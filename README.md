@@ -4,18 +4,35 @@
 [![Latest Stable Version](https://poser.pugx.org/pepakriz/phpstan-exception-rules/v/stable)](https://packagist.org/packages/pepakriz/phpstan-exception-rules)
 [![License](https://poser.pugx.org/pepakriz/phpstan-exception-rules/license)](https://packagist.org/packages/pepakriz/phpstan-exception-rules)
 
+* [PHPStan](https://github.com/phpstan/phpstan)
+* [Nette Framework](https://nette.org/)
 
-## Installation
+This extension provides following rules and features:
+
+* Require `@throws` annotation when some whitelisted exception is thrown
+* Ignore caught whitelisted exceptions
+* Ignore blacklisted exceptions which have whitelisted parent
+
+In future we will provide some next amazing features as:
+
+* `@throws` object validation
+* Exception propagation over function calls
+* Unnecessary `@throws` annotations
+
+## Usage
+
+To use this extension, require it in [Composer](https://getcomposer.org/):
 
 ```bash
 composer require --dev pepakriz/phpstan-exception-rules
 ```
 
-## Configuration
+And include and configure extension.neon in your project's PHPStan config:
 
-```neon
+```yaml
 includes:
 	- vendor/pepakriz/phpstan-exception-rules/extension.neon
+
 parameters:
 	annotatedExceptions:
 		whitelist:
