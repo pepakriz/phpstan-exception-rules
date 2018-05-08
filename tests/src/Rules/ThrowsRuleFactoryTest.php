@@ -29,6 +29,7 @@ class ThrowsRuleFactoryTest extends RuleTestCase
 			$throwsRule->createThrow(),
 			$throwsRule->createTryCatch(),
 			$throwsRule->createMethodCall(),
+			$throwsRule->createStaticCall(),
 		];
 	}
 

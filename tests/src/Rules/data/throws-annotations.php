@@ -46,6 +46,14 @@ class ThrowsAnnotationsClass
 	}
 
 	/**
+	 * @throws SomeRuntimeException
+	 */
+	public static function staticCorrectSomeException(): void
+	{
+		throw new SomeRuntimeException();
+	}
+
+	/**
 	 * @throws NextRuntimeException
 	 */
 	public function correctNextException(): void
@@ -64,6 +72,12 @@ class ThrowsAnnotationsClass
 	public function missingAnnotationsByMethodCall(): void
 	{
 		$this->correctAbstract(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\BaseRuntimeException annotation
+	}
+
+	public function missingAnnotationsByStaticMethodCall(): void
+	{
+		self::staticCorrectSomeException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
+		$this::staticCorrectSomeException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
 	}
 
 	/**
@@ -91,6 +105,13 @@ class ThrowsAnnotationsClass
 	{
 		$this->correctSomeException();
 		$this->correctNextException();
+	}
+
+	public static function staticMissingAnnotations(): void
+	{
+		throw new RuntimeException(); // error: Missing @throws RuntimeException annotation
+		throw new SomeRuntimeException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
+		throw new WhitelistedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\WhitelistedException annotation
 	}
 
 }

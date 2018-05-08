@@ -3,13 +3,19 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
 use PhpParser\Node;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Throw_;
 use PhpParser\Node\Stmt\TryCatch;
 use PHPStan\Analyser\Scope;
 use PHPStan\Broker\Broker;
+use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Rules\Rule;
+use PHPStan\ShouldNotHappenException;
+use PHPStan\Type\ObjectType;
 use PHPStan\Type\TypeWithClassName;
 use PHPStan\Type\VerbosityLevel;
 use function array_merge;
@@ -148,6 +154,37 @@ class ThrowsRuleFactory
 		};
 	}
 
+	public function createStaticCall(): Rule
+	{
+		return new class ($this) implements Rule {
+
+			/**
+			 * @var ThrowsRuleFactory
+			 */
+			private $throwsRule;
+
+			public function __construct(ThrowsRuleFactory $throwsRule)
+			{
+				$this->throwsRule = $throwsRule;
+			}
+
+			public function getNodeType(): string
+			{
+				return StaticCall::class;
+			}
+
+			/**
+			 * @param StaticCall $node
+			 * @return string[]
+			 */
+			public function processNode(Node $node, Scope $scope): array
+			{
+				return $this->throwsRule->processStaticCall($node, $scope);
+			}
+
+		};
+	}
+
 	/**
 	 * @return string[]
 	 */
@@ -261,6 +298,67 @@ class ThrowsRuleFactory
 		return [
 			sprintf('Missing @throws %s annotation', $targetThrowType->describe(VerbosityLevel::typeOnly())),
 		];
+	}
+
+	/**
+	 * @return string[]
+	 */
+	public function processStaticCall(StaticCall $node, Scope $scope): array
+	{
+		$classReflection = $scope->getClassReflection();
+		$methodReflection = $scope->getFunction();
+		if ($classReflection === null || $methodReflection === null) {
+			return [];
+		}
+
+		if (!$methodReflection instanceof ThrowableReflection) {
+			return [];
+		}
+
+		if (!is_string($node->name)) {
+			return [];
+		}
+
+		$targetMethodReflection = $this->getMethod($node->class, $node->name, $scope);
+		if (!$targetMethodReflection instanceof ThrowableReflection) {
+			return [];
+		}
+
+		$targetThrowType = $targetMethodReflection->getThrowType();
+		if ($targetThrowType === null) {
+			return [];
+		}
+
+		$throwType = $methodReflection->getThrowType();
+		if ($throwType !== null && $throwType->accepts($targetThrowType)) {
+			return [];
+		}
+
+		return [
+			sprintf('Missing @throws %s annotation', $targetThrowType->describe(VerbosityLevel::typeOnly())),
+		];
+	}
+
+	/**
+	 * @param Name|Expr $class
+	 */
+	private function getMethod(
+		$class,
+		string $methodName,
+		Scope $scope
+	): MethodReflection
+	{
+		if ($class instanceof Name) {
+			$calledOnType = new ObjectType($scope->resolveName($class));
+		} else {
+			$calledOnType = $scope->getType($class);
+		}
+
+		if (!$calledOnType->hasMethod($methodName)) {
+			throw new ShouldNotHappenException();
+		}
+
+		return $calledOnType->getMethod($methodName, $scope);
 	}
 
 	private function isExceptionClassWhitelisted(string $exceptionClassName): bool
