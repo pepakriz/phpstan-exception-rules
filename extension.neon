@@ -18,6 +18,11 @@ services:
 		tags: [phpstan.rules.rule]
 
 	-
+		class: PHPStan\Rules\Rule
+		factory: @throwsRuleFactory::createMethodCall()
+		tags: [phpstan.rules.rule]
+
+	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\ValidThrowValueRule
 		tags: [phpstan.rules.rule]
 

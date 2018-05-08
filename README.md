@@ -10,6 +10,8 @@
 This extension provides following rules and features:
 
 * Require `@throws` annotation when some whitelisted exception is thrown ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-annotations.php))
+	* Ignore blacklisted exceptions which have whitelisted parent
+	* Exception propagation over function calls
 * Ignore caught whitelisted exceptions ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/try-catch.php))
 * Ignore blacklisted exceptions which have whitelisted parent
 * Thrown value must be instanceof `Throwable` ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throw-values.php))
@@ -17,7 +19,6 @@ This extension provides following rules and features:
 
 In future we will provide some next amazing features as:
 
-* Exception propagation over function calls
 * Unnecessary `@throws` annotation detection
 
 ## Usage

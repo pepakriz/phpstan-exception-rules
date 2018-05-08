@@ -3,14 +3,18 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
 use PhpParser\Node;
+use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Stmt\Throw_;
 use PhpParser\Node\Stmt\TryCatch;
 use PHPStan\Analyser\Scope;
+use PHPStan\Broker\Broker;
 use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Rules\Rule;
 use PHPStan\Type\TypeWithClassName;
+use PHPStan\Type\VerbosityLevel;
 use function array_merge;
 use function is_a;
+use function is_string;
 use function sprintf;
 
 class ThrowsRuleFactory
@@ -32,16 +36,23 @@ class ThrowsRuleFactory
 	private static $catches = [];
 
 	/**
+	 * @var Broker
+	 */
+	private $broker;
+
+	/**
 	 * @param string[] $exceptionWhiteList
 	 * @param string[] $exceptionBlackList
 	 */
 	public function __construct(
 		array $exceptionWhiteList,
-		array $exceptionBlackList
+		array $exceptionBlackList,
+		Broker $broker
 	)
 	{
 		$this->exceptionWhiteList = $exceptionWhiteList;
 		$this->exceptionBlackList = $exceptionBlackList;
+		$this->broker = $broker;
 	}
 
 	public function createTryCatch(): Rule
@@ -101,6 +112,37 @@ class ThrowsRuleFactory
 			public function processNode(Node $node, Scope $scope): array
 			{
 				return $this->throwsRule->processThrow($node, $scope);
+			}
+
+		};
+	}
+
+	public function createMethodCall(): Rule
+	{
+		return new class ($this) implements Rule {
+
+			/**
+			 * @var ThrowsRuleFactory
+			 */
+			private $throwsRule;
+
+			public function __construct(ThrowsRuleFactory $throwsRule)
+			{
+				$this->throwsRule = $throwsRule;
+			}
+
+			public function getNodeType(): string
+			{
+				return MethodCall::class;
+			}
+
+			/**
+			 * @param MethodCall $node
+			 * @return string[]
+			 */
+			public function processNode(Node $node, Scope $scope): array
+			{
+				return $this->throwsRule->processMethodCall($node, $scope);
 			}
 
 		};
@@ -171,6 +213,53 @@ class ThrowsRuleFactory
 
 		return [
 			sprintf('Missing @throws %s annotation', $exceptionClassName),
+		];
+	}
+
+	/**
+	 * @return string[]
+	 */
+	public function processMethodCall(MethodCall $node, Scope $scope): array
+	{
+		$classReflection = $scope->getClassReflection();
+		$methodReflection = $scope->getFunction();
+		if ($classReflection === null || $methodReflection === null) {
+			return [];
+		}
+
+		if (!$methodReflection instanceof ThrowableReflection) {
+			return [];
+		}
+
+		$targetType = $scope->getType($node->var);
+		if (!$targetType instanceof TypeWithClassName) {
+			return [];
+		}
+
+		$methodName = $node->name;
+		if (!is_string($methodName)) {
+			return [];
+		}
+
+		$targetClassReflection = $this->broker->getClass($targetType->getClassName());
+		$targetMethodReflection = $targetClassReflection->getMethod($methodName, $scope);
+
+		if (!$targetMethodReflection instanceof ThrowableReflection) {
+			return [];
+		}
+
+		$targetThrowType = $targetMethodReflection->getThrowType();
+		if ($targetThrowType === null) {
+			return [];
+		}
+
+		$throwType = $methodReflection->getThrowType();
+		if ($throwType !== null && $throwType->accepts($targetThrowType)) {
+			return [];
+		}
+
+		return [
+			sprintf('Missing @throws %s annotation', $targetThrowType->describe(VerbosityLevel::typeOnly())),
 		];
 	}
 

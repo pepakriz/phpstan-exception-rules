@@ -23,11 +23,12 @@ class ThrowsRuleFactoryTest extends RuleTestCase
 		], [
 			BaseBlacklistedRuntimeException::class,
 			SomeBlacklistedRuntimeException::class,
-		]);
+		], $this->createBroker());
 
 		return [
 			$throwsRule->createThrow(),
 			$throwsRule->createTryCatch(),
+			$throwsRule->createMethodCall(),
 		];
 	}
 
