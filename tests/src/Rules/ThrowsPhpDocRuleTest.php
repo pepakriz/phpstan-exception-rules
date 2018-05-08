@@ -9,7 +9,7 @@ use Pepakriz\PHPStanExceptionRules\RuleTestCase;
 use PHPStan\Rules\Rule;
 use RuntimeException;
 
-class ThrowsRuleFactoryTest extends RuleTestCase
+class ThrowsPhpDocRuleTest extends RuleTestCase
 {
 
 	/**
@@ -17,7 +17,7 @@ class ThrowsRuleFactoryTest extends RuleTestCase
 	 */
 	protected function getRules(): array
 	{
-		$throwsRule = new ThrowsRuleFactory([
+		$throwsRule = new ThrowsPhpDocRule([
 			RuntimeException::class,
 			WhitelistedException::class,
 		], [
@@ -26,10 +26,10 @@ class ThrowsRuleFactoryTest extends RuleTestCase
 		], $this->createBroker());
 
 		return [
-			$throwsRule->createThrow(),
-			$throwsRule->createTryCatch(),
-			$throwsRule->createMethodCall(),
-			$throwsRule->createStaticCall(),
+			$throwsRule->enableThrowsPhpDocChecker(),
+			$throwsRule->enableTryCatchCrawler(),
+			$throwsRule->enableCallPropagation(),
+			$throwsRule->enableStaticCallPropagation(),
 		];
 	}
 

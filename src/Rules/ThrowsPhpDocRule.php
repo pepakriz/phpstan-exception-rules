@@ -27,7 +27,7 @@ use function is_a;
 use function is_string;
 use function sprintf;
 
-class ThrowsRuleFactory
+class ThrowsPhpDocRule
 {
 
 	/**
@@ -65,16 +65,16 @@ class ThrowsRuleFactory
 		$this->broker = $broker;
 	}
 
-	public function createTryCatch(): Rule
+	public function enableTryCatchCrawler(): Rule
 	{
 		return new class ($this) implements Rule {
 
 			/**
-			 * @var ThrowsRuleFactory
+			 * @var ThrowsPhpDocRule
 			 */
 			private $throwsRule;
 
-			public function __construct(ThrowsRuleFactory $throwsRule)
+			public function __construct(ThrowsPhpDocRule $throwsRule)
 			{
 				$this->throwsRule = $throwsRule;
 			}
@@ -90,22 +90,22 @@ class ThrowsRuleFactory
 			 */
 			public function processNode(Node $node, Scope $scope): array
 			{
-				return $this->throwsRule->processTryCatch($node, $scope);
+				return $this->throwsRule->processTryCatchCrawler($node, $scope);
 			}
 
 		};
 	}
 
-	public function createThrow(): Rule
+	public function enableThrowsPhpDocChecker(): Rule
 	{
 		return new class ($this) implements Rule {
 
 			/**
-			 * @var ThrowsRuleFactory
+			 * @var ThrowsPhpDocRule
 			 */
 			private $throwsRule;
 
-			public function __construct(ThrowsRuleFactory $throwsRule)
+			public function __construct(ThrowsPhpDocRule $throwsRule)
 			{
 				$this->throwsRule = $throwsRule;
 			}
@@ -121,22 +121,22 @@ class ThrowsRuleFactory
 			 */
 			public function processNode(Node $node, Scope $scope): array
 			{
-				return $this->throwsRule->processThrow($node, $scope);
+				return $this->throwsRule->processThrowsPhpDocChecker($node, $scope);
 			}
 
 		};
 	}
 
-	public function createMethodCall(): Rule
+	public function enableCallPropagation(): Rule
 	{
 		return new class ($this) implements Rule {
 
 			/**
-			 * @var ThrowsRuleFactory
+			 * @var ThrowsPhpDocRule
 			 */
 			private $throwsRule;
 
-			public function __construct(ThrowsRuleFactory $throwsRule)
+			public function __construct(ThrowsPhpDocRule $throwsRule)
 			{
 				$this->throwsRule = $throwsRule;
 			}
@@ -152,22 +152,22 @@ class ThrowsRuleFactory
 			 */
 			public function processNode(Node $node, Scope $scope): array
 			{
-				return $this->throwsRule->processMethodCall($node, $scope);
+				return $this->throwsRule->processCallPropagation($node, $scope);
 			}
 
 		};
 	}
 
-	public function createStaticCall(): Rule
+	public function enableStaticCallPropagation(): Rule
 	{
 		return new class ($this) implements Rule {
 
 			/**
-			 * @var ThrowsRuleFactory
+			 * @var ThrowsPhpDocRule
 			 */
 			private $throwsRule;
 
-			public function __construct(ThrowsRuleFactory $throwsRule)
+			public function __construct(ThrowsPhpDocRule $throwsRule)
 			{
 				$this->throwsRule = $throwsRule;
 			}
@@ -183,7 +183,7 @@ class ThrowsRuleFactory
 			 */
 			public function processNode(Node $node, Scope $scope): array
 			{
-				return $this->throwsRule->processStaticCall($node, $scope);
+				return $this->throwsRule->processStaticCallPropagation($node, $scope);
 			}
 
 		};
@@ -192,7 +192,7 @@ class ThrowsRuleFactory
 	/**
 	 * @return string[]
 	 */
-	public function processTryCatch(TryCatch $node, Scope $scope): array
+	public function processTryCatchCrawler(TryCatch $node, Scope $scope): array
 	{
 		$classReflection = $scope->getClassReflection();
 		$methodReflection = $scope->getFunction();
@@ -219,7 +219,7 @@ class ThrowsRuleFactory
 	/**
 	 * @return string[]
 	 */
-	public function processThrow(Throw_ $node, Scope $scope): array
+	public function processThrowsPhpDocChecker(Throw_ $node, Scope $scope): array
 	{
 		$classReflection = $scope->getClassReflection();
 		$methodReflection = $scope->getFunction();
@@ -260,7 +260,7 @@ class ThrowsRuleFactory
 	/**
 	 * @return string[]
 	 */
-	public function processMethodCall(MethodCall $node, Scope $scope): array
+	public function processCallPropagation(MethodCall $node, Scope $scope): array
 	{
 		$classReflection = $scope->getClassReflection();
 		$methodReflection = $scope->getFunction();
@@ -289,7 +289,7 @@ class ThrowsRuleFactory
 			return [];
 		}
 
-		return $this->validateThrowsByCall(
+		return $this->processThrowsTypes(
 			$methodReflection->getThrowType(),
 			$targetMethodReflection->getThrowType()
 		);
@@ -298,7 +298,7 @@ class ThrowsRuleFactory
 	/**
 	 * @return string[]
 	 */
-	public function processStaticCall(StaticCall $node, Scope $scope): array
+	public function processStaticCallPropagation(StaticCall $node, Scope $scope): array
 	{
 		$classReflection = $scope->getClassReflection();
 		$methodReflection = $scope->getFunction();
@@ -319,7 +319,7 @@ class ThrowsRuleFactory
 			return [];
 		}
 
-		return $this->validateThrowsByCall(
+		return $this->processThrowsTypes(
 			$methodReflection->getThrowType(),
 			$targetMethodReflection->getThrowType()
 		);
@@ -328,7 +328,7 @@ class ThrowsRuleFactory
 	/**
 	 * @return string[]
 	 */
-	private function validateThrowsByCall(?Type $throwType, ?Type $targetThrowType): array
+	private function processThrowsTypes(?Type $throwType, ?Type $targetThrowType): array
 	{
 		if ($targetThrowType === null) {
 			return [];

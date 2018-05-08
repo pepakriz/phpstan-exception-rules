@@ -4,27 +4,27 @@ parameters:
 		blacklist: []
 
 services:
-	throwsRuleFactory:
-		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsRuleFactory(%annotatedExceptions.whitelist%, %annotatedExceptions.blacklist%)
+	throwsPhpDocRule:
+		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule(%annotatedExceptions.whitelist%, %annotatedExceptions.blacklist%)
 
 	-
 		class: PHPStan\Rules\Rule
-		factory: @throwsRuleFactory::createTryCatch()
+		factory: @throwsPhpDocRule::enableTryCatchCrawler()
 		tags: [phpstan.rules.rule]
 
 	-
 		class: PHPStan\Rules\Rule
-		factory: @throwsRuleFactory::createThrow()
+		factory: @throwsPhpDocRule::enableThrowsPhpDocChecker()
 		tags: [phpstan.rules.rule]
 
 	-
 		class: PHPStan\Rules\Rule
-		factory: @throwsRuleFactory::createMethodCall()
+		factory: @throwsPhpDocRule::enableCallPropagation()
 		tags: [phpstan.rules.rule]
 
 	-
 		class: PHPStan\Rules\Rule
-		factory: @throwsRuleFactory::createStaticCall()
+		factory: @throwsPhpDocRule::enableStaticCallPropagation()
 		tags: [phpstan.rules.rule]
 
 	-
