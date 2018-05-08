@@ -4,3 +4,8 @@ includes:
 	- vendor/phpstan/phpstan-nette/extension.neon
 	- vendor/phpstan/phpstan-nette/rules.neon
 	- vendor/phpstan/phpstan-strict-rules/rules.neon
+	- extension.neon
+
+parameters:
+	excludes_analyse:
+		- %rootDir%/../../../tests/*/data/*
