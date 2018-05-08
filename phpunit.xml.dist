@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+	colors="true"
+	backupGlobals="false"
+	backupStaticAttributes="false"
+	beStrictAboutChangesToGlobalState="true"
+	beStrictAboutOutputDuringTests="true"
+	beStrictAboutTestsThatDoNotTestAnything="true"
+	beStrictAboutTodoAnnotatedTests="true"
+	failOnRisky="true"
+	failOnWarning="true"
+>
+
+	<logging>
+		<log
+			type="coverage-text"
+			target="php://stdout"
+			showUncoveredFiles="true"
+			showOnlySummary="true"
+		/>
+		<log type="coverage-clover" target="tests/tmp/clover.xml"/>
+	</logging>
+
+	<testsuites>
+		<testsuite name="Exception rules for PHPStan">
+			<directory>./tests</directory>
+		</testsuite>
+	</testsuites>
+	<filter>
+		<whitelist processUncoveredFilesFromWhitelist="true">
+			<directory>./src</directory>
+		</whitelist>
+	</filter>
+</phpunit>

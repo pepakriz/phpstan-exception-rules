@@ -1,0 +1,9 @@
+parameters:
+	annotatedExceptions:
+		whitelist: []
+		blacklist: []
+
+services:
+	-
+		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsRule(%annotatedExceptions.whitelist%, %annotatedExceptions.blacklist%)
+		tags: [phpstan.rules.rule]

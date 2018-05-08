@@ -1,0 +1,22 @@
+language: php
+
+cache:
+  directories:
+    - $HOME/.composer/cache
+
+env:
+  - DEPENDENCIES="--prefer-lowest"
+  - DEPENDENCIES=""
+
+php:
+  - 7.1
+  - 7.2
+
+install:
+  - travis_retry composer update --no-interaction --prefer-dist $DEPENDENCIES
+
+script:
+  - composer run-script check
+
+after_script:
+  - composer run-script coveralls
