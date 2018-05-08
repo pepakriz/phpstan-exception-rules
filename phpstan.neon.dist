@@ -7,5 +7,6 @@ includes:
 	- extension.neon
 
 parameters:
+	tmpDir: %rootDir%/../../../tmp
 	excludes_analyse:
 		- %rootDir%/../../../tests/*/data/*
