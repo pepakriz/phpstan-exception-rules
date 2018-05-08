@@ -4,6 +4,15 @@ parameters:
 		blacklist: []
 
 services:
+	throwsRuleFactory:
+		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsRuleFactory(%annotatedExceptions.whitelist%, %annotatedExceptions.blacklist%)
+
 	-
-		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsRule(%annotatedExceptions.whitelist%, %annotatedExceptions.blacklist%)
+		class: PHPStan\Rules\Rule
+		factory: @throwsRuleFactory::createTryCatch()
+		tags: [phpstan.rules.rule]
+
+	-
+		class: PHPStan\Rules\Rule
+		factory: @throwsRuleFactory::createThrow()
 		tags: [phpstan.rules.rule]

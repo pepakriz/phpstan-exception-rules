@@ -19,9 +19,9 @@ class ThrowsAnnotationsClass
 
 	public function wrongAnnotations(): void
 	{
-		throw new RuntimeException();
-		throw new SomeRuntimeException();
-		throw new WhitelistedException();
+		throw new RuntimeException(); // error: Missing @throws RuntimeException annotation
+		throw new SomeRuntimeException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
+		throw new WhitelistedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\WhitelistedException annotation
 	}
 
 	public function ignoreNonWhitelisted(): void
