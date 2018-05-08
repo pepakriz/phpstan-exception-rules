@@ -160,7 +160,7 @@ class ThrowsRuleFactory
 
 		$className = $classReflection->getName();
 		$functionName = $methodReflection->getName();
-		if ($this->isCatched($className, $functionName, $node->getLine(), $exceptionClassName)) {
+		if ($this->isCaught($className, $functionName, $node->getLine(), $exceptionClassName)) {
 			return [];
 		}
 
@@ -195,7 +195,7 @@ class ThrowsRuleFactory
 		return false;
 	}
 
-	private function isCatched(string $className, string $functionName, int $line, string $exceptionClassName): bool
+	private function isCaught(string $className, string $functionName, int $line, string $exceptionClassName): bool
 	{
 		$catches = $this->getCatches($className, $functionName, $line);
 
