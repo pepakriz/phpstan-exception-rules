@@ -12,6 +12,7 @@ This extension provides following rules and features:
 * Require `@throws` annotation when some whitelisted exception is thrown
 * Ignore caught whitelisted exceptions
 * Ignore blacklisted exceptions which have whitelisted parent
+* Thrown value must be instanceof `Throwable`
 
 In future we will provide some next amazing features as:
 

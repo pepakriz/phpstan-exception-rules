@@ -16,3 +16,7 @@ services:
 		class: PHPStan\Rules\Rule
 		factory: @throwsRuleFactory::createThrow()
 		tags: [phpstan.rules.rule]
+
+	-
+		class: Pepakriz\PHPStanExceptionRules\Rules\ValidThrowValueRule
+		tags: [phpstan.rules.rule]
