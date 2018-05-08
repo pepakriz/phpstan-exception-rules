@@ -16,9 +16,13 @@ use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Rules\Rule;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\ObjectType;
+use PHPStan\Type\Type;
 use PHPStan\Type\TypeWithClassName;
+use PHPStan\Type\UnionType;
 use PHPStan\Type\VerbosityLevel;
+use function array_filter;
 use function array_merge;
+use function count;
 use function is_a;
 use function is_string;
 use function sprintf;
@@ -285,19 +289,10 @@ class ThrowsRuleFactory
 			return [];
 		}
 
-		$targetThrowType = $targetMethodReflection->getThrowType();
-		if ($targetThrowType === null) {
-			return [];
-		}
-
-		$throwType = $methodReflection->getThrowType();
-		if ($throwType !== null && $throwType->accepts($targetThrowType)) {
-			return [];
-		}
-
-		return [
-			sprintf('Missing @throws %s annotation', $targetThrowType->describe(VerbosityLevel::typeOnly())),
-		];
+		return $this->validateThrowsByCall(
+			$methodReflection->getThrowType(),
+			$targetMethodReflection->getThrowType()
+		);
 	}
 
 	/**
@@ -324,19 +319,54 @@ class ThrowsRuleFactory
 			return [];
 		}
 
-		$targetThrowType = $targetMethodReflection->getThrowType();
+		return $this->validateThrowsByCall(
+			$methodReflection->getThrowType(),
+			$targetMethodReflection->getThrowType()
+		);
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function validateThrowsByCall(?Type $throwType, ?Type $targetThrowType): array
+	{
 		if ($targetThrowType === null) {
 			return [];
 		}
 
-		$throwType = $methodReflection->getThrowType();
-		if ($throwType !== null && $throwType->accepts($targetThrowType)) {
+		if ($targetThrowType instanceof UnionType) {
+			$targetExceptionClasses = $this->filterClassesByWhitelist($targetThrowType->getReferencedClasses());
+		} elseif ($targetThrowType instanceof TypeWithClassName) {
+			$targetExceptionClasses = $this->filterClassesByWhitelist([$targetThrowType->getClassName()]);
+		} else {
+			throw new ShouldNotHappenException();
+		}
+
+		if (count($targetExceptionClasses) === 0) {
 			return [];
 		}
 
-		return [
-			sprintf('Missing @throws %s annotation', $targetThrowType->describe(VerbosityLevel::typeOnly())),
-		];
+		$messages = [];
+		foreach ($targetExceptionClasses as $targetExceptionClass) {
+			if ($throwType !== null && $throwType->accepts(new ObjectType($targetExceptionClass))) {
+				continue;
+			}
+
+			$messages[] = sprintf('Missing @throws %s annotation', $targetThrowType->describe(VerbosityLevel::typeOnly()));
+		}
+
+		return $messages;
+	}
+
+	/**
+	 * @param string[] $classes
+	 * @return string[]
+	 */
+	private function filterClassesByWhitelist(array $classes): array
+	{
+		return array_filter($classes, function (string $class): bool {
+			return $this->isExceptionClassWhitelisted($class);
+		});
 	}
 
 	/**
