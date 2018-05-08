@@ -13,7 +13,6 @@ This extension provides following rules and features:
 	* Ignore blacklisted exceptions which have whitelisted parent
 	* Exception propagation over function calls
 * Ignore caught whitelisted exceptions ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/try-catch.php))
-* Ignore blacklisted exceptions which have whitelisted parent
 * Thrown value must be instanceof `Throwable` ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throw-values.php))
 * `@throws` annotation must contain only valid `Throwable` objects ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-phpdoc.php))
 
