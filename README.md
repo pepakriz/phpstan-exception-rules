@@ -13,12 +13,12 @@ This extension provides following rules and features:
 * Ignore caught whitelisted exceptions
 * Ignore blacklisted exceptions which have whitelisted parent
 * Thrown value must be instanceof `Throwable`
+* `@throws` annotation must contain only valid `Throwable` objects
 
 In future we will provide some next amazing features as:
 
-* `@throws` object validation
 * Exception propagation over function calls
-* Unnecessary `@throws` annotations
+* Unnecessary `@throws` annotation detection
 
 ## Usage
 
