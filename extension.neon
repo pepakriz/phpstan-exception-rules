@@ -28,6 +28,16 @@ services:
 		tags: [phpstan.rules.rule]
 
 	-
+		class: PHPStan\Rules\Rule
+		factory: @throwsPhpDocRule::enableMethodDeclaration()
+		tags: [phpstan.rules.rule]
+
+	-
+		class: PHPStan\Rules\Rule
+		factory: @throwsPhpDocRule::enableMethodEnd()
+		tags: [phpstan.rules.rule]
+
+	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\ValidThrowValueRule
 		tags: [phpstan.rules.rule]
 

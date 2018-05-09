@@ -15,9 +15,6 @@ This extension provides following rules and features:
 * Ignore caught whitelisted exceptions ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/try-catch.php))
 * Thrown value must be instanceof `Throwable` ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throw-values.php))
 * `@throws` annotation must contain only valid `Throwable` objects ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-phpdoc.php))
-
-In future we will provide some next amazing features as:
-
 * Unnecessary `@throws` annotation detection
 
 ## Usage

@@ -2,11 +2,13 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
+use Pepakriz\PHPStanExceptionRules\Node\ClassMethodEnd;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Name;
+use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Throw_;
 use PhpParser\Node\Stmt\TryCatch;
 use PHPStan\Analyser\Scope;
@@ -20,8 +22,11 @@ use PHPStan\Type\Type;
 use PHPStan\Type\TypeWithClassName;
 use PHPStan\Type\UnionType;
 use PHPStan\Type\VerbosityLevel;
+use ReflectionMethod;
+use function array_diff;
 use function array_filter;
 use function array_merge;
+use function array_unique;
 use function count;
 use function is_a;
 use function is_string;
@@ -44,6 +49,11 @@ class ThrowsPhpDocRule
 	 * @var mixed[]
 	 */
 	private static $catches = [];
+
+	/**
+	 * @var mixed[]
+	 */
+	private static $usedThrows = [];
 
 	/**
 	 * @var Broker
@@ -189,6 +199,70 @@ class ThrowsPhpDocRule
 		};
 	}
 
+	public function enableMethodDeclaration(): Rule
+	{
+		return new class ($this) implements Rule {
+
+			/**
+			 * @var ThrowsPhpDocRule
+			 */
+			private $throwsRule;
+
+			public function __construct(ThrowsPhpDocRule $throwsRule)
+			{
+				$this->throwsRule = $throwsRule;
+			}
+
+			public function getNodeType(): string
+			{
+				return ClassMethod::class;
+			}
+
+			/**
+			 * @param ClassMethod $node
+			 * @return string[]
+			 */
+			public function processNode(Node $node, Scope $scope): array
+			{
+				$node->stmts[] = new ClassMethodEnd($node);
+
+				return [];
+			}
+
+		};
+	}
+
+	public function enableMethodEnd(): Rule
+	{
+		return new class ($this) implements Rule {
+
+			/**
+			 * @var ThrowsPhpDocRule
+			 */
+			private $throwsRule;
+
+			public function __construct(ThrowsPhpDocRule $throwsRule)
+			{
+				$this->throwsRule = $throwsRule;
+			}
+
+			public function getNodeType(): string
+			{
+				return ClassMethodEnd::class;
+			}
+
+			/**
+			 * @param ClassMethodEnd $node
+			 * @return string[]
+			 */
+			public function processNode(Node $node, Scope $scope): array
+			{
+				return $this->throwsRule->processUnusedThrows($node, $scope);
+			}
+
+		};
+	}
+
 	/**
 	 * @return string[]
 	 */
@@ -248,7 +322,10 @@ class ThrowsPhpDocRule
 		}
 
 		$throwType = $methodReflection->getThrowType();
-		if ($throwType !== null && $throwType->accepts($exceptionType)) {
+		$targetExceptionClasses = $this->getClassNamesByType($exceptionType);
+		$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
+
+		if ($this->isExceptionClassAnnotated($className, $functionName, $throwType, $targetExceptionClasses)) {
 			return [];
 		}
 
@@ -290,6 +367,8 @@ class ThrowsPhpDocRule
 		}
 
 		return $this->processThrowsTypes(
+			$classReflection->getName(),
+			$methodReflection->getName(),
 			$methodReflection->getThrowType(),
 			$targetMethodReflection->getThrowType()
 		);
@@ -320,6 +399,8 @@ class ThrowsPhpDocRule
 		}
 
 		return $this->processThrowsTypes(
+			$classReflection->getName(),
+			$methodReflection->getName(),
 			$methodReflection->getThrowType(),
 			$targetMethodReflection->getThrowType()
 		);
@@ -328,34 +409,115 @@ class ThrowsPhpDocRule
 	/**
 	 * @return string[]
 	 */
-	private function processThrowsTypes(?Type $throwType, ?Type $targetThrowType): array
+	public function processUnusedThrows(ClassMethodEnd $node, Scope $scope): array
+	{
+		$classReflection = $scope->getClassReflection();
+		$methodReflection = $scope->getFunction();
+		if ($classReflection === null || $methodReflection === null) {
+			return [];
+		}
+
+		if ($classReflection->isInterface()) {
+			return [];
+		}
+
+		$nativeMethodReflection = new ReflectionMethod($classReflection->getName(), $methodReflection->getName());
+		if ($nativeMethodReflection->isAbstract()) {
+			return [];
+		}
+
+		if (!$methodReflection instanceof ThrowableReflection) {
+			return [];
+		}
+
+		$throwType = $methodReflection->getThrowType();
+		if ($throwType === null) {
+			return [];
+		}
+
+		$className = $classReflection->getName();
+		$functionName = $methodReflection->getName();
+
+		$declaredThrows = $this->getClassNamesByType($throwType);
+		$userThrows = array_unique(self::$usedThrows[$className][$functionName] ?? []);
+
+		$messages = [];
+		$diff = array_diff($declaredThrows, $userThrows);
+		foreach ($diff as $unusedClass) {
+			$messages[] = sprintf('Unused @throws %s annotation', $unusedClass);
+		}
+
+		return $messages;
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function processThrowsTypes(string $className, string $functionName, ?Type $throwType, ?Type $targetThrowType): array
 	{
 		if ($targetThrowType === null) {
 			return [];
 		}
 
-		if ($targetThrowType instanceof UnionType) {
-			$targetExceptionClasses = $this->filterClassesByWhitelist($targetThrowType->getReferencedClasses());
-		} elseif ($targetThrowType instanceof TypeWithClassName) {
-			$targetExceptionClasses = $this->filterClassesByWhitelist([$targetThrowType->getClassName()]);
-		} else {
-			throw new ShouldNotHappenException();
-		}
+		$targetExceptionClasses = $this->getClassNamesByType($targetThrowType);
+		$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
 
-		if (count($targetExceptionClasses) === 0) {
+		if ($this->isExceptionClassAnnotated($className, $functionName, $throwType, $targetExceptionClasses)) {
 			return [];
 		}
 
-		$messages = [];
-		foreach ($targetExceptionClasses as $targetExceptionClass) {
-			if ($throwType !== null && $throwType->accepts(new ObjectType($targetExceptionClass))) {
-				continue;
-			}
+		return [
+			sprintf('Missing @throws %s annotation', $targetThrowType->describe(VerbosityLevel::typeOnly())),
+		];
+	}
 
-			$messages[] = sprintf('Missing @throws %s annotation', $targetThrowType->describe(VerbosityLevel::typeOnly()));
+	/**
+	 * @param string[] $targetExceptionClasses
+	 */
+	private function isExceptionClassAnnotated(
+		string $className,
+		string $functionName,
+		?Type $throwType,
+		array $targetExceptionClasses
+	): bool
+	{
+		if (count($targetExceptionClasses) === 0) {
+			return true;
 		}
 
-		return $messages;
+		if ($throwType === null) {
+			return false;
+		}
+
+		$throwsExceptionClasses = $this->getClassNamesByType($throwType);
+		foreach ($targetExceptionClasses as $targetExceptionClass) {
+			foreach ($throwsExceptionClasses as $throwsExceptionClass) {
+				if (is_a($targetExceptionClass, $throwsExceptionClass, true)) {
+					self::$usedThrows[$className][$functionName][] = $throwsExceptionClass;
+					continue 2;
+				}
+			}
+
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function getClassNamesByType(Type $type): array
+	{
+		if ($type instanceof UnionType) {
+			return $type->getReferencedClasses();
+		}
+
+		if ($type instanceof TypeWithClassName) {
+			return [$type->getClassName()];
+		}
+
+		throw new ShouldNotHappenException();
 	}
 
 	/**

@@ -30,6 +30,8 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			$throwsRule->enableTryCatchCrawler(),
 			$throwsRule->enableCallPropagation(),
 			$throwsRule->enableStaticCallPropagation(),
+			$throwsRule->enableMethodDeclaration(),
+			$throwsRule->enableMethodEnd(),
 		];
 	}
 
@@ -41,6 +43,11 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	public function testTryCatch(): void
 	{
 		$this->analyse(__DIR__ . '/data/try-catch.php');
+	}
+
+	public function testUnusedThrows(): void
+	{
+		$this->analyse(__DIR__ . '/data/unused-throws.php');
 	}
 
 }

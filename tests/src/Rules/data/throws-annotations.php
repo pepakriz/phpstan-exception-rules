@@ -107,6 +107,12 @@ class ThrowsAnnotationsClass
 		$this->correctNextException();
 	}
 
+	public function correctBlacklistedByMethodCalls(): void
+	{
+		$this->ignoreNonWhitelisted();
+		$this->ignoreBlacklisted();
+	}
+
 	public static function staticMissingAnnotations(): void
 	{
 		throw new RuntimeException(); // error: Missing @throws RuntimeException annotation
