@@ -11,9 +11,9 @@ abstract class BaseRuntimeException extends RuntimeException {}
 abstract class BaseBlacklistedRuntimeException extends BaseRuntimeException {}
 class SomeRuntimeException extends BaseRuntimeException {}
 class NextRuntimeException extends BaseRuntimeException {}
-class SomeBlacklistedRuntimeException extends BaseRuntimeException {}
-class SomeInheritedBlacklistedRuntimeException extends BaseBlacklistedRuntimeException {}
-class WhitelistedException extends Exception {}
+class SomeUncheckedRuntimeException extends BaseRuntimeException {}
+class SomeInheritedUncheckedRuntimeException extends BaseBlacklistedRuntimeException {}
+class CheckedException extends Exception {}
 
 class ThrowsAnnotationsClass
 {
@@ -22,10 +22,10 @@ class ThrowsAnnotationsClass
 	{
 		throw new RuntimeException(); // error: Missing @throws RuntimeException annotation
 		throw new SomeRuntimeException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
-		throw new WhitelistedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\WhitelistedException annotation
+		throw new CheckedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException annotation
 	}
 
-	public function ignoreNonWhitelisted(): void
+	public function ignoreUnchecked(): void
 	{
 		throw new LogicException();
 		throw new CustomLogicException();
@@ -33,8 +33,8 @@ class ThrowsAnnotationsClass
 
 	public function ignoreBlacklisted(): void
 	{
-		throw new SomeBlacklistedRuntimeException();
-		throw new SomeInheritedBlacklistedRuntimeException();
+		throw new SomeUncheckedRuntimeException();
+		throw new SomeInheritedUncheckedRuntimeException();
 	}
 
 	/**
@@ -109,7 +109,7 @@ class ThrowsAnnotationsClass
 
 	public function correctBlacklistedByMethodCalls(): void
 	{
-		$this->ignoreNonWhitelisted();
+		$this->ignoreUnchecked();
 		$this->ignoreBlacklisted();
 	}
 
@@ -117,7 +117,7 @@ class ThrowsAnnotationsClass
 	{
 		throw new RuntimeException(); // error: Missing @throws RuntimeException annotation
 		throw new SomeRuntimeException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
-		throw new WhitelistedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\WhitelistedException annotation
+		throw new CheckedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException annotation
 	}
 
 }
