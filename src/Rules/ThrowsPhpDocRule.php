@@ -38,12 +38,12 @@ class ThrowsPhpDocRule
 	/**
 	 * @var string[]
 	 */
-	private $exceptionWhiteList;
+	private $checkedExceptions;
 
 	/**
 	 * @var string[]
 	 */
-	private $exceptionBlackList;
+	private $uncheckedExceptions;
 
 	/**
 	 * @var mixed[]
@@ -61,17 +61,17 @@ class ThrowsPhpDocRule
 	private $broker;
 
 	/**
-	 * @param string[] $exceptionWhiteList
-	 * @param string[] $exceptionBlackList
+	 * @param string[] $checkedExceptions
+	 * @param string[] $uncheckedExceptions
 	 */
 	public function __construct(
-		array $exceptionWhiteList,
-		array $exceptionBlackList,
+		array $checkedExceptions,
+		array $uncheckedExceptions,
 		Broker $broker
 	)
 	{
-		$this->exceptionWhiteList = $exceptionWhiteList;
-		$this->exceptionBlackList = $exceptionBlackList;
+		$this->checkedExceptions = $checkedExceptions;
+		$this->uncheckedExceptions = $uncheckedExceptions;
 		$this->broker = $broker;
 	}
 
@@ -307,7 +307,7 @@ class ThrowsPhpDocRule
 		}
 
 		$exceptionClassName = $exceptionType->getClassName();
-		if (!$this->isExceptionClassWhitelisted($exceptionClassName)) {
+		if (!$this->isExceptionClassChecked($exceptionClassName)) {
 			return [];
 		}
 
@@ -323,7 +323,7 @@ class ThrowsPhpDocRule
 
 		$throwType = $methodReflection->getThrowType();
 		$targetExceptionClasses = $this->getClassNamesByType($exceptionType);
-		$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
+		$targetExceptionClasses = $this->filterCheckedClasses($targetExceptionClasses);
 
 		if ($this->isExceptionClassAnnotated($className, $functionName, $throwType, $targetExceptionClasses)) {
 			return [];
@@ -460,7 +460,7 @@ class ThrowsPhpDocRule
 		}
 
 		$targetExceptionClasses = $this->getClassNamesByType($targetThrowType);
-		$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
+		$targetExceptionClasses = $this->filterCheckedClasses($targetExceptionClasses);
 
 		if ($this->isExceptionClassAnnotated($className, $functionName, $throwType, $targetExceptionClasses)) {
 			return [];
@@ -524,10 +524,10 @@ class ThrowsPhpDocRule
 	 * @param string[] $classes
 	 * @return string[]
 	 */
-	private function filterClassesByWhitelist(array $classes): array
+	private function filterCheckedClasses(array $classes): array
 	{
 		return array_filter($classes, function (string $class): bool {
-			return $this->isExceptionClassWhitelisted($class);
+			return $this->isExceptionClassChecked($class);
 		});
 	}
 
@@ -553,16 +553,16 @@ class ThrowsPhpDocRule
 		return $calledOnType->getMethod($methodName, $scope);
 	}
 
-	private function isExceptionClassWhitelisted(string $exceptionClassName): bool
+	private function isExceptionClassChecked(string $exceptionClassName): bool
 	{
-		foreach ($this->exceptionWhiteList as $whitelistedException) {
-			if (is_a($exceptionClassName, $whitelistedException, true)) {
-				foreach ($this->exceptionBlackList as $blacklistedException) {
+		foreach ($this->checkedExceptions as $checkedException) {
+			if (is_a($exceptionClassName, $checkedException, true)) {
+				foreach ($this->uncheckedExceptions as $blacklistedException) {
 					if (!is_a($exceptionClassName, $blacklistedException, true)) {
 						continue;
 					}
 
-					if (is_a($blacklistedException, $whitelistedException, true)) {
+					if (is_a($blacklistedException, $checkedException, true)) {
 						continue 2;
 					}
 				}

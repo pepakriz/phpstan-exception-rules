@@ -9,10 +9,10 @@
 
 This extension provides following rules and features:
 
-* Require `@throws` annotation when some whitelisted exception is thrown ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-annotations.php))
-	* Ignore blacklisted exceptions which have whitelisted parent
+* Require `@throws` annotation when some checked exception is thrown ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-annotations.php))
+	* Ignore unchecked exceptions which have checked parent
 	* Exception propagation over function calls
-* Ignore caught whitelisted exceptions ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/try-catch.php))
+* Ignore caught checked exceptions ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/try-catch.php))
 * Thrown value must be instanceof `Throwable` ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throw-values.php))
 * `@throws` annotation must contain only valid `Throwable` objects ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-phpdoc.php))
 * Unnecessary `@throws` annotation detection ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-throws.php))
