@@ -42,11 +42,13 @@
 	},
 	"scripts": {
 		"check": [
+			"@check:composer",
 			"@check:lint",
 			"@check:cs",
 			"@check:types",
 			"@check:tests"
 		],
+		"check:composer": "composer validate",
 		"check:tests": "phpunit --coverage-text",
 		"check:cs": "phpcs --extensions=php --encoding=utf-8 --tab-width=4 --colors --ignore=tests/*/data -sp src tests/src",
 		"check:lint": "parallel-lint src tests/src",
