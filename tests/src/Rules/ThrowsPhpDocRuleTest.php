@@ -3,8 +3,8 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
 use Pepakriz\PHPStanExceptionRules\Rules\Data\BaseBlacklistedRuntimeException;
+use Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException;
 use Pepakriz\PHPStanExceptionRules\Rules\Data\SomeBlacklistedRuntimeException;
-use Pepakriz\PHPStanExceptionRules\Rules\Data\WhitelistedException;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
 use PHPStan\Rules\Rule;
 use RuntimeException;
@@ -19,7 +19,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	{
 		$throwsRule = new ThrowsPhpDocRule([
 			RuntimeException::class,
-			WhitelistedException::class,
+			CheckedException::class,
 		], [
 			BaseBlacklistedRuntimeException::class,
 			SomeBlacklistedRuntimeException::class,

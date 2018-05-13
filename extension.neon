@@ -1,11 +1,11 @@
 parameters:
-	annotatedExceptions:
-		whitelist: []
-		blacklist: []
+	exceptionRules:
+		checkedExceptions: []
+		ignoredExceptions: []
 
 services:
 	throwsPhpDocRule:
-		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule(%annotatedExceptions.whitelist%, %annotatedExceptions.blacklist%)
+		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule(%exceptionRules.checkedExceptions%, %exceptionRules.ignoredExceptions%)
 
 	-
 		class: PHPStan\Rules\Rule

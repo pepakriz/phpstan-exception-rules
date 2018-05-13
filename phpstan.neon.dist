@@ -10,3 +10,11 @@ parameters:
 	tmpDir: %rootDir%/../../../tmp
 	excludes_analyse:
 		- %rootDir%/../../../tests/*/data/*
+
+	exceptionRules:
+		checkedExceptions:
+			- RuntimeException
+		ignoredExceptions:
+			- LogicException
+			- PHPUnit\Framework\Exception
+			- Nette\DI\MissingServiceException

@@ -13,7 +13,7 @@ class SomeRuntimeException extends BaseRuntimeException {}
 class NextRuntimeException extends BaseRuntimeException {}
 class SomeBlacklistedRuntimeException extends BaseRuntimeException {}
 class SomeInheritedBlacklistedRuntimeException extends BaseBlacklistedRuntimeException {}
-class WhitelistedException extends Exception {}
+class CheckedException extends Exception {}
 
 class ThrowsAnnotationsClass
 {
@@ -22,7 +22,7 @@ class ThrowsAnnotationsClass
 	{
 		throw new RuntimeException(); // error: Missing @throws RuntimeException annotation
 		throw new SomeRuntimeException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
-		throw new WhitelistedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\WhitelistedException annotation
+		throw new CheckedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException annotation
 	}
 
 	public function ignoreNonWhitelisted(): void
@@ -117,7 +117,7 @@ class ThrowsAnnotationsClass
 	{
 		throw new RuntimeException(); // error: Missing @throws RuntimeException annotation
 		throw new SomeRuntimeException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
-		throw new WhitelistedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\WhitelistedException annotation
+		throw new CheckedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException annotation
 	}
 
 }
