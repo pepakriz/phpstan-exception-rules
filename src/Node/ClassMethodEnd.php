@@ -23,4 +23,9 @@ class ClassMethodEnd extends NodeAbstract
 		return [];
 	}
 
+	public function getType(): string
+	{
+		return 'ClassMethodEnd';
+	}
+
 }

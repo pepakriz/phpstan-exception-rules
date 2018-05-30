@@ -7,6 +7,7 @@ use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Throw_;
@@ -224,6 +225,10 @@ class ThrowsPhpDocRule
 			 */
 			public function processNode(Node $node, Scope $scope): array
 			{
+				if ($node->stmts === null) {
+					$node->stmts = [];
+				}
+
 				$node->stmts[] = new ClassMethodEnd($node);
 
 				return [];
@@ -355,12 +360,12 @@ class ThrowsPhpDocRule
 		}
 
 		$methodName = $node->name;
-		if (!is_string($methodName)) {
+		if (!$methodName instanceof Identifier) {
 			return [];
 		}
 
 		$targetClassReflection = $this->broker->getClass($targetType->getClassName());
-		$targetMethodReflection = $targetClassReflection->getMethod($methodName, $scope);
+		$targetMethodReflection = $targetClassReflection->getMethod($methodName->toString(), $scope);
 
 		if (!$targetMethodReflection instanceof ThrowableReflection) {
 			return [];
@@ -389,11 +394,16 @@ class ThrowsPhpDocRule
 			return [];
 		}
 
-		if (!is_string($node->name)) {
+		$methodName = $node->name;
+		if ($methodName instanceof Identifier) {
+			$methodName = $methodName->toString();
+		}
+
+		if (!is_string($methodName)) {
 			return [];
 		}
 
-		$targetMethodReflection = $this->getMethod($node->class, $node->name, $scope);
+		$targetMethodReflection = $this->getMethod($node->class, $methodName, $scope);
 		if (!$targetMethodReflection instanceof ThrowableReflection) {
 			return [];
 		}
