@@ -1,6 +1,6 @@
 <?php declare(strict_types = 1);
 
-namespace Pepakriz\PHPStanExceptionRules\Rules\Data;
+namespace Pepakriz\PHPStanExceptionRules\Rules\Data\TryCatch;
 
 use LogicException;
 use RuntimeException;
@@ -8,6 +8,7 @@ use Throwable;
 
 class FooRuntimeException extends RuntimeException {}
 class BarRuntimeException extends RuntimeException {}
+class SomeRuntimeException extends RuntimeException {}
 
 class TryCatchClass
 {
@@ -71,6 +72,48 @@ class TryCatchClass
 		} catch (FooRuntimeException $e) {
 
 		}
+	}
+
+	public function catchedOneFromUnion(): void
+	{
+		try {
+			$this->throwUnion(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\TryCatch\SomeRuntimeException annotation
+		} catch (FooRuntimeException | BarRuntimeException $e) {
+			// ignore
+		}
+	}
+
+	public function catchedOneFromStaticUnion(): void
+	{
+		try {
+			self::throwStaticUnion(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\TryCatch\SomeRuntimeException annotation
+		} catch (FooRuntimeException | BarRuntimeException $e) {
+			// ignore
+		}
+	}
+
+	/**
+	 * @throws FooRuntimeException
+	 * @throws BarRuntimeException
+	 * @throws SomeRuntimeException
+	 */
+	private function throwUnion(): void
+	{
+		throw new FooRuntimeException();
+		throw new BarRuntimeException();
+		throw new SomeRuntimeException();
+	}
+
+	/**
+	 * @throws FooRuntimeException
+	 * @throws BarRuntimeException
+	 * @throws SomeRuntimeException
+	 */
+	private static function throwStaticUnion(): void
+	{
+		throw new FooRuntimeException();
+		throw new BarRuntimeException();
+		throw new SomeRuntimeException();
 	}
 
 }

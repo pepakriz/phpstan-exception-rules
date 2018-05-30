@@ -20,6 +20,7 @@ use PHPStan\Rules\Rule;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
+use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeWithClassName;
 use PHPStan\Type\UnionType;
 use PHPStan\Type\VerbosityLevel;
@@ -375,7 +376,8 @@ class ThrowsPhpDocRule
 			$classReflection->getName(),
 			$methodReflection->getName(),
 			$methodReflection->getThrowType(),
-			$targetMethodReflection->getThrowType()
+			$targetMethodReflection->getThrowType(),
+			$node->getLine()
 		);
 	}
 
@@ -412,7 +414,8 @@ class ThrowsPhpDocRule
 			$classReflection->getName(),
 			$methodReflection->getName(),
 			$methodReflection->getThrowType(),
-			$targetMethodReflection->getThrowType()
+			$targetMethodReflection->getThrowType(),
+			$node->getLine()
 		);
 	}
 
@@ -463,10 +466,24 @@ class ThrowsPhpDocRule
 	/**
 	 * @return string[]
 	 */
-	private function processThrowsTypes(string $className, string $functionName, ?Type $throwType, ?Type $targetThrowType): array
+	private function processThrowsTypes(string $className, string $functionName, ?Type $throwType, ?Type $targetThrowType, int $lint): array
 	{
 		if ($targetThrowType === null) {
 			return [];
+		}
+
+		if ($targetThrowType instanceof UnionType) {
+			foreach ($targetThrowType->getTypes() as $type) {
+				if (!$type instanceof TypeWithClassName) {
+					continue;
+				}
+
+				if (!$this->isCaught($className, $functionName, $lint, $type->getClassName())) {
+					continue;
+				}
+
+				$targetThrowType = TypeCombinator::remove($targetThrowType, $type);
+			}
 		}
 
 		$targetExceptionClasses = $this->getClassNamesByType($targetThrowType);
