@@ -40,7 +40,3 @@ services:
 	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\ValidThrowValueRule
 		tags: [phpstan.rules.rule]
-
-	-
-		class: Pepakriz\PHPStanExceptionRules\Rules\ValidThrowsPhpDocRule
-		tags: [phpstan.rules.rule]
