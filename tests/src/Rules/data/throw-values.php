@@ -19,7 +19,7 @@ function () {
 	throw new Exception();
 	throw $validInterface;
 
-	throw 123; // error: Thrown value must be instanceof Throwable. int is given.
-	throw new InvalidException(); // error: Thrown value must be instanceof Throwable. Pepakriz\PHPStanExceptionRules\Rules\Data\InvalidException is given.
-	throw $invalidInterface; // error: Thrown value must be instanceof Throwable. Pepakriz\PHPStanExceptionRules\Rules\Data\InvalidInterfaceException is given.
+	throw 123; // error: Invalid type int to throw.
+	throw new InvalidException(); // error: Possibly invalid type Pepakriz\PHPStanExceptionRules\Rules\Data\InvalidException to throw.
+	throw $invalidInterface; // error: Possibly invalid type Pepakriz\PHPStanExceptionRules\Rules\Data\InvalidInterfaceException to throw.
 };

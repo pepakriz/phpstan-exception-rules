@@ -14,7 +14,7 @@ class ValidThrowValueRuleTest extends RuleTestCase
 	protected function getRules(): array
 	{
 		return [
-			new ValidThrowValueRule(),
+			new ValidThrowValueRule(true),
 		];
 	}
 
