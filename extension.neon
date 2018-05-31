@@ -1,5 +1,6 @@
 parameters:
 	exceptionRules:
+		reportMaybes: true
 		checkedExceptions: []
 		ignoredExceptions: []
 
@@ -38,5 +39,5 @@ services:
 		tags: [phpstan.rules.rule]
 
 	-
-		class: Pepakriz\PHPStanExceptionRules\Rules\ValidThrowValueRule
+		class: Pepakriz\PHPStanExceptionRules\Rules\ValidThrowValueRule(%exceptionRules.reportMaybes%)
 		tags: [phpstan.rules.rule]

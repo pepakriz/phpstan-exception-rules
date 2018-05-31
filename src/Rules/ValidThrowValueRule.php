@@ -7,14 +7,23 @@ use PhpParser\Node\Stmt\Throw_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\Rule;
 use PHPStan\Type\MixedType;
-use PHPStan\Type\TypeWithClassName;
+use PHPStan\Type\ObjectType;
 use PHPStan\Type\VerbosityLevel;
 use Throwable;
-use function is_a;
 use function sprintf;
 
 class ValidThrowValueRule implements Rule
 {
+
+	/**
+	 * @var bool
+	 */
+	private $reportMaybes;
+
+	public function __construct(bool $reportMaybes)
+	{
+		$this->reportMaybes = $reportMaybes;
+	}
 
 	public function getNodeType(): string
 	{
@@ -32,15 +41,22 @@ class ValidThrowValueRule implements Rule
 			return [];
 		}
 
-		if ($type instanceof TypeWithClassName) {
-			if (is_a($type->getClassName(), Throwable::class, true)) {
-				return [];
-			}
+		$throwableType = new ObjectType(Throwable::class);
+		$isSuperType = $throwableType->isSuperTypeOf($type);
+
+		if ($isSuperType->no()) {
+			return [
+				sprintf('Invalid type %s to throw.', $type->describe(VerbosityLevel::typeOnly())),
+			];
 		}
 
-		return [
-			sprintf('Thrown value must be instanceof %s. %s is given.', Throwable::class, $type->describe(VerbosityLevel::typeOnly())),
-		];
+		if ($this->reportMaybes && $isSuperType->maybe()) {
+			return [
+				sprintf('Possibly invalid type %s to throw.', $type->describe(VerbosityLevel::typeOnly())),
+			];
+		}
+
+		return [];
 	}
 
 }
