@@ -21,6 +21,7 @@ use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
+use PHPStan\Type\TypeUtils;
 use PHPStan\Type\TypeWithClassName;
 use PHPStan\Type\UnionType;
 use PHPStan\Type\VerbosityLevel;
@@ -328,7 +329,7 @@ class ThrowsPhpDocRule
 		}
 
 		$throwType = $methodReflection->getThrowType();
-		$targetExceptionClasses = $this->getClassNamesByType($exceptionType);
+		$targetExceptionClasses = TypeUtils::getDirectClassNames($exceptionType);
 		$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
 
 		if ($this->isExceptionClassAnnotated($className, $functionName, $throwType, $targetExceptionClasses)) {
@@ -451,7 +452,7 @@ class ThrowsPhpDocRule
 		$className = $classReflection->getName();
 		$functionName = $methodReflection->getName();
 
-		$declaredThrows = $this->getClassNamesByType($throwType);
+		$declaredThrows = TypeUtils::getDirectClassNames($throwType);
 		$userThrows = array_unique(self::$usedThrows[$className][$functionName] ?? []);
 
 		$messages = [];
@@ -486,7 +487,7 @@ class ThrowsPhpDocRule
 			}
 		}
 
-		$targetExceptionClasses = $this->getClassNamesByType($targetThrowType);
+		$targetExceptionClasses = TypeUtils::getDirectClassNames($targetThrowType);
 		$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
 
 		if ($this->isExceptionClassAnnotated($className, $functionName, $throwType, $targetExceptionClasses)) {
@@ -516,7 +517,7 @@ class ThrowsPhpDocRule
 			return false;
 		}
 
-		$throwsExceptionClasses = $this->getClassNamesByType($throwType);
+		$throwsExceptionClasses = TypeUtils::getDirectClassNames($throwType);
 		foreach ($targetExceptionClasses as $targetExceptionClass) {
 			foreach ($throwsExceptionClasses as $throwsExceptionClass) {
 				if (is_a($targetExceptionClass, $throwsExceptionClass, true)) {
@@ -529,22 +530,6 @@ class ThrowsPhpDocRule
 		}
 
 		return true;
-	}
-
-	/**
-	 * @return string[]
-	 */
-	private function getClassNamesByType(Type $type): array
-	{
-		if ($type instanceof UnionType) {
-			return $type->getReferencedClasses();
-		}
-
-		if ($type instanceof TypeWithClassName) {
-			return [$type->getClassName()];
-		}
-
-		throw new ShouldNotHappenException();
 	}
 
 	/**
