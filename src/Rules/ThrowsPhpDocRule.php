@@ -364,6 +364,10 @@ class ThrowsPhpDocRule
 		}
 
 		$targetClassReflection = $this->broker->getClass($targetType->getClassName());
+		if (!$targetClassReflection->hasMethod($methodName->toString())) {
+			return [];
+		}
+
 		$targetMethodReflection = $targetClassReflection->getMethod($methodName->toString(), $scope);
 
 		if (!$targetMethodReflection instanceof ThrowableReflection) {

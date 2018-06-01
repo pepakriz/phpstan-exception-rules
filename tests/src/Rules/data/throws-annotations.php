@@ -120,4 +120,9 @@ class ThrowsAnnotationsClass
 		throw new CheckedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException annotation
 	}
 
+	public function callUndefinedMethod(): void
+	{
+		$this->undefinedMethod();
+	}
+
 }
