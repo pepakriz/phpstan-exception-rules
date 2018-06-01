@@ -17,7 +17,6 @@ use PHPStan\Broker\Broker;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Rules\Rule;
-use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
@@ -550,7 +549,7 @@ class ThrowsPhpDocRule
 		$class,
 		string $methodName,
 		Scope $scope
-	): MethodReflection
+	): ?MethodReflection
 	{
 		if ($class instanceof Name) {
 			$calledOnType = new ObjectType($scope->resolveName($class));
@@ -559,7 +558,7 @@ class ThrowsPhpDocRule
 		}
 
 		if (!$calledOnType->hasMethod($methodName)) {
-			throw new ShouldNotHappenException();
+			return null;
 		}
 
 		return $calledOnType->getMethod($methodName, $scope);
