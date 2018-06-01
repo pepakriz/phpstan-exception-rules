@@ -5,7 +5,6 @@
 [![License](https://poser.pugx.org/pepakriz/phpstan-exception-rules/license)](https://packagist.org/packages/pepakriz/phpstan-exception-rules)
 
 * [PHPStan](https://github.com/phpstan/phpstan)
-* [Nette Framework](https://nette.org/)
 
 This extension provides following rules and features:
 
