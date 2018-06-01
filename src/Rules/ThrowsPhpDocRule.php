@@ -466,7 +466,7 @@ class ThrowsPhpDocRule
 	/**
 	 * @return string[]
 	 */
-	private function processThrowsTypes(string $className, string $functionName, ?Type $throwType, ?Type $targetThrowType, int $lint): array
+	private function processThrowsTypes(string $className, string $functionName, ?Type $throwType, ?Type $targetThrowType, int $line): array
 	{
 		if ($targetThrowType === null) {
 			return [];
@@ -478,7 +478,7 @@ class ThrowsPhpDocRule
 					continue;
 				}
 
-				if (!$this->isCaught($className, $functionName, $lint, $type->getClassName())) {
+				if (!$this->isCaught($className, $functionName, $line, $type->getClassName())) {
 					continue;
 				}
 
