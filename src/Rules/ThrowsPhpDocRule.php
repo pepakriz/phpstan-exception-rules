@@ -19,14 +19,12 @@ use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Rules\Rule;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
-use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeUtils;
 use PHPStan\Type\TypeWithClassName;
-use PHPStan\Type\UnionType;
-use PHPStan\Type\VerbosityLevel;
 use ReflectionMethod;
 use function array_diff;
 use function array_filter;
+use function array_map;
 use function array_merge;
 use function array_unique;
 use function count;
@@ -472,30 +470,20 @@ class ThrowsPhpDocRule
 			return [];
 		}
 
-		if ($targetThrowType instanceof UnionType) {
-			foreach ($targetThrowType->getTypes() as $type) {
-				if (!$type instanceof TypeWithClassName) {
-					continue;
-				}
-
-				if (!$this->isCaught($className, $functionName, $line, $type->getClassName())) {
-					continue;
-				}
-
-				$targetThrowType = TypeCombinator::remove($targetThrowType, $type);
-			}
-		}
-
 		$targetExceptionClasses = TypeUtils::getDirectClassNames($targetThrowType);
+		$targetExceptionClasses = array_filter($targetExceptionClasses, function (string $targetExceptionClass) use ($className, $functionName, $line): bool {
+			return $this->isCaught($className, $functionName, $line, $targetExceptionClass) === false;
+		});
+
 		$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
 
 		if ($this->isExceptionClassAnnotated($className, $functionName, $throwType, $targetExceptionClasses)) {
 			return [];
 		}
 
-		return [
-			sprintf('Missing @throws %s annotation', $targetThrowType->describe(VerbosityLevel::typeOnly())),
-		];
+		return array_map(function (string $targetExceptionClass): string {
+			return sprintf('Missing @throws %s annotation', $targetExceptionClass);
+		}, $targetExceptionClasses);
 	}
 
 	/**
