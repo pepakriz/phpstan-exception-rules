@@ -6,9 +6,11 @@ use Pepakriz\PHPStanExceptionRules\Node\ClassMethodEnd;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
+use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Throw_;
 use PhpParser\Node\Stmt\TryCatch;
@@ -194,6 +196,37 @@ class ThrowsPhpDocRule
 			public function processNode(Node $node, Scope $scope): array
 			{
 				return $this->throwsRule->processStaticCallPropagation($node, $scope);
+			}
+
+		};
+	}
+
+	public function enableCallConstructorPropagation(): Rule
+	{
+		return new class ($this) implements Rule {
+
+			/**
+			 * @var ThrowsPhpDocRule
+			 */
+			private $throwsRule;
+
+			public function __construct(ThrowsPhpDocRule $throwsRule)
+			{
+				$this->throwsRule = $throwsRule;
+			}
+
+			public function getNodeType(): string
+			{
+				return New_::class;
+			}
+
+			/**
+			 * @param New_ $node
+			 * @return string[]
+			 */
+			public function processNode(Node $node, Scope $scope): array
+			{
+				return $this->throwsRule->processCallConstructorPropagation($node, $scope);
 			}
 
 		};
@@ -424,6 +457,35 @@ class ThrowsPhpDocRule
 	/**
 	 * @return string[]
 	 */
+	public function processCallConstructorPropagation(New_ $node, Scope $scope): array
+	{
+		$classReflection = $scope->getClassReflection();
+		$methodReflection = $scope->getFunction();
+		if ($classReflection === null || $methodReflection === null) {
+			return [];
+		}
+
+		if (!$methodReflection instanceof ThrowableReflection) {
+			return [];
+		}
+
+		$targetMethodReflection = $this->getMethod($node->class, '__construct', $scope);
+		if (!$targetMethodReflection instanceof ThrowableReflection) {
+			return [];
+		}
+
+		return $this->processThrowsTypes(
+			$classReflection->getName(),
+			$methodReflection->getName(),
+			$methodReflection->getThrowType(),
+			$targetMethodReflection->getThrowType(),
+			$node->getLine()
+		);
+	}
+
+	/**
+	 * @return string[]
+	 */
 	public function processUnusedThrows(ClassMethodEnd $node, Scope $scope): array
 	{
 		$classReflection = $scope->getClassReflection();
@@ -535,7 +597,7 @@ class ThrowsPhpDocRule
 	}
 
 	/**
-	 * @param Name|Expr $class
+	 * @param Name|Expr|ClassLike $class
 	 */
 	private function getMethod(
 		$class,
@@ -543,7 +605,15 @@ class ThrowsPhpDocRule
 		Scope $scope
 	): ?MethodReflection
 	{
-		if ($class instanceof Name) {
+		if ($class instanceof ClassLike) {
+			$className = $class->name;
+			if ($className === null) {
+				return null;
+			}
+
+			$calledOnType = new ObjectType($className->name);
+
+		} elseif ($class instanceof Name) {
 			$calledOnType = new ObjectType($scope->resolveName($class));
 		} else {
 			$calledOnType = $scope->getType($class);

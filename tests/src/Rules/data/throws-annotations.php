@@ -125,4 +125,21 @@ class ThrowsAnnotationsClass
 		$this->undefinedMethod();
 	}
 
+	public function createNewInstance(): void
+	{
+		new ThrowInConstructor(); // error: Missing @throws RuntimeException annotation
+	}
+
+}
+
+class ThrowInConstructor{
+
+	/**
+	 * @throws RuntimeException
+	 */
+	public function __construct()
+	{
+		throw new RuntimeException();
+	}
+
 }

@@ -30,6 +30,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			$throwsRule->enableTryCatchCrawler(),
 			$throwsRule->enableCallPropagation(),
 			$throwsRule->enableStaticCallPropagation(),
+			$throwsRule->enableCallConstructorPropagation(),
 			$throwsRule->enableMethodDeclaration(),
 			$throwsRule->enableMethodEnd(),
 		];
