@@ -12,12 +12,12 @@ This extension provides following rules and features:
 	* Skip ignored exceptions which have checked parent
 	* Exception propagation over function calls
 * Ignore caught checked exceptions ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/try-catch.php))
-* Thrown value must be subclass of `Throwable` ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throw-values.php))
 * Unnecessary `@throws` annotation detection ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-throws.php))
 
 Features and rules provided by PHPStan core (we rely on):
 
 * `@throws` annotation must contain only valid `Throwable` types
+* Thrown value must be subclass of `Throwable`
 
 ## Usage
 
