@@ -2,6 +2,7 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules\Data\Inheritance;
 
+use LogicException;
 use RuntimeException;
 
 class BaseException extends RuntimeException {};
@@ -15,6 +16,14 @@ class BaseThrowsAnnotations
 	 * @throws BaseException
 	 */
 	public function correct(): void
+	{
+
+	}
+
+	/**
+	 * @throws LogicException
+	 */
+	public function correctWithLogicException(): void
 	{
 
 	}
@@ -45,6 +54,14 @@ class ThrowsAnnotations extends BaseThrowsAnnotations
 	 * @throws SecondConcreteException
 	 */
 	public function correct(): void
+	{
+
+	}
+
+	/**
+	 * @throws ConcreteException
+	 */
+	public function correctWithLogicException(): void
 	{
 
 	}

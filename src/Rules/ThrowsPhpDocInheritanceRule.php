@@ -2,6 +2,7 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
+use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassMethod;
 use PHPStan\Analyser\Scope;
@@ -9,13 +10,24 @@ use PHPStan\Broker\Broker;
 use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Rules\Rule;
 use PHPStan\Type\FileTypeMapper;
+use PHPStan\Type\ObjectType;
+use PHPStan\Type\Type;
+use PHPStan\Type\TypeCombinator;
+use PHPStan\Type\TypeUtils;
 use PHPStan\Type\VerbosityLevel;
+use function array_filter;
 use function class_implements;
+use function count;
 use function get_parent_class;
 use function sprintf;
 
 class ThrowsPhpDocInheritanceRule implements Rule
 {
+
+	/**
+	 * @var CheckedExceptionService
+	 */
+	private $checkedExceptionService;
 
 	/**
 	 * @var FileTypeMapper
@@ -28,10 +40,12 @@ class ThrowsPhpDocInheritanceRule implements Rule
 	private $broker;
 
 	public function __construct(
+		CheckedExceptionService $checkedExceptionService,
 		FileTypeMapper $fileTypeMapper,
 		Broker $broker
 	)
 	{
+		$this->checkedExceptionService = $checkedExceptionService;
 		$this->fileTypeMapper = $fileTypeMapper;
 		$this->broker = $broker;
 	}
@@ -98,6 +112,11 @@ class ThrowsPhpDocInheritanceRule implements Rule
 				continue;
 			}
 
+			$parentThrowType = $this->filterUnchecked($parentThrowType);
+			if ($parentThrowType === null) {
+				continue;
+			}
+
 			if ($parentThrowType->isSuperTypeOf($throwType)->yes()) {
 				continue;
 			}
@@ -110,6 +129,25 @@ class ThrowsPhpDocInheritanceRule implements Rule
 		}
 
 		return $messages;
+	}
+
+	private function filterUnchecked(Type $type): ?Type
+	{
+		$exceptionClasses = TypeUtils::getDirectClassNames($type);
+		$exceptionClasses = array_filter($exceptionClasses, function (string $className): bool {
+			return $this->checkedExceptionService->isExceptionClassWhitelisted($className);
+		});
+
+		if (count($exceptionClasses) === 0) {
+			return null;
+		}
+
+		$types = [];
+		foreach ($exceptionClasses as $exceptionClass) {
+			$types[] = new ObjectType($exceptionClass);
+		}
+
+		return TypeCombinator::union(...$types);
 	}
 
 }

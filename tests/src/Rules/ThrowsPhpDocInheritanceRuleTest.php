@@ -2,9 +2,12 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
+use LogicException;
+use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
 use PHPStan\Rules\Rule;
 use PHPStan\Type\FileTypeMapper;
+use RuntimeException;
 
 class ThrowsPhpDocInheritanceRuleTest extends RuleTestCase
 {
@@ -15,6 +18,14 @@ class ThrowsPhpDocInheritanceRuleTest extends RuleTestCase
 	protected function getRules(): array
 	{
 		$throwsRule = new ThrowsPhpDocInheritanceRule(
+			new CheckedExceptionService(
+				[
+					RuntimeException::class,
+				],
+				[
+					LogicException::class,
+				]
+			),
 			self::getContainer()->getByType(FileTypeMapper::class),
 			$this->createBroker()
 		);

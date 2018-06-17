@@ -2,6 +2,7 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
+use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\Node\ClassMethodEnd;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
@@ -38,16 +39,6 @@ class ThrowsPhpDocRule
 {
 
 	/**
-	 * @var string[]
-	 */
-	private $exceptionWhiteList;
-
-	/**
-	 * @var string[]
-	 */
-	private $exceptionBlackList;
-
-	/**
 	 * @var mixed[]
 	 */
 	private static $catches = [];
@@ -58,22 +49,21 @@ class ThrowsPhpDocRule
 	private static $usedThrows = [];
 
 	/**
+	 * @var CheckedExceptionService
+	 */
+	private $checkedExceptionService;
+
+	/**
 	 * @var Broker
 	 */
 	private $broker;
 
-	/**
-	 * @param string[] $exceptionWhiteList
-	 * @param string[] $exceptionBlackList
-	 */
 	public function __construct(
-		array $exceptionWhiteList,
-		array $exceptionBlackList,
+		CheckedExceptionService $checkedExceptionService,
 		Broker $broker
 	)
 	{
-		$this->exceptionWhiteList = $exceptionWhiteList;
-		$this->exceptionBlackList = $exceptionBlackList;
+		$this->checkedExceptionService = $checkedExceptionService;
 		$this->broker = $broker;
 	}
 
@@ -344,7 +334,7 @@ class ThrowsPhpDocRule
 		}
 
 		$exceptionClassName = $exceptionType->getClassName();
-		if (!$this->isExceptionClassWhitelisted($exceptionClassName)) {
+		if (!$this->checkedExceptionService->isExceptionClassWhitelisted($exceptionClassName)) {
 			return [];
 		}
 
@@ -592,7 +582,7 @@ class ThrowsPhpDocRule
 	private function filterClassesByWhitelist(array $classes): array
 	{
 		return array_filter($classes, function (string $class): bool {
-			return $this->isExceptionClassWhitelisted($class);
+			return $this->checkedExceptionService->isExceptionClassWhitelisted($class);
 		});
 	}
 
@@ -624,27 +614,6 @@ class ThrowsPhpDocRule
 		}
 
 		return $calledOnType->getMethod($methodName, $scope);
-	}
-
-	private function isExceptionClassWhitelisted(string $exceptionClassName): bool
-	{
-		foreach ($this->exceptionWhiteList as $whitelistedException) {
-			if (is_a($exceptionClassName, $whitelistedException, true)) {
-				foreach ($this->exceptionBlackList as $blacklistedException) {
-					if (!is_a($exceptionClassName, $blacklistedException, true)) {
-						continue;
-					}
-
-					if (is_a($blacklistedException, $whitelistedException, true)) {
-						continue 2;
-					}
-				}
-
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	private function isCaught(string $className, string $functionName, int $line, string $exceptionClassName): bool

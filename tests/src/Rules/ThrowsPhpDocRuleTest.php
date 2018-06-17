@@ -2,6 +2,7 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
+use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\Rules\Data\BaseBlacklistedRuntimeException;
 use Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException;
 use Pepakriz\PHPStanExceptionRules\Rules\Data\SomeBlacklistedRuntimeException;
@@ -17,13 +18,19 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	 */
 	protected function getRules(): array
 	{
-		$throwsRule = new ThrowsPhpDocRule([
-			RuntimeException::class,
-			CheckedException::class,
-		], [
-			BaseBlacklistedRuntimeException::class,
-			SomeBlacklistedRuntimeException::class,
-		], $this->createBroker());
+		$throwsRule = new ThrowsPhpDocRule(
+			new CheckedExceptionService(
+				[
+					RuntimeException::class,
+					CheckedException::class,
+				],
+				[
+					BaseBlacklistedRuntimeException::class,
+					SomeBlacklistedRuntimeException::class,
+				]
+			),
+			$this->createBroker()
+		);
 
 		return [
 			$throwsRule->enableThrowsPhpDocChecker(),

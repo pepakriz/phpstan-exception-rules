@@ -6,7 +6,10 @@ parameters:
 
 services:
 	throwsPhpDocRule:
-		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule(%exceptionRules.checkedExceptions%, %exceptionRules.ignoredExceptions%)
+		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule
+
+	-
+		class: Pepakriz\PHPStanExceptionRules\CheckedExceptionService(%exceptionRules.checkedExceptions%, %exceptionRules.ignoredExceptions%)
 
 	-
 		class: PHPStan\Rules\Rule
