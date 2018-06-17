@@ -13,6 +13,7 @@ This extension provides following rules and features:
 	* Exception propagation over function calls
 * Ignore caught checked exceptions ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/try-catch.php))
 * Unnecessary `@throws` annotation detection ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-throws.php))
+* `@throws` annotation variance validation ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-inheritance.php))
 
 Features and rules provided by PHPStan core (we rely on):
 
