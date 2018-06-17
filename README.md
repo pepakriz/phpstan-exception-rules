@@ -40,3 +40,53 @@ parameters:
 		ignoredExceptions:
 			- LogicException
 ```
+
+## Motivation
+
+There are 2 types of exceptions:
+
+1) Safety-checks that something should never happen (you should never call some method in some case etc.). We call these [**LogicException**](http://php.net/manual/en/class.logicexception.php) and if they are thrown, programmer did something wrong. For that reason, it is important that this exception is never caught and kills the application. Also, it is important to write good descriptive message of what went wrong and how to fix it - that is why every LogicException must have a message. Therefore, inheriting LogicException does not make much sense. Also, LogicException should never be `@throws` annotation (see below).
+2) Special cases in business logic which should be handled by application and error cases that just may happen no matter how hard we try (e.g. HTTP request may fail). These exceptions we called [**RuntimeException**](http://php.net/manual/en/class.runtimeexception.php) or maybe better "checked exception". All these exceptions should be checked. Therefore it must be either caught or written in `@throws` annotation. Also if you call an method with that annotation and do not catch the exception, you must propagate it in your `@throws` annotation. This, of course, may spread quickly. When this exception is handled (caught), it is important for programmer to immediately know what case is handled and therefore all used RuntimeExceptions are inherited from some parent and have very descriptive class name (so that you can see it in catch construct) - for example `CannotCloseAccountWithPositiveBalanceException`. The message is not that important since you should always catch these exceptions somewhere, but in our case we often use that message in API output and display it to end-user, so please use something informative for users in that cases (you can pass custom arguments to constructor (e.g. entities) to provide better message). Sometimes you can meet a place where you know that some exception will never be thrown - in this case you can catch it and wrap to LogicException (because when it is thrown, it is a programmer's fault).
+
+It is always a good idea to wrap previous exception so that we do not lose information of what really happened in some logs.
+
+```php
+// no throws annotation
+public function decide(int $arg): void
+{
+    switch ($arg) {
+        case self::ONE:
+             $this->decided()
+        case self::TWO:
+             $this->decidedDifferently()
+        default:
+             throw new LogicException("Decision cannot be made for argument $arg because of ...");
+    }
+}
+
+/**
+ * @return mixed[]
+ *
+ * @throws PrintJobFailedException
+ */
+private function sendRequest(Request $request): array
+{
+    try {
+        $response = $this->httpClient->send($request);
+        return Json::decode((string) $response->getBody(), Json::FORCE_ARRAY);
+
+    } catch (GuzzleException | JsonException $e) {
+        throw new PrintJobFailedException($e);
+    }
+}
+
+class PrintJobFailedException extends RuntimeException
+{
+
+    public function __construct(Throwable $previous)
+    {
+        parent::__construct('Printing failed, remote printing service is down. Please try again later', $previous);
+    }
+
+}
+```
