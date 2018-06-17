@@ -4,7 +4,6 @@ namespace Pepakriz\PHPStanExceptionRules\Rules;
 
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\Node\ClassMethodEnd;
-use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
@@ -69,452 +68,236 @@ class ThrowsPhpDocRule
 
 	public function enableTryCatchCrawler(): Rule
 	{
-		return new class ($this) implements Rule {
-
-			/**
-			 * @var ThrowsPhpDocRule
-			 */
-			private $throwsRule;
-
-			public function __construct(ThrowsPhpDocRule $throwsRule)
-			{
-				$this->throwsRule = $throwsRule;
+		return BaseRule::createRule(TryCatch::class, function (TryCatch $node, Scope $scope): array {
+			$classReflection = $scope->getClassReflection();
+			$methodReflection = $scope->getFunction();
+			if ($classReflection === null || $methodReflection === null) {
+				return [];
 			}
 
-			public function getNodeType(): string
-			{
-				return TryCatch::class;
+			$className = $classReflection->getName();
+			$functionName = $methodReflection->getName();
+
+			foreach ($node->catches as $catch) {
+				if (!isset(self::$catches[$className][$functionName][$node->getLine()][$catch->getLine()])) {
+					self::$catches[$className][$functionName][$node->getLine()][$catch->getLine()] = [];
+				}
+
+				foreach ($catch->types as $catchType) {
+					self::$catches[$className][$functionName][$node->getLine()][$catch->getLine()][] = (string) $catchType;
+				}
 			}
 
-			/**
-			 * @param TryCatch $node
-			 * @return string[]
-			 */
-			public function processNode(Node $node, Scope $scope): array
-			{
-				return $this->throwsRule->processTryCatchCrawler($node, $scope);
-			}
-
-		};
+			return [];
+		});
 	}
 
 	public function enableThrowsPhpDocChecker(): Rule
 	{
-		return new class ($this) implements Rule {
-
-			/**
-			 * @var ThrowsPhpDocRule
-			 */
-			private $throwsRule;
-
-			public function __construct(ThrowsPhpDocRule $throwsRule)
-			{
-				$this->throwsRule = $throwsRule;
+		return BaseRule::createRule(Throw_::class, function (Throw_ $node, Scope $scope): array {
+			$classReflection = $scope->getClassReflection();
+			$methodReflection = $scope->getFunction();
+			if ($classReflection === null || $methodReflection === null) {
+				return [];
 			}
 
-			public function getNodeType(): string
-			{
-				return Throw_::class;
+			$exceptionType = $scope->getType($node->expr);
+			if (!$exceptionType instanceof TypeWithClassName) {
+				return [];
 			}
 
-			/**
-			 * @param Throw_ $node
-			 * @return string[]
-			 */
-			public function processNode(Node $node, Scope $scope): array
-			{
-				return $this->throwsRule->processThrowsPhpDocChecker($node, $scope);
+			$exceptionClassName = $exceptionType->getClassName();
+			if (!$this->checkedExceptionService->isExceptionClassWhitelisted($exceptionClassName)) {
+				return [];
 			}
 
-		};
+			if (!$methodReflection instanceof ThrowableReflection) {
+				return [];
+			}
+
+			$className = $classReflection->getName();
+			$functionName = $methodReflection->getName();
+			if ($this->isCaught($className, $functionName, $node->getLine(), $exceptionClassName)) {
+				return [];
+			}
+
+			$throwType = $methodReflection->getThrowType();
+			$targetExceptionClasses = TypeUtils::getDirectClassNames($exceptionType);
+			$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
+
+			if ($this->isExceptionClassAnnotated($className, $functionName, $throwType, $targetExceptionClasses)) {
+				return [];
+			}
+
+			return [
+				sprintf('Missing @throws %s annotation', $exceptionClassName),
+			];
+		});
 	}
 
 	public function enableCallPropagation(): Rule
 	{
-		return new class ($this) implements Rule {
-
-			/**
-			 * @var ThrowsPhpDocRule
-			 */
-			private $throwsRule;
-
-			public function __construct(ThrowsPhpDocRule $throwsRule)
-			{
-				$this->throwsRule = $throwsRule;
+		return BaseRule::createRule(MethodCall::class, function (MethodCall $node, Scope $scope): array {
+			$classReflection = $scope->getClassReflection();
+			$methodReflection = $scope->getFunction();
+			if ($classReflection === null || $methodReflection === null) {
+				return [];
 			}
 
-			public function getNodeType(): string
-			{
-				return MethodCall::class;
+			if (!$methodReflection instanceof ThrowableReflection) {
+				return [];
 			}
 
-			/**
-			 * @param MethodCall $node
-			 * @return string[]
-			 */
-			public function processNode(Node $node, Scope $scope): array
-			{
-				return $this->throwsRule->processCallPropagation($node, $scope);
+			$targetType = $scope->getType($node->var);
+			if (!$targetType instanceof TypeWithClassName) {
+				return [];
 			}
 
-		};
+			$methodName = $node->name;
+			if (!$methodName instanceof Identifier) {
+				return [];
+			}
+
+			$targetClassReflection = $this->broker->getClass($targetType->getClassName());
+			if (!$targetClassReflection->hasMethod($methodName->toString())) {
+				return [];
+			}
+
+			$targetMethodReflection = $targetClassReflection->getMethod($methodName->toString(), $scope);
+
+			if (!$targetMethodReflection instanceof ThrowableReflection) {
+				return [];
+			}
+
+			return $this->processThrowsTypes(
+				$classReflection->getName(),
+				$methodReflection->getName(),
+				$methodReflection->getThrowType(),
+				$targetMethodReflection->getThrowType(),
+				$node->getLine()
+			);
+		});
 	}
 
 	public function enableStaticCallPropagation(): Rule
 	{
-		return new class ($this) implements Rule {
-
-			/**
-			 * @var ThrowsPhpDocRule
-			 */
-			private $throwsRule;
-
-			public function __construct(ThrowsPhpDocRule $throwsRule)
-			{
-				$this->throwsRule = $throwsRule;
+		return BaseRule::createRule(StaticCall::class, function (StaticCall $node, Scope $scope): array {
+			$classReflection = $scope->getClassReflection();
+			$methodReflection = $scope->getFunction();
+			if ($classReflection === null || $methodReflection === null) {
+				return [];
 			}
 
-			public function getNodeType(): string
-			{
-				return StaticCall::class;
+			if (!$methodReflection instanceof ThrowableReflection) {
+				return [];
 			}
 
-			/**
-			 * @param StaticCall $node
-			 * @return string[]
-			 */
-			public function processNode(Node $node, Scope $scope): array
-			{
-				return $this->throwsRule->processStaticCallPropagation($node, $scope);
+			$methodName = $node->name;
+			if ($methodName instanceof Identifier) {
+				$methodName = $methodName->toString();
 			}
 
-		};
+			if (!is_string($methodName)) {
+				return [];
+			}
+
+			$targetMethodReflection = $this->getMethod($node->class, $methodName, $scope);
+			if (!$targetMethodReflection instanceof ThrowableReflection) {
+				return [];
+			}
+
+			return $this->processThrowsTypes(
+				$classReflection->getName(),
+				$methodReflection->getName(),
+				$methodReflection->getThrowType(),
+				$targetMethodReflection->getThrowType(),
+				$node->getLine()
+			);
+		});
 	}
 
 	public function enableCallConstructorPropagation(): Rule
 	{
-		return new class ($this) implements Rule {
-
-			/**
-			 * @var ThrowsPhpDocRule
-			 */
-			private $throwsRule;
-
-			public function __construct(ThrowsPhpDocRule $throwsRule)
-			{
-				$this->throwsRule = $throwsRule;
+		return BaseRule::createRule(New_::class, function (New_ $node, Scope $scope): array {
+			$classReflection = $scope->getClassReflection();
+			$methodReflection = $scope->getFunction();
+			if ($classReflection === null || $methodReflection === null) {
+				return [];
 			}
 
-			public function getNodeType(): string
-			{
-				return New_::class;
+			if (!$methodReflection instanceof ThrowableReflection) {
+				return [];
 			}
 
-			/**
-			 * @param New_ $node
-			 * @return string[]
-			 */
-			public function processNode(Node $node, Scope $scope): array
-			{
-				return $this->throwsRule->processCallConstructorPropagation($node, $scope);
+			$targetMethodReflection = $this->getMethod($node->class, '__construct', $scope);
+			if (!$targetMethodReflection instanceof ThrowableReflection) {
+				return [];
 			}
 
-		};
+			return $this->processThrowsTypes(
+				$classReflection->getName(),
+				$methodReflection->getName(),
+				$methodReflection->getThrowType(),
+				$targetMethodReflection->getThrowType(),
+				$node->getLine()
+			);
+		});
 	}
 
 	public function enableMethodDeclaration(): Rule
 	{
-		return new class ($this) implements Rule {
-
-			/**
-			 * @var ThrowsPhpDocRule
-			 */
-			private $throwsRule;
-
-			public function __construct(ThrowsPhpDocRule $throwsRule)
-			{
-				$this->throwsRule = $throwsRule;
+		return BaseRule::createRule(ClassMethod::class, function (ClassMethod $node, Scope $scope): array {
+			if ($node->stmts === null) {
+				$node->stmts = [];
 			}
 
-			public function getNodeType(): string
-			{
-				return ClassMethod::class;
-			}
+			$node->stmts[] = new ClassMethodEnd($node);
 
-			/**
-			 * @param ClassMethod $node
-			 * @return string[]
-			 */
-			public function processNode(Node $node, Scope $scope): array
-			{
-				if ($node->stmts === null) {
-					$node->stmts = [];
-				}
-
-				$node->stmts[] = new ClassMethodEnd($node);
-
-				return [];
-			}
-
-		};
+			return [];
+		});
 	}
 
 	public function enableMethodEnd(): Rule
 	{
-		return new class ($this) implements Rule {
-
-			/**
-			 * @var ThrowsPhpDocRule
-			 */
-			private $throwsRule;
-
-			public function __construct(ThrowsPhpDocRule $throwsRule)
-			{
-				$this->throwsRule = $throwsRule;
+		return BaseRule::createRule(ClassMethodEnd::class, function (ClassMethodEnd $node, Scope $scope): array {
+			$classReflection = $scope->getClassReflection();
+			$methodReflection = $scope->getFunction();
+			if ($classReflection === null || $methodReflection === null) {
+				return [];
 			}
 
-			public function getNodeType(): string
-			{
-				return ClassMethodEnd::class;
+			if ($classReflection->isInterface()) {
+				return [];
 			}
 
-			/**
-			 * @param ClassMethodEnd $node
-			 * @return string[]
-			 */
-			public function processNode(Node $node, Scope $scope): array
-			{
-				return $this->throwsRule->processUnusedThrows($node, $scope);
+			$nativeMethodReflection = new ReflectionMethod($classReflection->getName(), $methodReflection->getName());
+			if ($nativeMethodReflection->isAbstract()) {
+				return [];
 			}
 
-		};
-	}
-
-	/**
-	 * @return string[]
-	 */
-	public function processTryCatchCrawler(TryCatch $node, Scope $scope): array
-	{
-		$classReflection = $scope->getClassReflection();
-		$methodReflection = $scope->getFunction();
-		if ($classReflection === null || $methodReflection === null) {
-			return [];
-		}
-
-		$className = $classReflection->getName();
-		$functionName = $methodReflection->getName();
-
-		foreach ($node->catches as $catch) {
-			if (!isset(self::$catches[$className][$functionName][$node->getLine()][$catch->getLine()])) {
-				self::$catches[$className][$functionName][$node->getLine()][$catch->getLine()] = [];
+			if (!$methodReflection instanceof ThrowableReflection) {
+				return [];
 			}
 
-			foreach ($catch->types as $catchType) {
-				self::$catches[$className][$functionName][$node->getLine()][$catch->getLine()][] = (string) $catchType;
+			$throwType = $methodReflection->getThrowType();
+			if ($throwType === null) {
+				return [];
 			}
-		}
 
-		return [];
-	}
+			$className = $classReflection->getName();
+			$functionName = $methodReflection->getName();
 
-	/**
-	 * @return string[]
-	 */
-	public function processThrowsPhpDocChecker(Throw_ $node, Scope $scope): array
-	{
-		$classReflection = $scope->getClassReflection();
-		$methodReflection = $scope->getFunction();
-		if ($classReflection === null || $methodReflection === null) {
-			return [];
-		}
+			$declaredThrows = TypeUtils::getDirectClassNames($throwType);
+			$userThrows = array_unique(self::$usedThrows[$className][$functionName] ?? []);
 
-		$exceptionType = $scope->getType($node->expr);
-		if (!$exceptionType instanceof TypeWithClassName) {
-			return [];
-		}
+			$messages = [];
+			$diff = array_diff($declaredThrows, $userThrows);
+			foreach ($diff as $unusedClass) {
+				$messages[] = sprintf('Unused @throws %s annotation', $unusedClass);
+			}
 
-		$exceptionClassName = $exceptionType->getClassName();
-		if (!$this->checkedExceptionService->isExceptionClassWhitelisted($exceptionClassName)) {
-			return [];
-		}
-
-		if (!$methodReflection instanceof ThrowableReflection) {
-			return [];
-		}
-
-		$className = $classReflection->getName();
-		$functionName = $methodReflection->getName();
-		if ($this->isCaught($className, $functionName, $node->getLine(), $exceptionClassName)) {
-			return [];
-		}
-
-		$throwType = $methodReflection->getThrowType();
-		$targetExceptionClasses = TypeUtils::getDirectClassNames($exceptionType);
-		$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
-
-		if ($this->isExceptionClassAnnotated($className, $functionName, $throwType, $targetExceptionClasses)) {
-			return [];
-		}
-
-		return [
-			sprintf('Missing @throws %s annotation', $exceptionClassName),
-		];
-	}
-
-	/**
-	 * @return string[]
-	 */
-	public function processCallPropagation(MethodCall $node, Scope $scope): array
-	{
-		$classReflection = $scope->getClassReflection();
-		$methodReflection = $scope->getFunction();
-		if ($classReflection === null || $methodReflection === null) {
-			return [];
-		}
-
-		if (!$methodReflection instanceof ThrowableReflection) {
-			return [];
-		}
-
-		$targetType = $scope->getType($node->var);
-		if (!$targetType instanceof TypeWithClassName) {
-			return [];
-		}
-
-		$methodName = $node->name;
-		if (!$methodName instanceof Identifier) {
-			return [];
-		}
-
-		$targetClassReflection = $this->broker->getClass($targetType->getClassName());
-		if (!$targetClassReflection->hasMethod($methodName->toString())) {
-			return [];
-		}
-
-		$targetMethodReflection = $targetClassReflection->getMethod($methodName->toString(), $scope);
-
-		if (!$targetMethodReflection instanceof ThrowableReflection) {
-			return [];
-		}
-
-		return $this->processThrowsTypes(
-			$classReflection->getName(),
-			$methodReflection->getName(),
-			$methodReflection->getThrowType(),
-			$targetMethodReflection->getThrowType(),
-			$node->getLine()
-		);
-	}
-
-	/**
-	 * @return string[]
-	 */
-	public function processStaticCallPropagation(StaticCall $node, Scope $scope): array
-	{
-		$classReflection = $scope->getClassReflection();
-		$methodReflection = $scope->getFunction();
-		if ($classReflection === null || $methodReflection === null) {
-			return [];
-		}
-
-		if (!$methodReflection instanceof ThrowableReflection) {
-			return [];
-		}
-
-		$methodName = $node->name;
-		if ($methodName instanceof Identifier) {
-			$methodName = $methodName->toString();
-		}
-
-		if (!is_string($methodName)) {
-			return [];
-		}
-
-		$targetMethodReflection = $this->getMethod($node->class, $methodName, $scope);
-		if (!$targetMethodReflection instanceof ThrowableReflection) {
-			return [];
-		}
-
-		return $this->processThrowsTypes(
-			$classReflection->getName(),
-			$methodReflection->getName(),
-			$methodReflection->getThrowType(),
-			$targetMethodReflection->getThrowType(),
-			$node->getLine()
-		);
-	}
-
-	/**
-	 * @return string[]
-	 */
-	public function processCallConstructorPropagation(New_ $node, Scope $scope): array
-	{
-		$classReflection = $scope->getClassReflection();
-		$methodReflection = $scope->getFunction();
-		if ($classReflection === null || $methodReflection === null) {
-			return [];
-		}
-
-		if (!$methodReflection instanceof ThrowableReflection) {
-			return [];
-		}
-
-		$targetMethodReflection = $this->getMethod($node->class, '__construct', $scope);
-		if (!$targetMethodReflection instanceof ThrowableReflection) {
-			return [];
-		}
-
-		return $this->processThrowsTypes(
-			$classReflection->getName(),
-			$methodReflection->getName(),
-			$methodReflection->getThrowType(),
-			$targetMethodReflection->getThrowType(),
-			$node->getLine()
-		);
-	}
-
-	/**
-	 * @return string[]
-	 */
-	public function processUnusedThrows(ClassMethodEnd $node, Scope $scope): array
-	{
-		$classReflection = $scope->getClassReflection();
-		$methodReflection = $scope->getFunction();
-		if ($classReflection === null || $methodReflection === null) {
-			return [];
-		}
-
-		if ($classReflection->isInterface()) {
-			return [];
-		}
-
-		$nativeMethodReflection = new ReflectionMethod($classReflection->getName(), $methodReflection->getName());
-		if ($nativeMethodReflection->isAbstract()) {
-			return [];
-		}
-
-		if (!$methodReflection instanceof ThrowableReflection) {
-			return [];
-		}
-
-		$throwType = $methodReflection->getThrowType();
-		if ($throwType === null) {
-			return [];
-		}
-
-		$className = $classReflection->getName();
-		$functionName = $methodReflection->getName();
-
-		$declaredThrows = TypeUtils::getDirectClassNames($throwType);
-		$userThrows = array_unique(self::$usedThrows[$className][$functionName] ?? []);
-
-		$messages = [];
-		$diff = array_diff($declaredThrows, $userThrows);
-		foreach ($diff as $unusedClass) {
-			$messages[] = sprintf('Unused @throws %s annotation', $unusedClass);
-		}
-
-		return $messages;
+			return $messages;
+		});
 	}
 
 	/**
