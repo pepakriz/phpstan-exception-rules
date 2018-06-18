@@ -4,6 +4,7 @@ namespace Pepakriz\PHPStanExceptionRules\Rules;
 
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\Node\ClassMethodEnd;
+use Pepakriz\PHPStanExceptionRules\Node\TryCatchTryEnd;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
@@ -27,18 +28,18 @@ use ReflectionMethod;
 use function array_diff;
 use function array_filter;
 use function array_map;
-use function array_merge;
 use function array_unique;
 use function count;
 use function is_a;
 use function is_string;
+use function spl_object_hash;
 use function sprintf;
 
 class ThrowsPhpDocRule
 {
 
 	/**
-	 * @var mixed[]
+	 * @var string[][]
 	 */
 	private static $catches = [];
 
@@ -75,18 +76,28 @@ class ThrowsPhpDocRule
 				return [];
 			}
 
-			$className = $classReflection->getName();
-			$functionName = $methodReflection->getName();
-
+			$nodeId = spl_object_hash($node);
 			foreach ($node->catches as $catch) {
-				if (!isset(self::$catches[$className][$functionName][$node->getLine()][$catch->getLine()])) {
-					self::$catches[$className][$functionName][$node->getLine()][$catch->getLine()] = [];
+				if (!isset(self::$catches[$nodeId])) {
+					self::$catches[$nodeId] = [];
 				}
 
 				foreach ($catch->types as $catchType) {
-					self::$catches[$className][$functionName][$node->getLine()][$catch->getLine()][] = (string) $catchType;
+					self::$catches[$nodeId][] = (string) $catchType;
 				}
 			}
+
+			$node->stmts[] = new TryCatchTryEnd($node);
+
+			return [];
+		});
+	}
+
+	public function enableTryEndCatchCrawler(): Rule
+	{
+		return BaseRule::createRule(TryCatchTryEnd::class, function (TryCatchTryEnd $node): array {
+			$nodeId = spl_object_hash($node->getTryCatchNode());
+			unset(self::$catches[$nodeId]);
 
 			return [];
 		});
@@ -117,7 +128,7 @@ class ThrowsPhpDocRule
 
 			$className = $classReflection->getName();
 			$functionName = $methodReflection->getName();
-			if ($this->isCaught($className, $functionName, $node->getLine(), $exceptionClassName)) {
+			if ($this->isCaught($exceptionClassName)) {
 				return [];
 			}
 
@@ -173,8 +184,7 @@ class ThrowsPhpDocRule
 				$classReflection->getName(),
 				$methodReflection->getName(),
 				$methodReflection->getThrowType(),
-				$targetMethodReflection->getThrowType(),
-				$node->getLine()
+				$targetMethodReflection->getThrowType()
 			);
 		});
 	}
@@ -210,8 +220,7 @@ class ThrowsPhpDocRule
 				$classReflection->getName(),
 				$methodReflection->getName(),
 				$methodReflection->getThrowType(),
-				$targetMethodReflection->getThrowType(),
-				$node->getLine()
+				$targetMethodReflection->getThrowType()
 			);
 		});
 	}
@@ -238,15 +247,14 @@ class ThrowsPhpDocRule
 				$classReflection->getName(),
 				$methodReflection->getName(),
 				$methodReflection->getThrowType(),
-				$targetMethodReflection->getThrowType(),
-				$node->getLine()
+				$targetMethodReflection->getThrowType()
 			);
 		});
 	}
 
 	public function enableMethodDeclaration(): Rule
 	{
-		return BaseRule::createRule(ClassMethod::class, function (ClassMethod $node, Scope $scope): array {
+		return BaseRule::createRule(ClassMethod::class, function (ClassMethod $node): array {
 			if ($node->stmts === null) {
 				$node->stmts = [];
 			}
@@ -303,15 +311,15 @@ class ThrowsPhpDocRule
 	/**
 	 * @return string[]
 	 */
-	private function processThrowsTypes(string $className, string $functionName, ?Type $throwType, ?Type $targetThrowType, int $line): array
+	private function processThrowsTypes(string $className, string $functionName, ?Type $throwType, ?Type $targetThrowType): array
 	{
 		if ($targetThrowType === null) {
 			return [];
 		}
 
 		$targetExceptionClasses = TypeUtils::getDirectClassNames($targetThrowType);
-		$targetExceptionClasses = array_filter($targetExceptionClasses, function (string $targetExceptionClass) use ($className, $functionName, $line): bool {
-			return $this->isCaught($className, $functionName, $line, $targetExceptionClass) === false;
+		$targetExceptionClasses = array_filter($targetExceptionClasses, function (string $targetExceptionClass): bool {
+			return $this->isCaught($targetExceptionClass) === false;
 		});
 
 		$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
@@ -399,44 +407,17 @@ class ThrowsPhpDocRule
 		return $calledOnType->getMethod($methodName, $scope);
 	}
 
-	private function isCaught(string $className, string $functionName, int $line, string $exceptionClassName): bool
+	private function isCaught(string $exceptionClassName): bool
 	{
-		$catches = $this->getCatches($className, $functionName, $line);
-
-		foreach ($catches as $catch) {
-			if (is_a($exceptionClassName, $catch, true)) {
-				return true;
+		foreach (self::$catches as $catches) {
+			foreach ($catches as $catch) {
+				if (is_a($exceptionClassName, $catch, true)) {
+					return true;
+				}
 			}
 		}
 
 		return false;
-	}
-
-	/**
-	 * @return string[]
-	 */
-	private function getCatches(string $className, string $functionName, int $line): array
-	{
-		if (!isset(self::$catches[$className][$functionName])) {
-			return [];
-		}
-
-		$result = [];
-		foreach (self::$catches[$className][$functionName] as $fromLine => $lines) {
-			if ($fromLine > $line) {
-				continue;
-			}
-
-			foreach ($lines as $toLine => $classNames) {
-				if ($toLine < $line) {
-					continue;
-				}
-
-				$result = array_merge($result, $classNames);
-			}
-		}
-
-		return $result;
 	}
 
 }

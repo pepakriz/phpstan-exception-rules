@@ -1,0 +1,30 @@
+<?php declare(strict_types = 1);
+
+namespace Pepakriz\PHPStanExceptionRules\Node;
+
+use PhpParser\Node\Stmt\Nop;
+use PhpParser\Node\Stmt\TryCatch;
+
+class TryCatchTryEnd extends Nop
+{
+
+	/**
+	 * @var TryCatch
+	 */
+	private $node;
+
+	public function __construct(TryCatch $node)
+	{
+		parent::__construct([
+			'startLine' => $node->getLine(),
+		]);
+
+		$this->node = $node;
+	}
+
+	public function getTryCatchNode(): TryCatch
+	{
+		return $this->node;
+	}
+
+}
