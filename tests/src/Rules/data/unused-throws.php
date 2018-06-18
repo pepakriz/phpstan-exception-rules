@@ -2,6 +2,7 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules\UnusedThrows;
 
+use LogicException;
 use RuntimeException;
 
 class FooException extends RuntimeException {}
@@ -41,6 +42,14 @@ class UnusedThrows
 	public function unusedBarAnnotation(): void // error: Unused @throws Pepakriz\PHPStanExceptionRules\Rules\UnusedThrows\BarException annotation
 	{
 		$this->throwFooExceptions();
+	}
+
+	/**
+	 * @throws LogicException
+	 */
+	public function unusedLogic(): void // error: Unused @throws LogicException annotation
+	{
+		throw new LogicException();
 	}
 
 }
