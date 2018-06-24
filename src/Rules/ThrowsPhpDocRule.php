@@ -39,7 +39,7 @@ class ThrowsPhpDocRule
 {
 
 	/**
-	 * @var string[][]
+	 * @var TryCatch[]
 	 */
 	private static $catches = [];
 
@@ -77,15 +77,7 @@ class ThrowsPhpDocRule
 			}
 
 			$nodeId = spl_object_hash($node);
-			foreach ($node->catches as $catch) {
-				if (!isset(self::$catches[$nodeId])) {
-					self::$catches[$nodeId] = [];
-				}
-
-				foreach ($catch->types as $catchType) {
-					self::$catches[$nodeId][] = (string) $catchType;
-				}
-			}
+			self::$catches[$nodeId] = $node;
 
 			$node->stmts[] = new TryCatchTryEnd($node);
 
@@ -410,9 +402,11 @@ class ThrowsPhpDocRule
 	private function isCaught(string $exceptionClassName): bool
 	{
 		foreach (self::$catches as $catches) {
-			foreach ($catches as $catch) {
-				if (is_a($exceptionClassName, $catch, true)) {
-					return true;
+			foreach ($catches->catches as $catch) {
+				foreach ($catch->types as $type) {
+					if (is_a($exceptionClassName, $type->toString(), true)) {
+						return true;
+					}
 				}
 			}
 		}
