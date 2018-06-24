@@ -12,6 +12,7 @@ use PHPStan\Analyser\NodeScopeResolver;
 use PHPStan\Analyser\TypeSpecifier;
 use PHPStan\Broker\AnonymousClassNameHelper;
 use PHPStan\Cache\Cache;
+use PHPStan\File\FileHelper;
 use PHPStan\PhpDoc\PhpDocStringResolver;
 use PHPStan\Rules\Registry;
 use PHPStan\Rules\Rule;
@@ -64,21 +65,19 @@ abstract class RuleTestCase extends TestCase
 				$this->getStaticMethodTypeSpecifyingExtensions()
 			);
 			$this->analyser = new Analyser(
-				$broker,
+				$this->createScopeFactory($broker, $typeSpecifier),
 				$this->getParser(),
 				$registry,
 				new NodeScopeResolver(
 					$broker,
 					$this->getParser(),
-					new FileTypeMapper($this->getParser(), self::getContainer()->getByType(PhpDocStringResolver::class), $this->createMock(Cache::class), new AnonymousClassNameHelper($this->getCurrentWorkingDirectory())),
+					new FileTypeMapper($this->getParser(), self::getContainer()->getByType(PhpDocStringResolver::class), $this->createMock(Cache::class), new AnonymousClassNameHelper(new FileHelper($this->getCurrentWorkingDirectory()))),
 					$fileHelper,
 					$typeSpecifier,
 					$this->shouldPolluteScopeWithLoopInitialAssignments(),
 					$this->shouldPolluteCatchScopeWithTryAssignments(),
 					[]
 				),
-				$printer,
-				$typeSpecifier,
 				$fileHelper,
 				[],
 				null,

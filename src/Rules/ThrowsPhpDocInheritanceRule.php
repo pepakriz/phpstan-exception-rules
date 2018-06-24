@@ -16,9 +16,7 @@ use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeUtils;
 use PHPStan\Type\VerbosityLevel;
 use function array_filter;
-use function class_implements;
 use function count;
-use function get_parent_class;
 use function sprintf;
 
 class ThrowsPhpDocInheritanceRule implements Rule
@@ -89,15 +87,15 @@ class ThrowsPhpDocInheritanceRule implements Rule
 		$throwType = $throwsTag->getType();
 		$methodName = $node->name->toString();
 
-		$parentClass = get_parent_class($classReflection->getName());
-		$parentClasses = class_implements($classReflection->getName());
+		$parentClasses = $classReflection->getInterfaces();
+		$parentClass = $classReflection->getParentClass();
 		if ($parentClass !== false) {
-			$parentClasses += [$parentClass];
+			$parentClasses[] = $parentClass;
 		}
 
 		$messages = [];
 		foreach ($parentClasses as $parentClass) {
-			$parentClassReflection = $this->broker->getClass($parentClass);
+			$parentClassReflection = $this->broker->getClass($parentClass->getName());
 			if (!$parentClassReflection->hasMethod($methodName)) {
 				continue;
 			}
