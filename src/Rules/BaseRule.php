@@ -6,7 +6,7 @@ use PhpParser\Node;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\Rule;
 
-abstract class BaseRule implements Rule
+class BaseRule implements Rule
 {
 
 	/**
@@ -41,10 +41,7 @@ abstract class BaseRule implements Rule
 
 	public static function createRule(string $nodeClassName, callable $callback): self
 	{
-		return new class ($nodeClassName, $callback) extends BaseRule
-		{
-
-		};
+		return new self($nodeClassName, $callback);
 	}
 
 }
