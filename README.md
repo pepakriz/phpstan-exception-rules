@@ -55,14 +55,14 @@ It is always a good idea to wrap previous exception so that we do not lose infor
 // no throws annotation
 public function decide(int $arg): void
 {
-    switch ($arg) {
-        case self::ONE:
-             $this->decided()
-        case self::TWO:
-             $this->decidedDifferently()
-        default:
-             throw new LogicException("Decision cannot be made for argument $arg because of ...");
-    }
+	switch ($arg) {
+		case self::ONE:
+			$this->decided()
+		case self::TWO:
+			$this->decidedDifferently()
+		default:
+			throw new LogicException("Decision cannot be made for argument $arg because of ...");
+	}
 }
 
 /**
@@ -72,22 +72,22 @@ public function decide(int $arg): void
  */
 private function sendRequest(Request $request): array
 {
-    try {
-        $response = $this->httpClient->send($request);
-        return Json::decode((string) $response->getBody(), Json::FORCE_ARRAY);
+	try {
+		$response = $this->httpClient->send($request);
+		return Json::decode((string) $response->getBody(), Json::FORCE_ARRAY);
 
-    } catch (GuzzleException | JsonException $e) {
-        throw new PrintJobFailedException($e);
-    }
+	} catch (GuzzleException | JsonException $e) {
+		throw new PrintJobFailedException($e);
+	}
 }
 
 class PrintJobFailedException extends RuntimeException
 {
 
-    public function __construct(Throwable $previous)
-    {
-        parent::__construct('Printing failed, remote printing service is down. Please try again later', $previous);
-    }
+	public function __construct(Throwable $previous)
+	{
+		parent::__construct('Printing failed, remote printing service is down. Please try again later', $previous);
+	}
 
 }
 ```
