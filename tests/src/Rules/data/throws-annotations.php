@@ -132,7 +132,8 @@ class ThrowsAnnotationsClass
 
 }
 
-class ThrowInConstructor{
+class ThrowInConstructor
+{
 
 	/**
 	 * @throws RuntimeException
@@ -140,6 +141,29 @@ class ThrowInConstructor{
 	public function __construct()
 	{
 		throw new RuntimeException();
+	}
+
+}
+
+class Issue6
+{
+
+	/**
+	 * @throws SomeRuntimeException
+	 */
+	public function foo()
+	{
+		$this->bar(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\NextRuntimeException annotation
+	}
+
+	/**
+	 * @throws SomeRuntimeException
+	 * @throws NextRuntimeException
+	 */
+	public function bar()
+	{
+		throw new SomeRuntimeException();
+		throw new NextRuntimeException();
 	}
 
 }
