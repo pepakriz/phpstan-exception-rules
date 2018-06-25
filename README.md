@@ -104,9 +104,9 @@ False positive when a method does not execute declared function:
  */
 public function createFnFoo(int $arg): callable
 {
-    return function () {
+	return function () {
 		throw new FooRuntimeException();
-    };
+	};
 }
 ```
 
