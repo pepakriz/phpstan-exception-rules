@@ -91,3 +91,81 @@ class PrintJobFailedException extends RuntimeException
 
 }
 ```
+
+## Known limitations
+
+1) Anonymous functions are analyzed at the same place they are declared
+
+False positive when a method does not execute declared function:
+
+```php
+/**
+ * @throws FooRuntimeException false positive
+ */
+public function createFnFoo(int $arg): callable
+{
+    return function () {
+		throw new FooRuntimeException();
+    };
+}
+```
+
+But most of use-cases just works:
+
+```php
+/**
+ * @param string[] $rows
+ * @return string[]
+ *
+ * @throws EmptyLineException
+ */
+public function normalizeRows(array $rows): array
+{
+	return array_map(function (string $row): string {
+		$row = trim($row);
+		if ($row === '') {
+			throw new EmptyLineException();
+		}
+
+		return $row;
+	}, $rows);
+}
+```
+
+2) `Catch` statement does not know about runtime subtypes
+
+Runtime exception is absorbed:
+
+```php
+// @throws phpdoc is not required
+public function methodWithoutThrowsPhpDoc(): void
+{
+	try {
+		throw new RuntimeException();
+		$this->dangerousCall();
+
+	} catch (Throwable $e) {
+		throw $e;
+	}
+}
+```
+
+As a workaround you could use custom catch statement:
+
+```php
+/**
+ * @throws RuntimeException
+ */
+public function methodWithThrowsPhpDoc(): void
+{
+	try {
+		throw new RuntimeException();
+		$this->dangerousCall();
+
+	} catch (RuntimeException $e) {
+		throw $e;
+	} catch (Throwable $e) {
+		throw $e;
+	}
+}
+```
