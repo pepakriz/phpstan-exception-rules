@@ -13,7 +13,7 @@ class SomeRuntimeException extends RuntimeException {}
 class TryCatchClass
 {
 
-	public function catchedException(): void
+	public function caughtException(): void
 	{
 		try {
 			throw new RuntimeException();
@@ -22,7 +22,7 @@ class TryCatchClass
 		}
 	}
 
-	public function uncatchedException(): void
+	public function uncaughtException(): void
 	{
 		try {
 			throw new RuntimeException(); // error: Missing @throws RuntimeException annotation
@@ -31,7 +31,7 @@ class TryCatchClass
 		}
 	}
 
-	public function catchedAndThrowedException(): void
+	public function caughtAndThrewException(): void
 	{
 		try {
 			throw new RuntimeException();
@@ -40,7 +40,7 @@ class TryCatchClass
 		}
 	}
 
-	public function catchedAndThrowedAsBlacklistedException(): void
+	public function caughtAndThrownAsBlacklistedException(): void
 	{
 		try {
 			throw new RuntimeException();
@@ -49,7 +49,7 @@ class TryCatchClass
 		}
 	}
 
-	public function catchedOneException(): void
+	public function caughtOneException(): void
 	{
 		try {
 			throw new FooRuntimeException();
@@ -61,7 +61,7 @@ class TryCatchClass
 		}
 	}
 
-	public function nestedCatchedException(): void
+	public function nestedCaughtException(): void
 	{
 		try {
 			try {
@@ -74,7 +74,7 @@ class TryCatchClass
 		}
 	}
 
-	public function catchedOneFromUnion(): void
+	public function caughtOneFromUnion(): void
 	{
 		try {
 			$this->throwUnion(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\TryCatch\SomeRuntimeException annotation
@@ -83,7 +83,7 @@ class TryCatchClass
 		}
 	}
 
-	public function catchedOneFromStaticUnion(): void
+	public function caughtOneFromStaticUnion(): void
 	{
 		try {
 			self::throwStaticUnion(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\TryCatch\SomeRuntimeException annotation
