@@ -127,8 +127,9 @@ class ThrowsPhpDocRule
 			$throwType = $methodReflection->getThrowType();
 			$targetExceptionClasses = TypeUtils::getDirectClassNames($exceptionType);
 			$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
+			$targetExceptionClasses = $this->filterOutAnnotatedExceptions($className, $functionName, $throwType, $targetExceptionClasses);
 
-			if ($this->isExceptionClassAnnotated($className, $functionName, $throwType, $targetExceptionClasses)) {
+			if (count($targetExceptionClasses) === 0) {
 				return [];
 			}
 
@@ -315,10 +316,7 @@ class ThrowsPhpDocRule
 		});
 
 		$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
-
-		if ($this->isExceptionClassAnnotated($className, $functionName, $throwType, $targetExceptionClasses)) {
-			return [];
-		}
+		$targetExceptionClasses = $this->filterOutAnnotatedExceptions($className, $functionName, $throwType, $targetExceptionClasses);
 
 		return array_map(function (string $targetExceptionClass): string {
 			return sprintf('Missing @throws %s annotation', $targetExceptionClass);
@@ -327,35 +325,36 @@ class ThrowsPhpDocRule
 
 	/**
 	 * @param string[] $targetExceptionClasses
+	 *
+	 * @return string[]
 	 */
-	private function isExceptionClassAnnotated(
+	private function filterOutAnnotatedExceptions(
 		string $className,
 		string $functionName,
 		?Type $throwType,
 		array $targetExceptionClasses
-	): bool
+	): array
 	{
 		if (count($targetExceptionClasses) === 0) {
-			return true;
+			return [];
 		}
 
 		if ($throwType === null) {
-			return false;
+			return $targetExceptionClasses;
 		}
 
 		$throwsExceptionClasses = TypeUtils::getDirectClassNames($throwType);
-		foreach ($targetExceptionClasses as $targetExceptionClass) {
+		foreach ($targetExceptionClasses as $key => $targetExceptionClass) {
 			foreach ($throwsExceptionClasses as $throwsExceptionClass) {
 				if (is_a($targetExceptionClass, $throwsExceptionClass, true)) {
+					unset($targetExceptionClasses[$key]);
 					self::$usedThrows[$className][$functionName][] = $throwsExceptionClass;
 					continue 2;
 				}
 			}
-
-			return false;
 		}
 
-		return true;
+		return $targetExceptionClasses;
 	}
 
 	/**
