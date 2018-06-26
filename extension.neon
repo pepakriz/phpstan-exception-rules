@@ -54,3 +54,7 @@ services:
 	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocInheritanceRule
 		tags: [phpstan.rules.rule]
+
+	-
+		class: Pepakriz\PHPStanExceptionRules\Rules\UnreachableCatchRule
+		tags: [phpstan.rules.rule]
