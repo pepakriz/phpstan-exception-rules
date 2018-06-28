@@ -14,7 +14,9 @@ This extension provides following rules and features:
 * Ignore caught checked exceptions ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/try-catch.php))
 * Unnecessary `@throws` annotation detection ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-throws.php))
 * `@throws` annotation variance validation ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-inheritance.php))
-* Detect unreachable catch statements ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unreachable-catches.php))
+* Unreachable catch statements
+	* exception has been caught in some previous catch statement ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unreachable-catches.php))
+	* checked exception is never thrown in the corresponding try block ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-catches.php))
 
 Features and rules provided by PHPStan core (we rely on):
 

@@ -41,6 +41,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			$throwsRule->enableCallConstructorPropagation(),
 			$throwsRule->enableMethodDeclaration(),
 			$throwsRule->enableMethodEnd(),
+			$throwsRule->enableCatchValidation(),
 		];
 	}
 
@@ -57,6 +58,11 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	public function testUnusedThrows(): void
 	{
 		$this->analyse(__DIR__ . '/data/unused-throws.php');
+	}
+
+	public function testUnusedCatches(): void
+	{
+		$this->analyse(__DIR__ . '/data/unused-catches.php');
 	}
 
 }

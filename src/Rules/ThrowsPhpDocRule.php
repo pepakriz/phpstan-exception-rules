@@ -11,6 +11,7 @@ use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
+use PhpParser\Node\Stmt\Catch_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Throw_;
@@ -27,16 +28,20 @@ use PHPStan\Type\TypeWithClassName;
 use ReflectionMethod;
 use function array_diff;
 use function array_filter;
+use function array_keys;
 use function array_map;
+use function array_pop;
+use function array_reverse;
 use function array_unique;
 use function count;
 use function is_a;
 use function is_string;
-use function spl_object_hash;
 use function sprintf;
 
 class ThrowsPhpDocRule
 {
+
+	private const CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE = '__CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE__';
 
 	/**
 	 * @var TryCatch[]
@@ -76,8 +81,7 @@ class ThrowsPhpDocRule
 				return [];
 			}
 
-			$nodeId = spl_object_hash($node);
-			self::$catches[$nodeId] = $node;
+			self::$catches[] = $node;
 
 			$node->stmts[] = new TryCatchTryEnd($node);
 
@@ -88,8 +92,7 @@ class ThrowsPhpDocRule
 	public function enableTryEndCatchCrawler(): Rule
 	{
 		return BaseRule::createRule(TryCatchTryEnd::class, function (TryCatchTryEnd $node): array {
-			$nodeId = spl_object_hash($node->getTryCatchNode());
-			unset(self::$catches[$nodeId]);
+			array_pop(self::$catches);
 
 			return [];
 		});
@@ -301,6 +304,29 @@ class ThrowsPhpDocRule
 		});
 	}
 
+	public function enableCatchValidation(): Rule
+	{
+		return BaseRule::createRule(Catch_::class, function (Catch_ $node, Scope $scope): array {
+			$messages = [];
+
+			foreach ($node->types as $type) {
+				$caughtCheckedExceptions = $type->getAttribute(self::CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE, []);
+				if (count($caughtCheckedExceptions) > 0) {
+					continue;
+				}
+
+				$exceptionClass = $type->toString();
+				if (!$this->checkedExceptionService->isExceptionClassWhitelisted($exceptionClass)) {
+					continue;
+				}
+
+				$messages[] = sprintf('%s is never thrown in the corresponding try block', $exceptionClass);
+			}
+
+			return $messages;
+		});
+	}
+
 	/**
 	 * @return string[]
 	 */
@@ -400,10 +426,16 @@ class ThrowsPhpDocRule
 
 	private function isCaught(string $exceptionClassName): bool
 	{
-		foreach (self::$catches as $catches) {
+		foreach (array_reverse(array_keys(self::$catches)) as $catchKey) {
+			$catches = self::$catches[$catchKey];
+
 			foreach ($catches->catches as $catch) {
 				foreach ($catch->types as $type) {
 					if (is_a($exceptionClassName, $type->toString(), true)) {
+						$caughtCheckedExceptions = $type->getAttribute(self::CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE, []);
+						$caughtCheckedExceptions[] = $exceptionClassName;
+						$type->setAttribute(self::CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE, $caughtCheckedExceptions);
+
 						return true;
 					}
 				}
