@@ -57,6 +57,16 @@ services:
 		tags: [phpstan.rules.rule]
 
 	-
+		class: PHPStan\Rules\Rule
+		factory: @throwsPhpDocRule::enableCatchEnd()
+		tags: [phpstan.rules.rule]
+
+	-
+		class: PHPStan\Rules\Rule
+		factory: @throwsPhpDocRule::enableReassignException()
+		tags: [phpstan.rules.rule]
+
+	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocInheritanceRule
 		tags: [phpstan.rules.rule]
 

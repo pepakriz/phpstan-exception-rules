@@ -42,6 +42,8 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			$throwsRule->enableMethodDeclaration(),
 			$throwsRule->enableMethodEnd(),
 			$throwsRule->enableCatchValidation(),
+			$throwsRule->enableCatchEnd(),
+			$throwsRule->enableReassignException(),
 		];
 	}
 
@@ -63,6 +65,11 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	public function testUnusedCatches(): void
 	{
 		$this->analyse(__DIR__ . '/data/unused-catches.php');
+	}
+
+	public function testCatchReassign(): void
+	{
+		$this->analyse(__DIR__ . '/data/catch-reassign.php');
 	}
 
 }

@@ -2,12 +2,19 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
+use PhpParser\Node\Stmt\Catch_;
+use PhpParser\Node\Stmt\Throw_;
 use PhpParser\Node\Stmt\TryCatch;
+use PHPStan\Type\Type;
+use PHPStan\Type\TypeUtils;
 use function array_keys;
 use function array_pop;
 use function array_reverse;
+use function end;
 use function is_a;
+use function is_string;
 
 class ThrowsScope
 {
@@ -15,9 +22,42 @@ class ThrowsScope
 	private const CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE = '__CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE__';
 
 	/**
+	 * @var Type|null
+	 */
+	private $throwsAnnotationBlock;
+
+	/**
+	 * @var bool[]
+	 */
+	private $usedThrowsAnnotations = [];
+
+	/**
 	 * @var TryCatch[]
 	 */
 	private $tryCatchQueue = [];
+
+	/**
+	 * @var Catch_[]
+	 */
+	private $catchStack = [];
+
+	public function enterToThrowsAnnotationBlock(?Type $type): void
+	{
+		$this->throwsAnnotationBlock = $type;
+		$this->usedThrowsAnnotations = [];
+	}
+
+	/**
+	 * @return string[]
+	 */
+	public function exitFromThrowsAnnotationBlock(): array
+	{
+		$this->throwsAnnotationBlock = null;
+		$usedThrowsAnnotations = $this->usedThrowsAnnotations;
+		$this->usedThrowsAnnotations = [];
+
+		return array_keys($usedThrowsAnnotations);
+	}
 
 	public function enterToTryCatch(TryCatch $tryCatch): void
 	{
@@ -27,6 +67,16 @@ class ThrowsScope
 	public function exitFromTry(): void
 	{
 		array_pop($this->tryCatchQueue);
+	}
+
+	public function enterToCatch(Catch_ $catch): void
+	{
+		$this->catchStack[] = $catch;
+	}
+
+	public function exitFromCatch(): void
+	{
+		array_pop($this->catchStack);
 	}
 
 	public function isExceptionCaught(string $exceptionClassName): bool
@@ -47,6 +97,16 @@ class ThrowsScope
 			}
 		}
 
+		if ($this->throwsAnnotationBlock !== null) {
+			$throwsExceptionClasses = TypeUtils::getDirectClassNames($this->throwsAnnotationBlock);
+			foreach ($throwsExceptionClasses as $throwsExceptionClass) {
+				if (is_a($exceptionClassName, $throwsExceptionClass, true)) {
+					$this->usedThrowsAnnotations[$throwsExceptionClass] = true;
+					return true;
+				}
+			}
+		}
+
 		return false;
 	}
 
@@ -56,6 +116,44 @@ class ThrowsScope
 	public function getCaughtExceptions(Name $name): array
 	{
 		return $name->getAttribute(self::CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE, []);
+	}
+
+	/**
+	 * @return string[]
+	 */
+	public function detectCaughtCheckedExceptionClasses(Throw_ $node): array
+	{
+		$classNames = [];
+
+		$expr = $node->expr;
+		if ($expr instanceof Variable) {
+			$currentCatch = $this->findCurrentCatch();
+			if ($currentCatch !== null) {
+				$currentCatchVarName = $currentCatch->var->name;
+				$exprVarName = $expr->name;
+				if (is_string($currentCatchVarName) && is_string($exprVarName) && $currentCatchVarName === $exprVarName) {
+					foreach ($currentCatch->types as $type) {
+						$caughtClasses = $this->getCaughtExceptions($type);
+						foreach ($caughtClasses as $caughtClass) {
+							if ($this->isExceptionCaught($caughtClass)) {
+								continue;
+							}
+
+							$classNames[] = $caughtClass;
+						}
+					}
+				}
+			}
+		}
+
+		return $classNames;
+	}
+
+	public function findCurrentCatch(): ?Catch_
+	{
+		$lastCatch = end($this->catchStack);
+
+		return $lastCatch !== false ? $lastCatch : null;
 	}
 
 }

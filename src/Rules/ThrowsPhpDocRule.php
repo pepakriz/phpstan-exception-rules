@@ -3,9 +3,11 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
+use Pepakriz\PHPStanExceptionRules\Node\CatchEnd;
 use Pepakriz\PHPStanExceptionRules\Node\ClassMethodEnd;
 use Pepakriz\PHPStanExceptionRules\Node\TryCatchTryEnd;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
@@ -37,11 +39,6 @@ use function sprintf;
 
 class ThrowsPhpDocRule
 {
-
-	/**
-	 * @var mixed[]
-	 */
-	private static $usedThrows = [];
 
 	/**
 	 * @var CheckedExceptionService
@@ -78,7 +75,6 @@ class ThrowsPhpDocRule
 			}
 
 			$this->throwsScope->enterToTryCatch($node);
-
 			$node->stmts[] = new TryCatchTryEnd($node);
 
 			return [];
@@ -97,60 +93,31 @@ class ThrowsPhpDocRule
 	public function enableThrowsPhpDocChecker(): Rule
 	{
 		return BaseRule::createRule(Throw_::class, function (Throw_ $node, Scope $scope): array {
-			$classReflection = $scope->getClassReflection();
-			$methodReflection = $scope->getFunction();
-			if ($classReflection === null || $methodReflection === null) {
-				return [];
-			}
+			$messageClasses = $this->throwsScope->detectCaughtCheckedExceptionClasses($node);
 
 			$exceptionType = $scope->getType($node->expr);
 			if (!$exceptionType instanceof TypeWithClassName) {
-				return [];
+				return $this->formatMissingThrowsByClasses($messageClasses);
 			}
 
 			$exceptionClassName = $exceptionType->getClassName();
 			if (!$this->checkedExceptionService->isExceptionClassWhitelisted($exceptionClassName)) {
-				return [];
+				return $this->formatMissingThrowsByClasses($messageClasses);
 			}
 
-			if (!$methodReflection instanceof ThrowableReflection) {
-				return [];
-			}
-
-			$className = $classReflection->getName();
-			$functionName = $methodReflection->getName();
 			if ($this->throwsScope->isExceptionCaught($exceptionClassName)) {
-				return [];
+				return $this->formatMissingThrowsByClasses($messageClasses);
 			}
 
-			$throwType = $methodReflection->getThrowType();
-			$targetExceptionClasses = TypeUtils::getDirectClassNames($exceptionType);
-			$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
-			$targetExceptionClasses = $this->filterOutAnnotatedExceptions($className, $functionName, $throwType, $targetExceptionClasses);
+			$messageClasses[] = $exceptionClassName;
 
-			if (count($targetExceptionClasses) === 0) {
-				return [];
-			}
-
-			return [
-				sprintf('Missing @throws %s annotation', $exceptionClassName),
-			];
+			return $this->formatMissingThrowsByClasses($messageClasses);
 		});
 	}
 
 	public function enableCallPropagation(): Rule
 	{
 		return BaseRule::createRule(MethodCall::class, function (MethodCall $node, Scope $scope): array {
-			$classReflection = $scope->getClassReflection();
-			$methodReflection = $scope->getFunction();
-			if ($classReflection === null || $methodReflection === null) {
-				return [];
-			}
-
-			if (!$methodReflection instanceof ThrowableReflection) {
-				return [];
-			}
-
 			$targetType = $scope->getType($node->var);
 			if (!$targetType instanceof TypeWithClassName) {
 				return [];
@@ -173,9 +140,6 @@ class ThrowsPhpDocRule
 			}
 
 			return $this->processThrowsTypes(
-				$classReflection->getName(),
-				$methodReflection->getName(),
-				$methodReflection->getThrowType(),
 				$targetMethodReflection->getThrowType()
 			);
 		});
@@ -184,16 +148,6 @@ class ThrowsPhpDocRule
 	public function enableStaticCallPropagation(): Rule
 	{
 		return BaseRule::createRule(StaticCall::class, function (StaticCall $node, Scope $scope): array {
-			$classReflection = $scope->getClassReflection();
-			$methodReflection = $scope->getFunction();
-			if ($classReflection === null || $methodReflection === null) {
-				return [];
-			}
-
-			if (!$methodReflection instanceof ThrowableReflection) {
-				return [];
-			}
-
 			$methodName = $node->name;
 			if ($methodName instanceof Identifier) {
 				$methodName = $methodName->toString();
@@ -209,9 +163,6 @@ class ThrowsPhpDocRule
 			}
 
 			return $this->processThrowsTypes(
-				$classReflection->getName(),
-				$methodReflection->getName(),
-				$methodReflection->getThrowType(),
 				$targetMethodReflection->getThrowType()
 			);
 		});
@@ -220,25 +171,12 @@ class ThrowsPhpDocRule
 	public function enableCallConstructorPropagation(): Rule
 	{
 		return BaseRule::createRule(New_::class, function (New_ $node, Scope $scope): array {
-			$classReflection = $scope->getClassReflection();
-			$methodReflection = $scope->getFunction();
-			if ($classReflection === null || $methodReflection === null) {
-				return [];
-			}
-
-			if (!$methodReflection instanceof ThrowableReflection) {
-				return [];
-			}
-
 			$targetMethodReflection = $this->getMethod($node->class, '__construct', $scope);
 			if (!$targetMethodReflection instanceof ThrowableReflection) {
 				return [];
 			}
 
 			return $this->processThrowsTypes(
-				$classReflection->getName(),
-				$methodReflection->getName(),
-				$methodReflection->getThrowType(),
 				$targetMethodReflection->getThrowType()
 			);
 		});
@@ -246,9 +184,19 @@ class ThrowsPhpDocRule
 
 	public function enableMethodDeclaration(): Rule
 	{
-		return BaseRule::createRule(ClassMethod::class, function (ClassMethod $node): array {
+		return BaseRule::createRule(ClassMethod::class, function (ClassMethod $node, Scope $scope): array {
 			if ($node->stmts === null) {
 				$node->stmts = [];
+			}
+
+			$classReflection = $scope->getClassReflection();
+			if ($classReflection === null) {
+				return [];
+			}
+
+			$methodReflection = $classReflection->getMethod($node->name->toString(), $scope);
+			if ($methodReflection instanceof ThrowableReflection) {
+				$this->throwsScope->enterToThrowsAnnotationBlock($methodReflection->getThrowType());
 			}
 
 			$node->stmts[] = new ClassMethodEnd($node);
@@ -260,6 +208,8 @@ class ThrowsPhpDocRule
 	public function enableMethodEnd(): Rule
 	{
 		return BaseRule::createRule(ClassMethodEnd::class, function (ClassMethodEnd $node, Scope $scope): array {
+			$usedThrowsAnnotations = $this->throwsScope->exitFromThrowsAnnotationBlock();
+
 			$classReflection = $scope->getClassReflection();
 			$methodReflection = $scope->getFunction();
 			if ($classReflection === null || $methodReflection === null) {
@@ -284,14 +234,10 @@ class ThrowsPhpDocRule
 				return [];
 			}
 
-			$className = $classReflection->getName();
-			$functionName = $methodReflection->getName();
-
 			$declaredThrows = TypeUtils::getDirectClassNames($throwType);
-			$userThrows = array_unique(self::$usedThrows[$className][$functionName] ?? []);
 
 			$messages = [];
-			$diff = array_diff($declaredThrows, $userThrows);
+			$diff = array_diff($declaredThrows, $usedThrowsAnnotations);
 			foreach ($diff as $unusedClass) {
 				$messages[] = sprintf('Unused @throws %s annotation', $unusedClass);
 			}
@@ -303,6 +249,9 @@ class ThrowsPhpDocRule
 	public function enableCatchValidation(): Rule
 	{
 		return BaseRule::createRule(Catch_::class, function (Catch_ $node): array {
+			$this->throwsScope->enterToCatch($node);
+			$node->stmts[] = new CatchEnd($node);
+
 			$messages = [];
 
 			foreach ($node->types as $type) {
@@ -323,10 +272,42 @@ class ThrowsPhpDocRule
 		});
 	}
 
+	public function enableCatchEnd(): Rule
+	{
+		return BaseRule::createRule(CatchEnd::class, function (): array {
+			$this->throwsScope->exitFromCatch();
+
+			return [];
+		});
+	}
+
+	public function enableReassignException(): Rule
+	{
+		return BaseRule::createRule(Assign::class, function (Assign $node): array {
+			$currentCatch = $this->throwsScope->findCurrentCatch();
+			if ($currentCatch === null) {
+				return [];
+			}
+
+			$var = $node->var;
+			if (!$var instanceof Expr\Variable) {
+				return [];
+			}
+
+			$varName = $var->name;
+			$currentCatchVarName = $currentCatch->var->name;
+			if (is_string($currentCatchVarName) && is_string($varName) && $currentCatchVarName === $varName) {
+				return [sprintf('Reassigning variable $%s is prohibited in catch block', $varName)];
+			}
+
+			return [];
+		});
+	}
+
 	/**
 	 * @return string[]
 	 */
-	private function processThrowsTypes(string $className, string $functionName, ?Type $throwType, ?Type $targetThrowType): array
+	private function processThrowsTypes(?Type $targetThrowType): array
 	{
 		if ($targetThrowType === null) {
 			return [];
@@ -338,45 +319,33 @@ class ThrowsPhpDocRule
 			return $this->throwsScope->isExceptionCaught($targetExceptionClass) === false;
 		});
 
-		$targetExceptionClasses = $this->filterOutAnnotatedExceptions($className, $functionName, $throwType, $targetExceptionClasses);
-
 		return array_map(function (string $targetExceptionClass): string {
 			return sprintf('Missing @throws %s annotation', $targetExceptionClass);
 		}, $targetExceptionClasses);
 	}
 
 	/**
-	 * @param string[] $targetExceptionClasses
-	 *
+	 * @param string[] $messageClasses
 	 * @return string[]
 	 */
-	private function filterOutAnnotatedExceptions(
-		string $className,
-		string $functionName,
-		?Type $throwType,
-		array $targetExceptionClasses
-	): array
+	private function formatMissingThrowsByClasses(array $messageClasses): array
 	{
-		if (count($targetExceptionClasses) === 0) {
-			return [];
-		}
+		$messageClasses = array_unique($messageClasses);
 
-		if ($throwType === null) {
-			return $targetExceptionClasses;
-		}
-
-		$throwsExceptionClasses = TypeUtils::getDirectClassNames($throwType);
-		foreach ($targetExceptionClasses as $key => $targetExceptionClass) {
-			foreach ($throwsExceptionClasses as $throwsExceptionClass) {
-				if (is_a($targetExceptionClass, $throwsExceptionClass, true)) {
-					unset($targetExceptionClasses[$key]);
-					self::$usedThrows[$className][$functionName][] = $throwsExceptionClass;
+		$uniqueMessageClasses = [];
+		foreach ($messageClasses as $messageClass) {
+			foreach ($uniqueMessageClasses as $uniqueMessageKey => $uniqueMessageClass) {
+				if (is_a($uniqueMessageClass, $messageClass, true)) {
+					$uniqueMessageClasses[$uniqueMessageKey] = $messageClass;
 					continue 2;
 				}
 			}
+			$uniqueMessageClasses[] = $messageClass;
 		}
 
-		return $targetExceptionClasses;
+		return array_map(function (string $messageClass): string {
+			return sprintf('Missing @throws %s annotation', $messageClass);
+		}, $uniqueMessageClasses);
 	}
 
 	/**

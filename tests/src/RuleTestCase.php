@@ -151,7 +151,7 @@ abstract class RuleTestCase extends TestCase
 
 		$expectedErrors = [];
 		foreach ($fileData as $line => $row) {
-			$matches = Strings::match($row, '#// error:([^$]+)#');
+			$matches = Strings::match($row, '#// error:([^\n]+)#');
 			if ($matches === null) {
 				continue;
 			}

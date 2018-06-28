@@ -45,7 +45,7 @@ class TryCatchClass
 		try {
 			throw new RuntimeException();
 		} catch (Throwable $e) {
-			throw $e;
+			throw $e; // error: Missing @throws RuntimeException annotation
 		}
 	}
 
@@ -89,6 +89,17 @@ class TryCatchClass
 			self::throwStaticUnion(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\TryCatch\SomeRuntimeException annotation
 		} catch (FooRuntimeException | BarRuntimeException $e) {
 			// ignore
+		}
+	}
+
+	public function caughtAndThrowOneWithCall(): void
+	{
+		try {
+			$this->throwUnion();
+		} catch (FooRuntimeException | BarRuntimeException $e) {
+			// ignore
+		} catch (Throwable $e) {
+			throw $e; // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\TryCatch\SomeRuntimeException annotation
 		}
 	}
 
