@@ -28,10 +28,7 @@ use PHPStan\Type\TypeWithClassName;
 use ReflectionMethod;
 use function array_diff;
 use function array_filter;
-use function array_keys;
 use function array_map;
-use function array_pop;
-use function array_reverse;
 use function array_unique;
 use function count;
 use function is_a;
@@ -40,13 +37,6 @@ use function sprintf;
 
 class ThrowsPhpDocRule
 {
-
-	private const CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE = '__CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE__';
-
-	/**
-	 * @var TryCatch[]
-	 */
-	private static $catches = [];
 
 	/**
 	 * @var mixed[]
@@ -63,6 +53,11 @@ class ThrowsPhpDocRule
 	 */
 	private $broker;
 
+	/**
+	 * @var ThrowsScope
+	 */
+	private $throwsScope;
+
 	public function __construct(
 		CheckedExceptionService $checkedExceptionService,
 		Broker $broker
@@ -70,6 +65,7 @@ class ThrowsPhpDocRule
 	{
 		$this->checkedExceptionService = $checkedExceptionService;
 		$this->broker = $broker;
+		$this->throwsScope = new ThrowsScope();
 	}
 
 	public function enableTryCatchCrawler(): Rule
@@ -81,7 +77,7 @@ class ThrowsPhpDocRule
 				return [];
 			}
 
-			self::$catches[] = $node;
+			$this->throwsScope->enterToTryCatch($node);
 
 			$node->stmts[] = new TryCatchTryEnd($node);
 
@@ -91,8 +87,8 @@ class ThrowsPhpDocRule
 
 	public function enableTryEndCatchCrawler(): Rule
 	{
-		return BaseRule::createRule(TryCatchTryEnd::class, function (TryCatchTryEnd $node): array {
-			array_pop(self::$catches);
+		return BaseRule::createRule(TryCatchTryEnd::class, function (): array {
+			$this->throwsScope->exitFromTry();
 
 			return [];
 		});
@@ -123,7 +119,7 @@ class ThrowsPhpDocRule
 
 			$className = $classReflection->getName();
 			$functionName = $methodReflection->getName();
-			if ($this->isCaught($exceptionClassName)) {
+			if ($this->throwsScope->isExceptionCaught($exceptionClassName)) {
 				return [];
 			}
 
@@ -306,11 +302,11 @@ class ThrowsPhpDocRule
 
 	public function enableCatchValidation(): Rule
 	{
-		return BaseRule::createRule(Catch_::class, function (Catch_ $node, Scope $scope): array {
+		return BaseRule::createRule(Catch_::class, function (Catch_ $node): array {
 			$messages = [];
 
 			foreach ($node->types as $type) {
-				$caughtCheckedExceptions = $type->getAttribute(self::CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE, []);
+				$caughtCheckedExceptions = $this->throwsScope->getCaughtExceptions($type);
 				if (count($caughtCheckedExceptions) > 0) {
 					continue;
 				}
@@ -337,11 +333,11 @@ class ThrowsPhpDocRule
 		}
 
 		$targetExceptionClasses = TypeUtils::getDirectClassNames($targetThrowType);
+		$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
 		$targetExceptionClasses = array_filter($targetExceptionClasses, function (string $targetExceptionClass): bool {
-			return $this->isCaught($targetExceptionClass) === false;
+			return $this->throwsScope->isExceptionCaught($targetExceptionClass) === false;
 		});
 
-		$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
 		$targetExceptionClasses = $this->filterOutAnnotatedExceptions($className, $functionName, $throwType, $targetExceptionClasses);
 
 		return array_map(function (string $targetExceptionClass): string {
@@ -422,27 +418,6 @@ class ThrowsPhpDocRule
 		}
 
 		return $calledOnType->getMethod($methodName, $scope);
-	}
-
-	private function isCaught(string $exceptionClassName): bool
-	{
-		foreach (array_reverse(array_keys(self::$catches)) as $catchKey) {
-			$catches = self::$catches[$catchKey];
-
-			foreach ($catches->catches as $catch) {
-				foreach ($catch->types as $type) {
-					if (is_a($exceptionClassName, $type->toString(), true)) {
-						$caughtCheckedExceptions = $type->getAttribute(self::CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE, []);
-						$caughtCheckedExceptions[] = $exceptionClassName;
-						$type->setAttribute(self::CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE, $caughtCheckedExceptions);
-
-						return true;
-					}
-				}
-			}
-		}
-
-		return false;
 	}
 
 }
