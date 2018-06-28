@@ -8,23 +8,11 @@ use PhpParser\Node\Stmt\TryCatch;
 class TryCatchTryEnd extends Nop
 {
 
-	/**
-	 * @var TryCatch
-	 */
-	private $node;
-
 	public function __construct(TryCatch $node)
 	{
 		parent::__construct([
 			'startLine' => $node->getLine(),
 		]);
-
-		$this->node = $node;
-	}
-
-	public function getTryCatchNode(): TryCatch
-	{
-		return $this->node;
 	}
 
 }
