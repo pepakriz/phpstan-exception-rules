@@ -52,6 +52,11 @@ services:
 		tags: [phpstan.rules.rule]
 
 	-
+		class: PHPStan\Rules\Rule
+		factory: @throwsPhpDocRule::enableCatchValidation()
+		tags: [phpstan.rules.rule]
+
+	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocInheritanceRule
 		tags: [phpstan.rules.rule]
 

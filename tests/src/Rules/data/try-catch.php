@@ -66,7 +66,7 @@ class TryCatchClass
 		try {
 			try {
 				throw new FooRuntimeException();
-			} catch (BarRuntimeException $e) {
+			} catch (LogicException $e) {
 				// ignore
 			}
 		} catch (FooRuntimeException $e) {
