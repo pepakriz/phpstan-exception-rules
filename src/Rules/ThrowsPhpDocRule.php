@@ -29,6 +29,7 @@ use function array_diff;
 use function array_filter;
 use function array_map;
 use function array_merge;
+use function array_unique;
 use function count;
 use function is_string;
 use function sprintf;
@@ -130,7 +131,7 @@ class ThrowsPhpDocRule
 				));
 			}
 
-			return $messages;
+			return array_unique($messages);
 		});
 	}
 
