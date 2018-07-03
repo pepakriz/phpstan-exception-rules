@@ -224,7 +224,7 @@ class ThrowsPhpDocRule implements Rule
 			return [];
 		}
 
-		return $this->processThrowTypesOnMethod($node->class, $methodName, $scope);
+		return $this->processThrowTypesOnMethod($node->class, [$methodName], $scope);
 	}
 
 	/**
@@ -232,7 +232,7 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	public function processNew(New_ $node, Scope $scope): array
 	{
-		return $this->processThrowTypesOnMethod($node->class, '__construct', $scope);
+		return $this->processThrowTypesOnMethod($node->class, ['__construct'], $scope);
 	}
 
 	/**
@@ -252,9 +252,13 @@ class ThrowsPhpDocRule implements Rule
 			}
 
 			if ($classReflection->isSubclassOf(Iterator::class)) {
-				$messages = array_merge($messages, $this->processThrowTypesOnMethod($node->expr, 'current', $scope));
+				$iteratorMethods = ['rewind', 'valid', 'current', 'next'];
+				if ($node->keyVar !== null) {
+					$iteratorMethods[] = 'key';
+				}
+				$messages = array_merge($messages, $this->processThrowTypesOnMethod($node->expr, $iteratorMethods, $scope));
 			} elseif ($classReflection->isSubclassOf(IteratorAggregate::class)) {
-				$messages = array_merge($messages, $this->processThrowTypesOnMethod($node->expr, 'getIterator', $scope));
+				$messages = array_merge($messages, $this->processThrowTypesOnMethod($node->expr, ['getIterator'], $scope));
 			}
 		}
 
@@ -368,7 +372,19 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		if ($functionName === 'count') {
-			return $this->processThrowTypesOnMethod($node->args[0]->value, 'count', $scope);
+			return $this->processThrowTypesOnMethod($node->args[0]->value, ['count'], $scope);
+		}
+
+		if ($functionName === 'iterator_count') {
+			return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'next'], $scope);
+		}
+
+		if ($functionName === 'iterator_to_array') {
+			return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'current', 'key', 'next'], $scope);
+		}
+
+		if ($functionName === 'iterator_apply') {
+			return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'next'], $scope);
 		}
 
 		return [];
@@ -376,12 +392,13 @@ class ThrowsPhpDocRule implements Rule
 
 	/**
 	 * @param Name|Expr|ClassLike $class
+	 * @param string[] $methods
 	 * @return string[]
 	 */
-	private function processThrowTypesOnMethod($class, string $method, Scope $scope): array
+	private function processThrowTypesOnMethod($class, array $methods, Scope $scope): array
 	{
 		$throwTypes = [];
-		$targetMethodReflections = $this->getMethodReflections($class, $method, $scope);
+		$targetMethodReflections = $this->getMethodReflections($class, $methods, $scope);
 		foreach ($targetMethodReflections as $targetMethodReflection) {
 			if (!$targetMethodReflection instanceof ThrowableReflection) {
 				continue;
@@ -422,11 +439,12 @@ class ThrowsPhpDocRule implements Rule
 
 	/**
 	 * @param Name|Expr|ClassLike $class
+	 * @param string[] $methodNames
 	 * @return MethodReflection[]
 	 */
 	private function getMethodReflections(
 		$class,
-		string $methodName,
+		array $methodNames,
 		Scope $scope
 	): array
 	{
@@ -448,9 +466,17 @@ class ThrowsPhpDocRule implements Rule
 		$classNames = TypeUtils::getDirectClassNames($calledOnType);
 		foreach ($classNames as $className) {
 			try {
-				$methodReflections[] = $this->broker->getClass($className)->getMethod($methodName, $scope);
-			} catch (ClassNotFoundException | MissingMethodFromReflectionException $e) {
+				$classReflection = $this->broker->getClass($className);
+			} catch (ClassNotFoundException $e) {
 				continue;
+			}
+
+			foreach ($methodNames as $methodName) {
+				try {
+					$methodReflections[] = $classReflection->getMethod($methodName, $scope);
+				} catch (MissingMethodFromReflectionException $e) {
+					continue;
+				}
 			}
 		}
 

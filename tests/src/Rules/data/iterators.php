@@ -3,6 +3,9 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules\Iterators;
 
 use Iterator;
+use function iterator_apply;
+use function iterator_count;
+use function iterator_to_array;
 use IteratorAggregate;
 use RuntimeException;
 
@@ -25,6 +28,13 @@ class Iterators
 		}
 	}
 
+	public function iteratorFunctions(): void
+	{
+		iterator_count(new FooIterator()); // error: Missing @throws RuntimeException annotation
+		iterator_to_array(new FooIterator()); // error: Missing @throws RuntimeException annotation
+		iterator_apply(new FooIterator(), function () {}); // error: Missing @throws RuntimeException annotation
+	}
+
 }
 
 class FooIterator implements Iterator
@@ -38,20 +48,36 @@ class FooIterator implements Iterator
 		throw new RuntimeException();
 	}
 
+	/**
+	 * @throws RuntimeException
+	 */
 	public function next()
 	{
+		throw new RuntimeException();
 	}
 
+	/**
+	 * @throws RuntimeException
+	 */
 	public function key()
 	{
+		throw new RuntimeException();
 	}
 
+	/**
+	 * @throws RuntimeException
+	 */
 	public function valid()
 	{
+		throw new RuntimeException();
 	}
 
+	/**
+	 * @throws RuntimeException
+	 */
 	public function rewind()
 	{
+		throw new RuntimeException();
 	}
 
 }
