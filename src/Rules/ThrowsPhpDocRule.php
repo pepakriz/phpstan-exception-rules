@@ -2,6 +2,8 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
+use Iterator;
+use IteratorAggregate;
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\Node\ClassMethodEnd;
 use Pepakriz\PHPStanExceptionRules\Node\TryCatchTryEnd;
@@ -15,6 +17,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Catch_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\Throw_;
 use PhpParser\Node\Stmt\TryCatch;
 use PHPStan\Analyser\Scope;
@@ -31,6 +34,8 @@ use PHPStan\Type\TypeUtils;
 use ReflectionMethod;
 use function array_diff;
 use function array_map;
+use function array_merge;
+use function array_unique;
 use function count;
 use function is_string;
 use function sprintf;
@@ -107,6 +112,10 @@ class ThrowsPhpDocRule implements Rule
 
 		if ($node instanceof Catch_) {
 			return $this->processCatch($node);
+		}
+
+		if ($node instanceof Foreach_) {
+			return $this->processForeach($node, $scope);
 		}
 
 		return [];
@@ -218,6 +227,32 @@ class ThrowsPhpDocRule implements Rule
 	public function processNew(New_ $node, Scope $scope): array
 	{
 		return $this->processThrowTypesOnMethod($node->class, '__construct', $scope);
+	}
+
+	/**
+	 * @return string[]
+	 */
+	public function processForeach(Foreach_ $node, Scope $scope): array
+	{
+		$type = $scope->getType($node->expr);
+
+		$messages = [];
+		$classNames = TypeUtils::getDirectClassNames($type);
+		foreach ($classNames as $className) {
+			try {
+				$classReflection = $this->broker->getClass($className);
+			} catch (ClassNotFoundException $e) {
+				continue;
+			}
+
+			if ($classReflection->isSubclassOf(Iterator::class)) {
+				$messages = array_merge($messages, $this->processThrowTypesOnMethod($node->expr, 'current', $scope));
+			} elseif ($classReflection->isSubclassOf(IteratorAggregate::class)) {
+				$messages = array_merge($messages, $this->processThrowTypesOnMethod($node->expr, 'getIterator', $scope));
+			}
+		}
+
+		return array_unique($messages);
 	}
 
 	/**

@@ -46,4 +46,9 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 		$this->analyse(__DIR__ . '/data/unused-catches.php');
 	}
 
+	public function testIterators(): void
+	{
+		$this->analyse(__DIR__ . '/data/iterators.php');
+	}
+
 }
