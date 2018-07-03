@@ -9,8 +9,12 @@
 This extension provides following rules and features:
 
 * Require `@throws` annotation when some checked exception is thrown ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-annotations.php))
-	* Skip ignored exceptions which have checked parent
-	* Exception propagation over function calls
+* Exception propagation over:
+	* function calls
+	* dynamic and static method calls
+	* Iterable interface in foreach and in `iterator_*()` functions ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/iterators.php))
+	* Countable interface combinated with `count()` function ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/countables.php))
+	* JsonSerializable interface combinated with `json_encode()` function ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/json-serializable.php))
 * Ignore caught checked exceptions ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/try-catch.php))
 * Unnecessary `@throws` annotation detection ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-throws.php))
 * `@throws` annotation variance validation ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-inheritance.php))
