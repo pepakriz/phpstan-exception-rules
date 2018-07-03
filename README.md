@@ -41,8 +41,6 @@ parameters:
 	exceptionRules:
 		checkedExceptions:
 			- RuntimeException
-		ignoredExceptions:
-			- LogicException
 ```
 
 ## Motivation

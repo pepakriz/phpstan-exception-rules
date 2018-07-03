@@ -12,9 +12,4 @@ parameters:
 		- %rootDir%/../../../tests/*/data/*
 
 	exceptionRules:
-		checkedExceptions:
-			- RuntimeException
-		ignoredExceptions:
-			- LogicException
-			- PHPUnit\Framework\Exception
-			- Nette\DI\MissingServiceException
+		checkedExceptions: []

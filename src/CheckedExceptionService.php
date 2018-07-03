@@ -10,40 +10,22 @@ class CheckedExceptionService
 	/**
 	 * @var string[]
 	 */
-	private $exceptionWhiteList;
+	private $checkedExceptions;
 
 	/**
-	 * @var string[]
-	 */
-	private $exceptionBlackList;
-
-	/**
-	 * @param string[] $exceptionWhiteList
-	 * @param string[] $exceptionBlackList
+	 * @param string[] $checkedExceptions
 	 */
 	public function __construct(
-		array $exceptionWhiteList,
-		array $exceptionBlackList
+		array $checkedExceptions
 	)
 	{
-		$this->exceptionWhiteList = $exceptionWhiteList;
-		$this->exceptionBlackList = $exceptionBlackList;
+		$this->checkedExceptions = $checkedExceptions;
 	}
 
 	public function isExceptionClassWhitelisted(string $exceptionClassName): bool
 	{
-		foreach ($this->exceptionWhiteList as $whitelistedException) {
+		foreach ($this->checkedExceptions as $whitelistedException) {
 			if (is_a($exceptionClassName, $whitelistedException, true)) {
-				foreach ($this->exceptionBlackList as $blacklistedException) {
-					if (!is_a($exceptionClassName, $blacklistedException, true)) {
-						continue;
-					}
-
-					if (is_a($blacklistedException, $whitelistedException, true)) {
-						continue 2;
-					}
-				}
-
 				return true;
 			}
 		}

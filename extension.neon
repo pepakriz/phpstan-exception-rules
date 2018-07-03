@@ -2,11 +2,10 @@ parameters:
 	exceptionRules:
 		reportMaybes: true
 		checkedExceptions: []
-		ignoredExceptions: []
 
 services:
 	-
-		class: Pepakriz\PHPStanExceptionRules\CheckedExceptionService(%exceptionRules.checkedExceptions%, %exceptionRules.ignoredExceptions%)
+		class: Pepakriz\PHPStanExceptionRules\CheckedExceptionService(%exceptionRules.checkedExceptions%)
 
 	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule

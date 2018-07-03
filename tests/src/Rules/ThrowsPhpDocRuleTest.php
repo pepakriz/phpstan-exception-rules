@@ -3,9 +3,7 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
-use Pepakriz\PHPStanExceptionRules\Rules\Data\BaseBlacklistedRuntimeException;
 use Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException;
-use Pepakriz\PHPStanExceptionRules\Rules\Data\SomeBlacklistedRuntimeException;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
 use PHPStan\Rules\Rule;
 use RuntimeException;
@@ -20,10 +18,6 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 				[
 					RuntimeException::class,
 					CheckedException::class,
-				],
-				[
-					BaseBlacklistedRuntimeException::class,
-					SomeBlacklistedRuntimeException::class,
 				]
 			),
 			$this->createBroker()

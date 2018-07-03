@@ -2,7 +2,6 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
-use LogicException;
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
 use PHPStan\Rules\Rule;
@@ -18,9 +17,6 @@ class ThrowsPhpDocInheritanceRuleTest extends RuleTestCase
 			new CheckedExceptionService(
 				[
 					RuntimeException::class,
-				],
-				[
-					LogicException::class,
 				]
 			),
 			self::getContainer()->getByType(FileTypeMapper::class),

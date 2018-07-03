@@ -12,8 +12,6 @@ abstract class BaseBlacklistedRuntimeException extends BaseRuntimeException {}
 class SomeRuntimeException extends BaseRuntimeException {}
 class NextRuntimeException extends BaseRuntimeException {}
 class ConcreteNextRuntimeException extends NextRuntimeException {}
-class SomeBlacklistedRuntimeException extends BaseRuntimeException {}
-class SomeInheritedBlacklistedRuntimeException extends BaseBlacklistedRuntimeException {}
 class CheckedException extends Exception {}
 
 class ThrowsAnnotationsClass
@@ -30,12 +28,6 @@ class ThrowsAnnotationsClass
 	{
 		throw new LogicException();
 		throw new CustomLogicException();
-	}
-
-	public function ignoreBlacklisted(): void
-	{
-		throw new SomeBlacklistedRuntimeException();
-		throw new SomeInheritedBlacklistedRuntimeException();
 	}
 
 	/**
