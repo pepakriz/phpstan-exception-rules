@@ -35,10 +35,7 @@ abstract class RuleTestCase extends TestCase
 	 */
 	private $analyser;
 
-	/**
-	 * @return Rule[]
-	 */
-	abstract protected function getRules(): array;
+	abstract protected function getRule(): Rule;
 
 	protected function getTypeSpecifier(): TypeSpecifier
 	{
@@ -53,7 +50,7 @@ abstract class RuleTestCase extends TestCase
 	private function getAnalyser(): Analyser
 	{
 		if ($this->analyser === null) {
-			$registry = new Registry($this->getRules());
+			$registry = new Registry([$this->getRule()]);
 
 			$broker = $this->createBroker();
 			$printer = new Standard();

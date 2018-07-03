@@ -13,10 +13,7 @@ use RuntimeException;
 class ThrowsPhpDocRuleTest extends RuleTestCase
 {
 
-	/**
-	 * @return Rule[]
-	 */
-	protected function getRules(): array
+	protected function getRule(): Rule
 	{
 		$throwsRule = new ThrowsPhpDocRule(
 			new CheckedExceptionService(
@@ -32,17 +29,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			$this->createBroker()
 		);
 
-		return [
-			$throwsRule->enableThrowsPhpDocChecker(),
-			$throwsRule->enableTryCatchCrawler(),
-			$throwsRule->enableTryEndCatchCrawler(),
-			$throwsRule->enableCallPropagation(),
-			$throwsRule->enableStaticCallPropagation(),
-			$throwsRule->enableCallConstructorPropagation(),
-			$throwsRule->enableMethodDeclaration(),
-			$throwsRule->enableMethodEnd(),
-			$throwsRule->enableCatchValidation(),
-		];
+		return $throwsRule;
 	}
 
 	public function testBasicThrows(): void

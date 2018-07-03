@@ -12,10 +12,7 @@ use RuntimeException;
 class ThrowsPhpDocInheritanceRuleTest extends RuleTestCase
 {
 
-	/**
-	 * @return Rule[]
-	 */
-	protected function getRules(): array
+	protected function getRule(): Rule
 	{
 		$throwsRule = new ThrowsPhpDocInheritanceRule(
 			new CheckedExceptionService(
@@ -30,9 +27,7 @@ class ThrowsPhpDocInheritanceRuleTest extends RuleTestCase
 			$this->createBroker()
 		);
 
-		return [
-			$throwsRule,
-		];
+		return $throwsRule;
 	}
 
 	public function testInheritance(): void

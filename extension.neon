@@ -5,55 +5,11 @@ parameters:
 		ignoredExceptions: []
 
 services:
-	throwsPhpDocRule:
-		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule
-
 	-
 		class: Pepakriz\PHPStanExceptionRules\CheckedExceptionService(%exceptionRules.checkedExceptions%, %exceptionRules.ignoredExceptions%)
 
 	-
-		class: PHPStan\Rules\Rule
-		factory: @throwsPhpDocRule::enableTryCatchCrawler()
-		tags: [phpstan.rules.rule]
-
-	-
-		class: PHPStan\Rules\Rule
-		factory: @throwsPhpDocRule::enableTryEndCatchCrawler()
-		tags: [phpstan.rules.rule]
-
-	-
-		class: PHPStan\Rules\Rule
-		factory: @throwsPhpDocRule::enableThrowsPhpDocChecker()
-		tags: [phpstan.rules.rule]
-
-	-
-		class: PHPStan\Rules\Rule
-		factory: @throwsPhpDocRule::enableCallPropagation()
-		tags: [phpstan.rules.rule]
-
-	-
-		class: PHPStan\Rules\Rule
-		factory: @throwsPhpDocRule::enableStaticCallPropagation()
-		tags: [phpstan.rules.rule]
-
-	-
-		class: PHPStan\Rules\Rule
-		factory: @throwsPhpDocRule::enableCallConstructorPropagation()
-		tags: [phpstan.rules.rule]
-
-	-
-		class: PHPStan\Rules\Rule
-		factory: @throwsPhpDocRule::enableMethodDeclaration()
-		tags: [phpstan.rules.rule]
-
-	-
-		class: PHPStan\Rules\Rule
-		factory: @throwsPhpDocRule::enableMethodEnd()
-		tags: [phpstan.rules.rule]
-
-	-
-		class: PHPStan\Rules\Rule
-		factory: @throwsPhpDocRule::enableCatchValidation()
+		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule
 		tags: [phpstan.rules.rule]
 
 	-

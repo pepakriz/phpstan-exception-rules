@@ -8,14 +8,9 @@ use PHPStan\Rules\Rule;
 class UnreachableCatchRuleTest extends RuleTestCase
 {
 
-	/**
-	 * @return Rule[]
-	 */
-	protected function getRules(): array
+	protected function getRule(): Rule
 	{
-		return [
-			new UnreachableCatchRule($this->createBroker()),
-		];
+		return new UnreachableCatchRule($this->createBroker());
 	}
 
 	public function test(): void
