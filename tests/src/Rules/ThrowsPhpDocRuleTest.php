@@ -51,4 +51,9 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 		$this->analyse(__DIR__ . '/data/iterators.php');
 	}
 
+	public function testCountable(): void
+	{
+		$this->analyse(__DIR__ . '/data/countables.php');
+	}
+
 }

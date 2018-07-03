@@ -9,9 +9,11 @@ use Pepakriz\PHPStanExceptionRules\Node\ClassMethodEnd;
 use Pepakriz\PHPStanExceptionRules\Node\TryCatchTryEnd;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Catch_;
@@ -116,6 +118,10 @@ class ThrowsPhpDocRule implements Rule
 
 		if ($node instanceof Foreach_) {
 			return $this->processForeach($node, $scope);
+		}
+
+		if ($node instanceof FuncCall) {
+			return $this->processFuncCall($node, $scope);
 		}
 
 		return [];
@@ -343,6 +349,29 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		return $messages;
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function processFuncCall(FuncCall $node, Scope $scope): array
+	{
+		$functionName = $node->name;
+		if ($functionName instanceof Variable) {
+			$functionName = $functionName->name;
+		} elseif ($functionName instanceof Name) {
+			$functionName = $functionName->toString();
+		}
+
+		if (!is_string($functionName)) {
+			return [];
+		}
+
+		if ($functionName === 'count') {
+			return $this->processThrowTypesOnMethod($node->args[0]->value, 'count', $scope);
+		}
+
+		return [];
 	}
 
 	/**
