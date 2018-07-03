@@ -11,6 +11,7 @@ abstract class BaseRuntimeException extends RuntimeException {}
 abstract class BaseBlacklistedRuntimeException extends BaseRuntimeException {}
 class SomeRuntimeException extends BaseRuntimeException {}
 class NextRuntimeException extends BaseRuntimeException {}
+class ConcreteNextRuntimeException extends NextRuntimeException {}
 class SomeBlacklistedRuntimeException extends BaseRuntimeException {}
 class SomeInheritedBlacklistedRuntimeException extends BaseBlacklistedRuntimeException {}
 class CheckedException extends Exception {}
@@ -130,6 +131,16 @@ class ThrowsAnnotationsClass
 		new ThrowInConstructor(); // error: Missing @throws RuntimeException annotation
 	}
 
+	/**
+	 * @throws NextRuntimeException
+	 */
+	public function callUnion(): void
+	{
+		/** @var UnionOne|UnionTwo|UnionThree $union */
+		$union = getUnion();
+		$union->foo(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
+	}
+
 }
 
 class ThrowInConstructor
@@ -143,6 +154,40 @@ class ThrowInConstructor
 		throw new RuntimeException();
 	}
 
+}
+
+class UnionOne  {
+
+	/**
+	 * @throws SomeRuntimeException
+	 */
+	public function foo(): void
+	{
+		throw new SomeRuntimeException();
+	}
+
+}
+
+class UnionTwo {
+
+	/**
+	 * @throws NextRuntimeException
+	 */
+	public function foo(): void
+	{
+		throw new NextRuntimeException();
+	}
+}
+
+class UnionThree {
+
+	/**
+	 * @throws ConcreteNextRuntimeException
+	 */
+	public function foo(): void
+	{
+		throw new ConcreteNextRuntimeException();
+	}
 }
 
 class Issue6

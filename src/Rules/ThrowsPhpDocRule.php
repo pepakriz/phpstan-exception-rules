@@ -23,13 +23,12 @@ use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Rules\Rule;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
+use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeUtils;
 use ReflectionMethod;
 use function array_diff;
 use function array_filter;
 use function array_map;
-use function array_merge;
-use function array_unique;
 use function count;
 use function is_string;
 use function sprintf;
@@ -113,25 +112,31 @@ class ThrowsPhpDocRule
 			$targetType = $scope->getType($node->var);
 			$targetClassNames = TypeUtils::getDirectClassNames($targetType);
 
-			$messages = [];
+			$throwTypes = [];
 			foreach ($targetClassNames as $targetClassName) {
 				$targetClassReflection = $this->broker->getClass($targetClassName);
 				if (!$targetClassReflection->hasMethod($methodName->toString())) {
-					return [];
+					continue;
 				}
 
 				$targetMethodReflection = $targetClassReflection->getMethod($methodName->toString(), $scope);
-
 				if (!$targetMethodReflection instanceof ThrowableReflection) {
-					return [];
+					continue;
 				}
 
-				$messages = array_merge($messages, $this->processThrowsTypes(
-					$targetMethodReflection->getThrowType()
-				));
+				$throwType = $targetMethodReflection->getThrowType();
+				if ($throwType === null) {
+					continue;
+				}
+
+				$throwTypes[] = $throwType;
 			}
 
-			return array_unique($messages);
+			if (count($throwTypes) === 0) {
+				return [];
+			}
+
+			return $this->processThrowsTypes(TypeCombinator::union(...$throwTypes));
 		});
 	}
 
