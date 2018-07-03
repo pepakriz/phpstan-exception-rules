@@ -30,7 +30,6 @@ use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeUtils;
 use ReflectionMethod;
 use function array_diff;
-use function array_filter;
 use function array_map;
 use function count;
 use function is_string;
@@ -148,8 +147,8 @@ class ThrowsPhpDocRule implements Rule
 	{
 		$exceptionType = $scope->getType($node->expr);
 		$exceptionClassNames = TypeUtils::getDirectClassNames($exceptionType);
-		$exceptionClassNames = $this->filterClassesByWhitelist($exceptionClassNames);
-		$exceptionClassNames = $this->filterClassesByUncaught($exceptionClassNames);
+		$exceptionClassNames = $this->checkedExceptionService->filterCheckedExceptions($exceptionClassNames);
+		$exceptionClassNames = $this->throwsScope->filterExceptionsByUncaught($exceptionClassNames);
 
 		return array_map(function (string $exceptionClassName): string {
 			return sprintf('Missing @throws %s annotation', $exceptionClassName);
@@ -301,7 +300,7 @@ class ThrowsPhpDocRule implements Rule
 			}
 
 			$exceptionClass = $type->toString();
-			if (!$this->checkedExceptionService->isExceptionClassWhitelisted($exceptionClass)) {
+			if (!$this->checkedExceptionService->isCheckedException($exceptionClass)) {
 				continue;
 			}
 
@@ -349,34 +348,12 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		$targetExceptionClasses = TypeUtils::getDirectClassNames($targetThrowType);
-		$targetExceptionClasses = $this->filterClassesByWhitelist($targetExceptionClasses);
-		$targetExceptionClasses = $this->filterClassesByUncaught($targetExceptionClasses);
+		$targetExceptionClasses = $this->checkedExceptionService->filterCheckedExceptions($targetExceptionClasses);
+		$targetExceptionClasses = $this->throwsScope->filterExceptionsByUncaught($targetExceptionClasses);
 
 		return array_map(function (string $targetExceptionClass): string {
 			return sprintf('Missing @throws %s annotation', $targetExceptionClass);
 		}, $targetExceptionClasses);
-	}
-
-	/**
-	 * @param string[] $classes
-	 * @return string[]
-	 */
-	private function filterClassesByWhitelist(array $classes): array
-	{
-		return array_filter($classes, function (string $class): bool {
-			return $this->checkedExceptionService->isExceptionClassWhitelisted($class);
-		});
-	}
-
-	/**
-	 * @param string[] $classes
-	 * @return string[]
-	 */
-	private function filterClassesByUncaught(array $classes): array
-	{
-		return array_filter($classes, function (string $class): bool {
-			return $this->throwsScope->isExceptionCaught($class) === false;
-		});
 	}
 
 	/**

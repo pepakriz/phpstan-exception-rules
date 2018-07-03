@@ -15,7 +15,6 @@ use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeUtils;
 use PHPStan\Type\VerbosityLevel;
-use function array_filter;
 use function count;
 use function sprintf;
 
@@ -132,9 +131,7 @@ class ThrowsPhpDocInheritanceRule implements Rule
 	private function filterUnchecked(Type $type): ?Type
 	{
 		$exceptionClasses = TypeUtils::getDirectClassNames($type);
-		$exceptionClasses = array_filter($exceptionClasses, function (string $className): bool {
-			return $this->checkedExceptionService->isExceptionClassWhitelisted($className);
-		});
+		$exceptionClasses = $this->checkedExceptionService->filterCheckedExceptions($exceptionClasses);
 
 		if (count($exceptionClasses) === 0) {
 			return null;

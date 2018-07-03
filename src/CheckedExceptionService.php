@@ -2,6 +2,7 @@
 
 namespace Pepakriz\PHPStanExceptionRules;
 
+use function array_filter;
 use function is_a;
 
 class CheckedExceptionService
@@ -22,7 +23,18 @@ class CheckedExceptionService
 		$this->checkedExceptions = $checkedExceptions;
 	}
 
-	public function isExceptionClassWhitelisted(string $exceptionClassName): bool
+	/**
+	 * @param string[] $classes
+	 * @return string[]
+	 */
+	public function filterCheckedExceptions(array $classes): array
+	{
+		return array_filter($classes, function (string $class): bool {
+			return $this->isCheckedException($class);
+		});
+	}
+
+	public function isCheckedException(string $exceptionClassName): bool
 	{
 		foreach ($this->checkedExceptions as $whitelistedException) {
 			if (is_a($exceptionClassName, $whitelistedException, true)) {

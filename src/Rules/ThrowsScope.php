@@ -6,6 +6,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\TryCatch;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeUtils;
+use function array_filter;
 use function array_keys;
 use function array_pop;
 use function array_reverse;
@@ -59,7 +60,26 @@ class ThrowsScope
 		array_pop($this->tryCatchQueue);
 	}
 
-	public function isExceptionCaught(string $exceptionClassName): bool
+	/**
+	 * @param string[] $classes
+	 * @return string[]
+	 */
+	public function filterExceptionsByUncaught(array $classes): array
+	{
+		return array_filter($classes, function (string $class): bool {
+			return $this->isExceptionCaught($class) === false;
+		});
+	}
+
+	/**
+	 * @return string[]
+	 */
+	public function getCaughtExceptions(Name $name): array
+	{
+		return $name->getAttribute(self::CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE, []);
+	}
+
+	private function isExceptionCaught(string $exceptionClassName): bool
 	{
 		foreach (array_reverse(array_keys($this->tryCatchQueue)) as $catchKey) {
 			$catches = $this->tryCatchQueue[$catchKey];
@@ -88,14 +108,6 @@ class ThrowsScope
 		}
 
 		return false;
-	}
-
-	/**
-	 * @return string[]
-	 */
-	public function getCaughtExceptions(Name $name): array
-	{
-		return $name->getAttribute(self::CAUGHT_CHECKED_EXCEPTIONS_ATTRIBUTE, []);
 	}
 
 }
