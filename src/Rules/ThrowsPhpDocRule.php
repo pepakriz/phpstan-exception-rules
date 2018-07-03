@@ -152,28 +152,14 @@ class ThrowsPhpDocRule
 				return [];
 			}
 
-			$targetMethodReflection = $this->getMethod($node->class, $methodName, $scope);
-			if (!$targetMethodReflection instanceof ThrowableReflection) {
-				return [];
-			}
-
-			return $this->processThrowsTypes(
-				$targetMethodReflection->getThrowType()
-			);
+			return $this->processThrowTypesOnMethod($node->class, $methodName, $scope);
 		});
 	}
 
 	public function enableCallConstructorPropagation(): Rule
 	{
 		return BaseRule::createRule(New_::class, function (New_ $node, Scope $scope): array {
-			$targetMethodReflection = $this->getMethod($node->class, '__construct', $scope);
-			if (!$targetMethodReflection instanceof ThrowableReflection) {
-				return [];
-			}
-
-			return $this->processThrowsTypes(
-				$targetMethodReflection->getThrowType()
-			);
+			return $this->processThrowTypesOnMethod($node->class, '__construct', $scope);
 		});
 	}
 
@@ -265,6 +251,29 @@ class ThrowsPhpDocRule
 	}
 
 	/**
+	 * @param Name|Expr|ClassLike $class
+	 * @return string[]
+	 */
+	private function processThrowTypesOnMethod($class, string $method, Scope $scope): array
+	{
+		$throwTypes = [];
+		$targetMethodReflections = $this->getMethodReflections($class, $method, $scope);
+		foreach ($targetMethodReflections as $targetMethodReflection) {
+			if (!$targetMethodReflection instanceof ThrowableReflection) {
+				continue;
+			}
+
+			$throwTypes[] = $targetMethodReflection->getThrowType();
+		}
+
+		if (count($throwTypes) === 0) {
+			return [];
+		}
+
+		return $this->processThrowsTypes(TypeCombinator::union(...$throwTypes));
+	}
+
+	/**
 	 * @return string[]
 	 */
 	private function processThrowsTypes(?Type $targetThrowType): array
@@ -306,12 +315,13 @@ class ThrowsPhpDocRule
 
 	/**
 	 * @param Name|Expr|ClassLike $class
+	 * @return MethodReflection[]
 	 */
-	private function getMethod(
+	private function getMethodReflections(
 		$class,
 		string $methodName,
 		Scope $scope
-	): ?MethodReflection
+	): array
 	{
 		if ($class instanceof ClassLike) {
 			$className = $class->name;
@@ -327,11 +337,13 @@ class ThrowsPhpDocRule
 			$calledOnType = $scope->getType($class);
 		}
 
-		if (!$calledOnType->hasMethod($methodName)) {
-			return null;
+		$methodReflections = [];
+		$classNames = TypeUtils::getDirectClassNames($calledOnType);
+		foreach ($classNames as $className) {
+			$methodReflections[] = $this->broker->getClass($className)->getMethod($methodName, $scope);
 		}
 
-		return $calledOnType->getMethod($methodName, $scope);
+		return $methodReflections;
 	}
 
 }

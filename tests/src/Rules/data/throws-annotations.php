@@ -141,6 +141,16 @@ class ThrowsAnnotationsClass
 		$union->foo(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
 	}
 
+	/**
+	 * @throws NextRuntimeException
+	 */
+	public function callStaticUnion(): void
+	{
+		/** @var UnionOne|UnionTwo|UnionThree $union */
+		$union = getStaticUnion();
+		$union::staticFoo(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
+	}
+
 }
 
 class ThrowInConstructor
@@ -166,6 +176,14 @@ class UnionOne  {
 		throw new SomeRuntimeException();
 	}
 
+	/**
+	 * @throws SomeRuntimeException
+	 */
+	public static function staticFoo(): void
+	{
+		throw new SomeRuntimeException();
+	}
+
 }
 
 class UnionTwo {
@@ -177,6 +195,15 @@ class UnionTwo {
 	{
 		throw new NextRuntimeException();
 	}
+
+	/**
+	 * @throws NextRuntimeException
+	 */
+	public static function staticFoo(): void
+	{
+		throw new NextRuntimeException();
+	}
+
 }
 
 class UnionThree {
@@ -188,6 +215,15 @@ class UnionThree {
 	{
 		throw new ConcreteNextRuntimeException();
 	}
+
+	/**
+	 * @throws ConcreteNextRuntimeException
+	 */
+	public static function staticFoo(): void
+	{
+		throw new ConcreteNextRuntimeException();
+	}
+
 }
 
 class Issue6
