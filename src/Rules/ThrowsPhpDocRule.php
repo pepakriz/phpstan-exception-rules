@@ -387,6 +387,10 @@ class ThrowsPhpDocRule implements Rule
 			return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'next'], $scope);
 		}
 
+		if ($functionName === 'json_encode') {
+			return $this->processThrowTypesOnMethod($node->args[0]->value, ['jsonSerialize'], $scope);
+		}
+
 		return [];
 	}
 

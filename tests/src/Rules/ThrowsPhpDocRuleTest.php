@@ -56,4 +56,9 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 		$this->analyse(__DIR__ . '/data/countables.php');
 	}
 
+	public function testJsonSerializable(): void
+	{
+		$this->analyse(__DIR__ . '/data/json-serializable.php');
+	}
+
 }
