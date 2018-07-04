@@ -18,6 +18,7 @@ This extension provides following rules and features:
 * Ignore caught checked exceptions ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/try-catch.php))
 * Unnecessary `@throws` annotation detection ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-throws.php))
 * `@throws` annotation variance validation ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-inheritance.php))
+* [Dynamic throw types based on arguments](#extensibility)
 * Unreachable catch statements
 	* exception has been caught in some previous catch statement ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unreachable-catches.php))
 	* checked exception is never thrown in the corresponding try block ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-catches.php))
@@ -45,6 +46,26 @@ parameters:
 	exceptionRules:
 		checkedExceptions:
 			- RuntimeException
+```
+
+## Extensibility
+
+`Dynamic throw type extensions` - If the throw type is not always the same, but depends on an argument passed to the method. (Similar feature as [Dynamic return type extensions](https://github.com/phpstan/phpstan#dynamic-return-type-extensions))
+
+There are interfaces, which you can implement:
+
+* `Pepakriz\PHPStanExceptionRules\DynamicMethodThrowTypeExtension` - service tag: `exceptionRules.dynamicMethodThrowTypeExtension`
+* `Pepakriz\PHPStanExceptionRules\DynamicStaticMethodThrowTypeExtension` - service tag: `exceptionRules.dynamicStaticMethodThrowTypeExtension`
+* `Pepakriz\PHPStanExceptionRules\DynamicFunctionThrowTypeExtension` - service tag: `exceptionRules.dynamicFunctionThrowTypeExtension`
+
+and register as service with correct tag:
+
+```neon
+services:
+	-
+		class: App\PHPStan\EntityManagerDynamicMethodThrowTypeExtension
+		tags:
+			- exceptionRules.dynamicMethodThrowTypeExtension
 ```
 
 ## Motivation

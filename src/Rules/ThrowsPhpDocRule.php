@@ -5,6 +5,7 @@ namespace Pepakriz\PHPStanExceptionRules\Rules;
 use Iterator;
 use IteratorAggregate;
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
+use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\Node\ClassMethodEnd;
 use Pepakriz\PHPStanExceptionRules\Node\TryCatchTryEnd;
 use PhpParser\Node;
@@ -13,7 +14,6 @@ use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
-use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Catch_;
@@ -25,6 +25,7 @@ use PhpParser\Node\Stmt\TryCatch;
 use PHPStan\Analyser\Scope;
 use PHPStan\Broker\Broker;
 use PHPStan\Broker\ClassNotFoundException;
+use PHPStan\Broker\FunctionNotFoundException;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\MissingMethodFromReflectionException;
 use PHPStan\Reflection\ThrowableReflection;
@@ -51,6 +52,11 @@ class ThrowsPhpDocRule implements Rule
 	private $checkedExceptionService;
 
 	/**
+	 * @var DynamicThrowTypeService
+	 */
+	private $dynamicThrowTypeService;
+
+	/**
 	 * @var Broker
 	 */
 	private $broker;
@@ -62,10 +68,12 @@ class ThrowsPhpDocRule implements Rule
 
 	public function __construct(
 		CheckedExceptionService $checkedExceptionService,
+		DynamicThrowTypeService $dynamicThrowTypeService,
 		Broker $broker
 	)
 	{
 		$this->checkedExceptionService = $checkedExceptionService;
+		$this->dynamicThrowTypeService = $dynamicThrowTypeService;
 		$this->broker = $broker;
 		$this->throwsScope = new ThrowsScope();
 	}
@@ -195,7 +203,7 @@ class ThrowsPhpDocRule implements Rule
 				continue;
 			}
 
-			$throwType = $targetMethodReflection->getThrowType();
+			$throwType = $this->dynamicThrowTypeService->getMethodThrowType($targetMethodReflection, $node, $scope);
 			if ($throwType === null) {
 				continue;
 			}
@@ -224,7 +232,22 @@ class ThrowsPhpDocRule implements Rule
 			return [];
 		}
 
-		return $this->processThrowTypesOnMethod($node->class, [$methodName], $scope);
+		$throwTypes = [];
+		$targetMethodReflections = $this->getMethodReflections($node->class, [$methodName], $scope);
+		foreach ($targetMethodReflections as $targetMethodReflection) {
+			$throwType = $this->dynamicThrowTypeService->getStaticMethodThrowType($targetMethodReflection, $node, $scope);
+			if ($throwType === null) {
+				continue;
+			}
+
+			$throwTypes[] = $throwType;
+		}
+
+		if (count($throwTypes) === 0) {
+			return [];
+		}
+
+		return $this->processThrowsTypes(TypeCombinator::union(...$throwTypes));
 	}
 
 	/**
@@ -360,17 +383,12 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private function processFuncCall(FuncCall $node, Scope $scope): array
 	{
-		$functionName = $node->name;
-		if ($functionName instanceof Variable) {
-			$functionName = $functionName->name;
-		} elseif ($functionName instanceof Name) {
-			$functionName = $functionName->toString();
+		$nodeName = $node->name;
+		if (!$nodeName instanceof Name) {
+			return []; // closure call
 		}
 
-		if (!is_string($functionName)) {
-			return [];
-		}
-
+		$functionName = $nodeName->toString();
 		if ($functionName === 'count') {
 			return $this->processThrowTypesOnMethod($node->args[0]->value, ['count'], $scope);
 		}
@@ -391,7 +409,15 @@ class ThrowsPhpDocRule implements Rule
 			return $this->processThrowTypesOnMethod($node->args[0]->value, ['jsonSerialize'], $scope);
 		}
 
-		return [];
+		try {
+			$functionReflection = $this->broker->getFunction($nodeName, $scope);
+		} catch (FunctionNotFoundException $e) {
+			return [];
+		}
+
+		$throwType = $this->dynamicThrowTypeService->getFunctionThrowType($functionReflection, $node, $scope);
+
+		return $this->processThrowsTypes($throwType);
 	}
 
 	/**
