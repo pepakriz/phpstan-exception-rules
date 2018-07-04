@@ -3,6 +3,9 @@ parameters:
 		reportMaybes: true
 		checkedExceptions: []
 
+extensions:
+	exceptionRules: Pepakriz\PHPStanExceptionRules\DI\ExceptionRulesExtension
+
 services:
 	-
 		class: Pepakriz\PHPStanExceptionRules\CheckedExceptionService(%exceptionRules.checkedExceptions%)
