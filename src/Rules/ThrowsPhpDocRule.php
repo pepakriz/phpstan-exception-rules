@@ -138,7 +138,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	public function processTryCatch(TryCatch $node, Scope $scope): array
+	private function processTryCatch(TryCatch $node, Scope $scope): array
 	{
 		$classReflection = $scope->getClassReflection();
 		$methodReflection = $scope->getFunction();
@@ -156,7 +156,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	public function processTryCatchTryEnd(): array
+	private function processTryCatchTryEnd(): array
 	{
 		$this->throwsScope->exitFromTry();
 
@@ -166,7 +166,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	public function processThrow(Throw_ $node, Scope $scope): array
+	private function processThrow(Throw_ $node, Scope $scope): array
 	{
 		$exceptionType = $scope->getType($node->expr);
 		$exceptionClassNames = TypeUtils::getDirectClassNames($exceptionType);
@@ -181,7 +181,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	public function processMethodCall(MethodCall $node, Scope $scope): array
+	private function processMethodCall(MethodCall $node, Scope $scope): array
 	{
 		$methodName = $node->name;
 		if (!$methodName instanceof Identifier) {
@@ -221,7 +221,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	public function processStaticCall(StaticCall $node, Scope $scope): array
+	private function processStaticCall(StaticCall $node, Scope $scope): array
 	{
 		$methodName = $node->name;
 		if ($methodName instanceof Identifier) {
@@ -253,7 +253,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	public function processNew(New_ $node, Scope $scope): array
+	private function processNew(New_ $node, Scope $scope): array
 	{
 		return $this->processThrowTypesOnMethod($node->class, ['__construct'], $scope);
 	}
@@ -261,7 +261,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	public function processForeach(Foreach_ $node, Scope $scope): array
+	private function processForeach(Foreach_ $node, Scope $scope): array
 	{
 		$type = $scope->getType($node->expr);
 
@@ -291,7 +291,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	public function processClassMethod(ClassMethod $node, Scope $scope): array
+	private function processClassMethod(ClassMethod $node, Scope $scope): array
 	{
 		if ($node->stmts === null) {
 			$node->stmts = [];
@@ -315,7 +315,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	public function processClassMethodEnd(Scope $scope): array
+	private function processClassMethodEnd(Scope $scope): array
 	{
 		$usedThrowsAnnotations = $this->throwsScope->exitFromThrowsAnnotationBlock();
 
@@ -357,7 +357,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	public function processCatch(Catch_ $node): array
+	private function processCatch(Catch_ $node): array
 	{
 		$messages = [];
 
