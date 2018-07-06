@@ -106,6 +106,11 @@ class ThrowsPhpDocInheritanceRule implements Rule
 
 			$parentThrowType = $methodReflection->getThrowType();
 			if ($parentThrowType === null) {
+				$messages[] = sprintf(
+					'PHPDoc tag @throws with type %s is not compatible with parent',
+					$throwType->describe(VerbosityLevel::typeOnly())
+				);
+
 				continue;
 			}
 

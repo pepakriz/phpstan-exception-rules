@@ -36,6 +36,11 @@ class BaseThrowsAnnotations
 
 	}
 
+	public function parentWithoutThrows(): void
+	{
+
+	}
+
 }
 
 class ThrowsAnnotations extends BaseThrowsAnnotations
@@ -70,6 +75,14 @@ class ThrowsAnnotations extends BaseThrowsAnnotations
 	 * @throws BaseException
 	 */
 	public function wrong(): void // error: PHPDoc tag @throws with type Pepakriz\PHPStanExceptionRules\Rules\Data\Inheritance\BaseException is not compatible with parent Pepakriz\PHPStanExceptionRules\Rules\Data\Inheritance\ConcreteException
+	{
+
+	}
+
+	/**
+	 * @throws BaseException
+	 */
+	public function parentWithoutThrows(): void // error: PHPDoc tag @throws with type Pepakriz\PHPStanExceptionRules\Rules\Data\Inheritance\BaseException is not compatible with parent
 	{
 
 	}
