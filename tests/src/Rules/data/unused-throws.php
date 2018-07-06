@@ -75,7 +75,7 @@ abstract class IgnoreOnAbstractMethod
 	/**
 	 * @throws RuntimeException
 	 */
-	public function unusedAnnotation(): void // error: Unused @throws RuntimeException annotation
+	public function unusedAnnotation(): void
 	{
 
 	}

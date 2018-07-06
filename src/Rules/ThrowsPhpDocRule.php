@@ -34,7 +34,6 @@ use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeUtils;
-use ReflectionMethod;
 use function array_diff;
 use function array_map;
 use function array_merge;
@@ -325,12 +324,7 @@ class ThrowsPhpDocRule implements Rule
 			return [];
 		}
 
-		if ($classReflection->isInterface()) {
-			return [];
-		}
-
-		$nativeMethodReflection = new ReflectionMethod($classReflection->getName(), $methodReflection->getName());
-		if ($nativeMethodReflection->isAbstract()) {
+		if ($classReflection->isInterface() || $classReflection->isAbstract()) {
 			return [];
 		}
 
