@@ -68,6 +68,11 @@ class ThrowsPhpDocInheritanceRule implements Rule
 			return [];
 		}
 
+		$methodName = $node->name->toString();
+		if ($methodName === '__construct') {
+			return [];
+		}
+
 		$traitReflection = $scope->getTraitReflection();
 		$traitName = $traitReflection !== null ? $traitReflection->getName() : null;
 
@@ -84,8 +89,6 @@ class ThrowsPhpDocInheritanceRule implements Rule
 		}
 
 		$throwType = $throwsTag->getType();
-		$methodName = $node->name->toString();
-
 		$parentClasses = $classReflection->getInterfaces();
 		$parentClass = $classReflection->getParentClass();
 		if ($parentClass !== false) {

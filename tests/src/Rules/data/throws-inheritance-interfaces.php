@@ -20,6 +20,8 @@ interface BaseThrowsAnnotations
 	 */
 	public function wrong(): void;
 
+	public function __construct();
+
 	public function parentWithoutThrows(): void;
 
 }
@@ -36,6 +38,11 @@ interface ThrowsAnnotations extends BaseThrowsAnnotations
 	 * @throws BaseException
 	 */
 	public function wrong(): void; // error: PHPDoc tag @throws with type Pepakriz\PHPStanExceptionRules\Rules\Data\InheritanceInterfaces\BaseException is not compatible with parent Pepakriz\PHPStanExceptionRules\Rules\Data\InheritanceInterfaces\ConcreteException
+
+	/**
+	 * @throws BaseException
+	 */
+	public function __construct();
 
 	/**
 	 * @throws BaseException
@@ -59,6 +66,14 @@ class Implementation implements BaseThrowsAnnotations
 	 * @throws BaseException
 	 */
 	public function wrong(): void // error: PHPDoc tag @throws with type Pepakriz\PHPStanExceptionRules\Rules\Data\InheritanceInterfaces\BaseException is not compatible with parent Pepakriz\PHPStanExceptionRules\Rules\Data\InheritanceInterfaces\ConcreteException
+	{
+
+	}
+
+	/**
+	 * @throws BaseException
+	 */
+	public function __construct()
 	{
 
 	}
