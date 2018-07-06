@@ -87,4 +87,9 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 		$this->analyse(__DIR__ . '/data/dynamic-function-extension.php');
 	}
 
+	public function testUnsupportedCatchCheckedAndUnchecked(): void
+	{
+		$this->analyse(__DIR__ . '/data/unsupported-catch.php');
+	}
+
 }

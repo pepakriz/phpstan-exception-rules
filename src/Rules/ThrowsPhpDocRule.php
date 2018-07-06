@@ -39,6 +39,7 @@ use function array_map;
 use function array_merge;
 use function array_unique;
 use function count;
+use function implode;
 use function is_string;
 use function sprintf;
 
@@ -169,8 +170,8 @@ class ThrowsPhpDocRule implements Rule
 	{
 		$exceptionType = $scope->getType($node->expr);
 		$exceptionClassNames = TypeUtils::getDirectClassNames($exceptionType);
-		$exceptionClassNames = $this->checkedExceptionService->filterCheckedExceptions($exceptionClassNames);
 		$exceptionClassNames = $this->throwsScope->filterExceptionsByUncaught($exceptionClassNames);
+		$exceptionClassNames = $this->checkedExceptionService->filterCheckedExceptions($exceptionClassNames);
 
 		return array_map(function (string $exceptionClassName): string {
 			return sprintf('Missing @throws %s annotation', $exceptionClassName);
@@ -317,6 +318,7 @@ class ThrowsPhpDocRule implements Rule
 	private function processClassMethodEnd(Scope $scope): array
 	{
 		$usedThrowsAnnotations = $this->throwsScope->exitFromThrowsAnnotationBlock();
+		$usedThrowsAnnotations = $this->checkedExceptionService->filterCheckedExceptions($usedThrowsAnnotations);
 
 		$classReflection = $scope->getClassReflection();
 		$methodReflection = $scope->getFunction();
@@ -356,8 +358,28 @@ class ThrowsPhpDocRule implements Rule
 		$messages = [];
 
 		foreach ($node->types as $type) {
-			$caughtCheckedExceptions = $this->throwsScope->getCaughtExceptions($type);
-			if (count($caughtCheckedExceptions) > 0) {
+			$caughtExceptions = $this->throwsScope->getCaughtExceptions($type);
+
+			$caughtChecked = [];
+			$caughtUnchecked = [];
+			foreach ($caughtExceptions as $caughtException) {
+				if ($this->checkedExceptionService->isCheckedException($caughtException)) {
+					$caughtChecked[] = $caughtException;
+				} else {
+					$caughtUnchecked[] = $caughtException;
+				}
+			}
+
+			if (count($caughtChecked) > 0 && count($caughtUnchecked) > 0) {
+				$messages[] = sprintf(
+					'Catching checked (%s) and unchecked (%s) exceptions in one catch statement is not supported',
+					implode(', ', $caughtChecked),
+					implode(', ', $caughtUnchecked)
+				);
+			}
+
+			$caughtExceptions = $this->checkedExceptionService->filterCheckedExceptions($caughtExceptions);
+			if (count($caughtExceptions) > 0) {
 				continue;
 			}
 
@@ -453,8 +475,8 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		$targetExceptionClasses = TypeUtils::getDirectClassNames($targetThrowType);
-		$targetExceptionClasses = $this->checkedExceptionService->filterCheckedExceptions($targetExceptionClasses);
 		$targetExceptionClasses = $this->throwsScope->filterExceptionsByUncaught($targetExceptionClasses);
+		$targetExceptionClasses = $this->checkedExceptionService->filterCheckedExceptions($targetExceptionClasses);
 
 		return array_map(function (string $targetExceptionClass): string {
 			return sprintf('Missing @throws %s annotation', $targetExceptionClass);
