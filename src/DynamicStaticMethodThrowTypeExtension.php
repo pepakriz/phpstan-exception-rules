@@ -14,6 +14,6 @@ interface DynamicStaticMethodThrowTypeExtension
 
 	public function isStaticMethodSupported(MethodReflection $methodReflection): bool;
 
-	public function getTypeFromStaticMethodCall(MethodReflection $methodReflection, StaticCall $methodCall, Scope $scope): Type;
+	public function getThrowTypeFromStaticMethodCall(MethodReflection $methodReflection, StaticCall $methodCall, Scope $scope): Type;
 
 }

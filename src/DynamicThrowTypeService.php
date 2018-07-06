@@ -93,7 +93,7 @@ class DynamicThrowTypeService
 				continue;
 			}
 
-			return $extension->getTypeFromMethodCall($methodReflection, $methodCall, $scope);
+			return $extension->getThrowTypeFromMethodCall($methodReflection, $methodCall, $scope);
 		}
 
 		if ($methodReflection instanceof ThrowableReflection) {
@@ -127,7 +127,7 @@ class DynamicThrowTypeService
 				continue;
 			}
 
-			return $extension->getTypeFromStaticMethodCall($methodReflection, $staticCall, $scope);
+			return $extension->getThrowTypeFromStaticMethodCall($methodReflection, $staticCall, $scope);
 		}
 
 		if ($methodReflection instanceof ThrowableReflection) {
@@ -144,7 +144,7 @@ class DynamicThrowTypeService
 				continue;
 			}
 
-			return $extension->getTypeFromFunctionCall($functionReflection, $functionCall, $scope);
+			return $extension->getThrowTypeFromFunctionCall($functionReflection, $functionCall, $scope);
 		}
 
 		return $functionReflection->getThrowType();

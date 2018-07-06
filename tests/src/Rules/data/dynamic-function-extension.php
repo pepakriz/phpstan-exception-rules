@@ -22,7 +22,7 @@ class DynamicFunctionExtension implements DynamicFunctionThrowTypeExtension
 		return $functionReflection->getName() === __NAMESPACE__ . '\\throwDynamicException';
 	}
 
-	public function getTypeFromFunctionCall(FunctionReflection $functionReflection, FuncCall $functionCall, Scope $scope): Type
+	public function getThrowTypeFromFunctionCall(FunctionReflection $functionReflection, FuncCall $functionCall, Scope $scope): Type
 	{
 		return new ObjectType(RuntimeException::class);
 	}

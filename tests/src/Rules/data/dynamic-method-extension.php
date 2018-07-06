@@ -23,7 +23,7 @@ class DynamicMethodExtension implements DynamicMethodThrowTypeExtension
 		return $methodReflection->getName() === 'throwDynamicException';
 	}
 
-	public function getTypeFromMethodCall(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope): Type
+	public function getThrowTypeFromMethodCall(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope): Type
 	{
 		return new ObjectType(RuntimeException::class);
 	}
