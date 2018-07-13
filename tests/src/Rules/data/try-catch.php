@@ -92,6 +92,34 @@ class TryCatchClass
 		}
 	}
 
+	public function caughtOnlySomeSubtypes(): void
+	{
+		try {
+			$this->throwAsParent(); // error: Missing @throws RuntimeException annotation
+		} catch (FooRuntimeException $e) {
+			// ignore
+		} catch (BarRuntimeException $e) {
+			// ignore
+		} catch (SomeRuntimeException $e) {
+			// ignore
+		}
+	}
+
+	public function caughtSomeSubtypesAndConcreteException(): void
+	{
+		try {
+			$this->throwAsParent();
+		} catch (FooRuntimeException $e) {
+			// ignore
+		} catch (BarRuntimeException $e) {
+			// ignore
+		} catch (SomeRuntimeException $e) {
+			// ignore
+		} catch (RuntimeException $e) {
+			// ignore
+		}
+	}
+
 	/**
 	 * @throws FooRuntimeException
 	 * @throws BarRuntimeException
@@ -110,6 +138,16 @@ class TryCatchClass
 	 * @throws SomeRuntimeException
 	 */
 	private static function throwStaticUnion(): void
+	{
+		throw new FooRuntimeException();
+		throw new BarRuntimeException();
+		throw new SomeRuntimeException();
+	}
+
+	/**
+	 * @throws RuntimeException
+	 */
+	private function throwAsParent(): void
 	{
 		throw new FooRuntimeException();
 		throw new BarRuntimeException();

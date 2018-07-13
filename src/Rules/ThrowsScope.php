@@ -86,11 +86,18 @@ class ThrowsScope
 
 			foreach ($catches->catches as $catch) {
 				foreach ($catch->types as $type) {
-					if (is_a($exceptionClassName, $type->toString(), true)) {
-						$caughtCheckedExceptions = $type->getAttribute(self::CAUGHT_EXCEPTIONS_ATTRIBUTE, []);
-						$caughtCheckedExceptions[] = $exceptionClassName;
-						$type->setAttribute(self::CAUGHT_EXCEPTIONS_ATTRIBUTE, $caughtCheckedExceptions);
+					$catchType = $type->toString();
+					$isCaught = is_a($exceptionClassName, $catchType, true);
+					$isMaybeCaught = is_a($catchType, $exceptionClassName, true);
+					if (!$isCaught && !$isMaybeCaught) {
+						continue;
+					}
 
+					$caughtCheckedExceptions = $type->getAttribute(self::CAUGHT_EXCEPTIONS_ATTRIBUTE, []);
+					$caughtCheckedExceptions[] = $exceptionClassName;
+					$type->setAttribute(self::CAUGHT_EXCEPTIONS_ATTRIBUTE, $caughtCheckedExceptions);
+
+					if ($isCaught) {
 						return true;
 					}
 				}
