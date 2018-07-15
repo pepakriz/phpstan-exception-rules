@@ -1,6 +1,6 @@
 parameters:
 	exceptionRules:
-		reportMaybes: true
+		reportUnusedCatchesOfUncheckedExceptions: false
 		checkedExceptions: []
 		uncheckedExceptions: []
 		methodThrowTypeDeclarations: []
@@ -22,6 +22,8 @@ services:
 
 	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule
+		arguments:
+			reportUnusedCatchesOfUncheckedExceptions: %exceptionRules.reportUnusedCatchesOfUncheckedExceptions%
 		tags: [phpstan.rules.rule]
 
 	-

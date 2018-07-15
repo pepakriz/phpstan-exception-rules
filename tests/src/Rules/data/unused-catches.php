@@ -71,5 +71,39 @@ class UnusedCatches
 		}
 	}
 
+	public function correctCatchMethodCall(): void
+	{
+		try {
+			$this->someVoidMethod();
+		} catch (LogicException $e) {
+
+		} catch (RuntimeException $e) { // error: RuntimeException is never thrown in the corresponding try block
+
+		}
+	}
+
+	public function correctCatchMethodCallWithThrows(): void
+	{
+		try {
+			$this->throwLogic();
+		} catch (LogicException $e) {
+
+		} catch (RuntimeException $e) { // error: RuntimeException is never thrown in the corresponding try block
+
+		}
+	}
+
+	private function someVoidMethod(): void
+	{
+	}
+
+	/**
+	 * @throws LogicException
+	 */
+	private function throwLogic(): void // error: Unused @throws LogicException annotation
+	{
+		throw new LogicException();
+	}
+
 }
 
