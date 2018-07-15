@@ -38,7 +38,7 @@ composer require --dev pepakriz/phpstan-exception-rules
 
 And include and configure extension.neon in your project's PHPStan config:
 
-```yaml
+```neon
 includes:
 	- vendor/pepakriz/phpstan-exception-rules/extension.neon
 
