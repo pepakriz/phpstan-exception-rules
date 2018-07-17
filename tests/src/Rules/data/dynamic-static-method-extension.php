@@ -3,6 +3,7 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules\DynamicStaticMethodExtension;
 
 use Pepakriz\PHPStanExceptionRules\DynamicStaticMethodThrowTypeExtension;
+use Pepakriz\PHPStanExceptionRules\UnsupportedFunctionException;
 use PhpParser\Node\Expr\StaticCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
@@ -18,13 +19,15 @@ class DynamicStaticMethodExtension implements DynamicStaticMethodThrowTypeExtens
 		return TestClass::class;
 	}
 
-	public function isStaticMethodSupported(MethodReflection $methodReflection): bool
-	{
-		return $methodReflection->getName() === 'throwDynamicException';
-	}
-
+	/**
+	 * @throws UnsupportedFunctionException
+	 */
 	public function getThrowTypeFromStaticMethodCall(MethodReflection $methodReflection, StaticCall $methodCall, Scope $scope): Type
 	{
+		if ($methodReflection->getName() !== 'throwDynamicException') {
+			throw new UnsupportedFunctionException();
+		}
+
 		return new ObjectType(RuntimeException::class);
 	}
 

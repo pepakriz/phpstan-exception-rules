@@ -10,8 +10,9 @@ use PHPStan\Type\Type;
 interface DynamicFunctionThrowTypeExtension
 {
 
-	public function isFunctionSupported(FunctionReflection $functionReflection): bool;
-
+	/**
+	 * @throws UnsupportedFunctionException
+	 */
 	public function getThrowTypeFromFunctionCall(FunctionReflection $functionReflection, FuncCall $functionCall, Scope $scope): Type;
 
 }

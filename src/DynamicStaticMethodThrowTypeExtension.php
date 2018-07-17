@@ -12,8 +12,9 @@ interface DynamicStaticMethodThrowTypeExtension
 
 	public function getClass(): string;
 
-	public function isStaticMethodSupported(MethodReflection $methodReflection): bool;
-
+	/**
+	 * @throws UnsupportedFunctionException
+	 */
 	public function getThrowTypeFromStaticMethodCall(MethodReflection $methodReflection, StaticCall $methodCall, Scope $scope): Type;
 
 }
