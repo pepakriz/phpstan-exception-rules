@@ -2,8 +2,6 @@
 
 namespace Pepakriz\PHPStanExceptionRules;
 
-use RuntimeException;
-
 class UnsupportedFunctionException extends RuntimeException
 {
 
