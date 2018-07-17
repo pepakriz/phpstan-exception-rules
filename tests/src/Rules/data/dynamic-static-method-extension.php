@@ -21,7 +21,7 @@ class DynamicStaticMethodExtension implements DynamicStaticMethodThrowTypeExtens
 	 */
 	public function getThrowTypeFromStaticMethodCall(MethodReflection $methodReflection, StaticCall $methodCall, Scope $scope): Type
 	{
-		if (!is_a($methodReflection->getDeclaringClass()->getName(), TestClass::class, true)) {
+		if ($methodReflection->getDeclaringClass()->getName() !== TestClass::class) {
 			throw new UnsupportedClassException();
 		}
 
