@@ -3,6 +3,7 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules\DynamicMethodExtension;
 
 use Pepakriz\PHPStanExceptionRules\DynamicMethodThrowTypeExtension;
+use Pepakriz\PHPStanExceptionRules\UnsupportedClassException;
 use Pepakriz\PHPStanExceptionRules\UnsupportedFunctionException;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
@@ -14,16 +15,16 @@ use RuntimeException;
 class DynamicMethodExtension implements DynamicMethodThrowTypeExtension
 {
 
-	public function getClass(): string
-	{
-		return TestClass::class;
-	}
-
 	/**
+	 * @throws UnsupportedClassException
 	 * @throws UnsupportedFunctionException
 	 */
 	public function getThrowTypeFromMethodCall(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope): Type
 	{
+		if (!is_a($methodReflection->getDeclaringClass()->getName(), TestClass::class, true)) {
+			throw new UnsupportedClassException();
+		}
+
 		if ($methodReflection->getName() !== 'throwDynamicException') {
 			throw new UnsupportedFunctionException();
 		}
