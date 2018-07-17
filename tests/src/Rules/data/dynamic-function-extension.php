@@ -3,6 +3,7 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules\DynamicFunctionExtension;
 
 use Pepakriz\PHPStanExceptionRules\DynamicFunctionThrowTypeExtension;
+use Pepakriz\PHPStanExceptionRules\UnsupportedFunctionException;
 use PhpParser\Node\Expr\FuncCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
@@ -17,13 +18,15 @@ function throwDynamicException(): void {
 class DynamicFunctionExtension implements DynamicFunctionThrowTypeExtension
 {
 
-	public function isFunctionSupported(FunctionReflection $functionReflection): bool
-	{
-		return $functionReflection->getName() === __NAMESPACE__ . '\\throwDynamicException';
-	}
-
+	/**
+	 * @throws UnsupportedFunctionException
+	 */
 	public function getThrowTypeFromFunctionCall(FunctionReflection $functionReflection, FuncCall $functionCall, Scope $scope): Type
 	{
+		if ($functionReflection->getName() !== __NAMESPACE__ . '\\throwDynamicException') {
+			throw new UnsupportedFunctionException();
+		}
+
 		return new ObjectType(RuntimeException::class);
 	}
 
