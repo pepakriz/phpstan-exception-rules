@@ -10,7 +10,6 @@ use PHPStan\Reflection\FunctionReflection;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Type\Type;
-use function array_merge;
 use function spl_object_hash;
 use function sprintf;
 
@@ -18,12 +17,12 @@ class DynamicThrowTypeService
 {
 
 	/**
-	 * @var DynamicMethodThrowTypeExtension[][]
+	 * @var DynamicMethodThrowTypeExtension[]
 	 */
 	private $dynamicMethodThrowTypeExtensions = [];
 
 	/**
-	 * @var DynamicStaticMethodThrowTypeExtension[][]
+	 * @var DynamicStaticMethodThrowTypeExtension[]
 	 */
 	private $dynamicStaticMethodThrowTypeExtensions = [];
 
@@ -31,6 +30,11 @@ class DynamicThrowTypeService
 	 * @var DynamicFunctionThrowTypeExtension[]
 	 */
 	private $dynamicFunctionThrowTypeExtensions = [];
+
+	/**
+	 * @var bool[][]
+	 */
+	private $unsupportedClasses = [];
 
 	/**
 	 * @var bool[][]
@@ -63,12 +67,12 @@ class DynamicThrowTypeService
 
 	private function addDynamicMethodExtension(DynamicMethodThrowTypeExtension $extension): void
 	{
-		$this->dynamicMethodThrowTypeExtensions[$extension->getClass()][] = $extension;
+		$this->dynamicMethodThrowTypeExtensions[] = $extension;
 	}
 
 	private function addDynamicStaticMethodExtension(DynamicStaticMethodThrowTypeExtension $extension): void
 	{
-		$this->dynamicStaticMethodThrowTypeExtensions[$extension->getClass()][] = $extension;
+		$this->dynamicStaticMethodThrowTypeExtensions[] = $extension;
 	}
 
 	private function addDynamicFunctionExtension(DynamicFunctionThrowTypeExtension $extension): void
@@ -79,31 +83,22 @@ class DynamicThrowTypeService
 	public function getMethodThrowType(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope): ?Type
 	{
 		$classReflection = $methodReflection->getDeclaringClass();
-		$classNames = array_merge(
-			[$classReflection->getName()],
-			$classReflection->getParentClassesNames(),
-			$classReflection->getNativeReflection()->getInterfaceNames()
-		);
 
-		/** @var DynamicMethodThrowTypeExtension[] $extensions */
-		$extensions = [];
-		foreach ($classNames as $className) {
-			if (!isset($this->dynamicMethodThrowTypeExtensions[$className])) {
+		$functionName = sprintf('%s::%s', $classReflection->getName(), $methodReflection->getName());
+		foreach ($this->dynamicMethodThrowTypeExtensions as $extension) {
+			$extensionHash = spl_object_hash($extension);
+			if (isset($this->unsupportedClasses[$classReflection->getName()][$extensionHash])) {
 				continue;
 			}
 
-			$extensions = array_merge($extensions, $this->dynamicMethodThrowTypeExtensions[$className]);
-		}
-
-		$functionName = sprintf('%s::%s', $classReflection->getName(), $methodReflection->getName());
-		foreach ($extensions as $extension) {
-			$extensionHash = spl_object_hash($extension);
 			if (isset($this->unsupportedFunctions[$functionName][$extensionHash])) {
 				continue;
 			}
 
 			try {
 				return $extension->getThrowTypeFromMethodCall($methodReflection, $methodCall, $scope);
+			} catch (UnsupportedClassException $e) {
+				$this->unsupportedClasses[$classReflection->getName()][$extensionHash] = true;
 			} catch (UnsupportedFunctionException $e) {
 				$this->unsupportedFunctions[$functionName][$extensionHash] = true;
 			}
@@ -119,31 +114,22 @@ class DynamicThrowTypeService
 	public function getStaticMethodThrowType(MethodReflection $methodReflection, StaticCall $staticCall, Scope $scope): ?Type
 	{
 		$classReflection = $methodReflection->getDeclaringClass();
-		$classNames = array_merge(
-			[$classReflection->getName()],
-			$classReflection->getParentClassesNames(),
-			$classReflection->getNativeReflection()->getInterfaceNames()
-		);
 
-		/** @var DynamicStaticMethodThrowTypeExtension[] $extensions */
-		$extensions = [];
-		foreach ($classNames as $className) {
-			if (!isset($this->dynamicStaticMethodThrowTypeExtensions[$className])) {
+		$functionName = sprintf('%s::%s', $classReflection->getName(), $methodReflection->getName());
+		foreach ($this->dynamicStaticMethodThrowTypeExtensions as $extension) {
+			$extensionHash = spl_object_hash($extension);
+			if (isset($this->unsupportedClasses[$classReflection->getName()][$extensionHash])) {
 				continue;
 			}
 
-			$extensions = array_merge($extensions, $this->dynamicStaticMethodThrowTypeExtensions[$className]);
-		}
-
-		$functionName = sprintf('%s::%s', $classReflection->getName(), $methodReflection->getName());
-		foreach ($extensions as $extension) {
-			$extensionHash = spl_object_hash($extension);
 			if (isset($this->unsupportedFunctions[$functionName][$extensionHash])) {
 				continue;
 			}
 
 			try {
 				return $extension->getThrowTypeFromStaticMethodCall($methodReflection, $staticCall, $scope);
+			} catch (UnsupportedClassException $e) {
+				$this->unsupportedClasses[$classReflection->getName()][$extensionHash] = true;
 			} catch (UnsupportedFunctionException $e) {
 				$this->unsupportedFunctions[$functionName][$extensionHash] = true;
 			}

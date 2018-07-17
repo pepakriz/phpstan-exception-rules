@@ -10,9 +10,8 @@ use PHPStan\Type\Type;
 interface DynamicMethodThrowTypeExtension
 {
 
-	public function getClass(): string;
-
 	/**
+	 * @throws UnsupportedClassException
 	 * @throws UnsupportedFunctionException
 	 */
 	public function getThrowTypeFromMethodCall(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope): Type;
