@@ -12,4 +12,5 @@ parameters:
 		- %rootDir%/../../../tests/*/data/*
 
 	exceptionRules:
-		checkedExceptions: []
+		checkedExceptions:
+			- Pepakriz\PHPStanExceptionRules\RuntimeException

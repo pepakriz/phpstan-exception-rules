@@ -48,6 +48,21 @@ parameters:
 			- RuntimeException
 ```
 
+If some third-party code defines wrong throw types, you could override definitions like this:
+
+```neon
+parameters:
+	exceptionRules:
+		methodThrowTypeDeclarations:
+			FooProject\SomeService:
+				sendMessage:
+					- FooProject\ConnectionTimeoutException
+				methodWithoutException: []
+		functionThrowTypeDeclarations:
+			myFooFunction:
+				- FooException
+```
+
 ## Extensibility
 
 `Dynamic throw type extensions` - If the throw type is not always the same, but depends on an argument passed to the method. (Similar feature as [Dynamic return type extensions](https://github.com/phpstan/phpstan#dynamic-return-type-extensions))

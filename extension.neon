@@ -2,6 +2,8 @@ parameters:
 	exceptionRules:
 		reportMaybes: true
 		checkedExceptions: []
+		methodThrowTypeDeclarations: []
+		functionThrowTypeDeclarations: []
 
 extensions:
 	exceptionRules: Pepakriz\PHPStanExceptionRules\DI\ExceptionRulesExtension
@@ -9,6 +11,13 @@ extensions:
 services:
 	-
 		class: Pepakriz\PHPStanExceptionRules\CheckedExceptionService(%exceptionRules.checkedExceptions%)
+
+	-
+		class: Pepakriz\PHPStanExceptionRules\DefaultThrowTypeExtension(%exceptionRules.methodThrowTypeDeclarations%, %exceptionRules.functionThrowTypeDeclarations%)
+		tags:
+			- exceptionRules.dynamicMethodThrowTypeExtension
+			- exceptionRules.dynamicStaticMethodThrowTypeExtension
+			- exceptionRules.dynamicFunctionThrowTypeExtension
 
 	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule
