@@ -11,18 +11,20 @@ use PHPStan\Reflection\MethodReflection;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
+use PHPStan\Type\VoidType;
 use function array_map;
+use function count;
 
 class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, DynamicMethodThrowTypeExtension, DynamicStaticMethodThrowTypeExtension
 {
 
 	/**
-	 * @var string[][][]
+	 * @var Type[][]
 	 */
 	private $methodThrowTypes = [];
 
 	/**
-	 * @var string[][]
+	 * @var Type[]
 	 */
 	private $functionThrowTypes = [];
 
@@ -37,29 +39,31 @@ class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, Dy
 	{
 		foreach ($methodThrowTypes as $className => $methods) {
 			foreach ($methods as $methodName => $throwTypes) {
-				$this->methodThrowTypes[$className][$methodName] = [];
-				foreach ($throwTypes as $throwType) {
-					$this->addMethodThrowType($className, $methodName, $throwType);
+				if (count($throwTypes) === 0) {
+					$this->methodThrowTypes[$className][$methodName] = new VoidType();
+					continue;
 				}
+
+				$this->methodThrowTypes[$className][$methodName] = TypeCombinator::union(
+					...array_map(function (string $throwType): ObjectType {
+						return new ObjectType($throwType);
+					}, $throwTypes)
+				);
 			}
 		}
 
 		foreach ($functionThrowTypes as $functionName => $throwTypes) {
-			$this->functionThrowTypes[$functionName] = [];
-			foreach ($throwTypes as $throwType) {
-				$this->addFunctionThrowType($functionName, $throwType);
+			if (count($throwTypes) === 0) {
+				$this->functionThrowTypes[$functionName] = new VoidType();
+				continue;
 			}
+
+			$this->functionThrowTypes[$functionName] = TypeCombinator::union(
+				...array_map(function (string $throwType): ObjectType {
+					return new ObjectType($throwType);
+				}, $throwTypes)
+			);
 		}
-	}
-
-	private function addMethodThrowType(string $className, string $methodName, string $throwType): void
-	{
-		$this->methodThrowTypes[$className][$methodName][] = $throwType;
-	}
-
-	private function addFunctionThrowType(string $functionName, string $throwType): void
-	{
-		$this->functionThrowTypes[$functionName][] = $throwType;
 	}
 
 	/**
@@ -72,11 +76,7 @@ class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, Dy
 			throw new UnsupportedFunctionException();
 		}
 
-		$throwTypes = array_map(function (string $className): ObjectType {
-			return new ObjectType($className);
-		}, $this->functionThrowTypes[$functionName]);
-
-		return TypeCombinator::union(...$throwTypes);
+		return $this->functionThrowTypes[$functionName];
 	}
 
 	/**
@@ -112,12 +112,7 @@ class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, Dy
 			throw new UnsupportedFunctionException();
 		}
 
-		$throwTypeClasses = $this->methodThrowTypes[$className][$methodReflection->getName()];
-		$throwTypes = array_map(function (string $className): ObjectType {
-			return new ObjectType($className);
-		}, $throwTypeClasses);
-
-		return TypeCombinator::union(...$throwTypes);
+		return $this->methodThrowTypes[$className][$methodReflection->getName()];
 	}
 
 }
