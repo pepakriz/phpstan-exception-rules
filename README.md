@@ -175,6 +175,8 @@ public function normalizeRows(array $rows): array
 
 #### `Catch` statement does not know about runtime subtypes
 
+This case is detected by rule, so you will be warned about a potential risk.
+
 _Runtime exception is absorbed:_
 
 ```php
