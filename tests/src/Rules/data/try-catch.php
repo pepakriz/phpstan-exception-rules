@@ -17,7 +17,7 @@ class TryCatchClass
 	{
 		try {
 			throw new RuntimeException();
-		} catch (Throwable $e) {
+		} catch (Throwable $e) { // error: Catching checked exception RuntimeException as unchecked Throwable is not supported properly in this moment. Eliminate checked exceptions by custom catch statement.
 			// ignore
 		}
 	}
@@ -44,7 +44,7 @@ class TryCatchClass
 	{
 		try {
 			throw new RuntimeException();
-		} catch (Throwable $e) {
+		} catch (Throwable $e) { // error: Catching checked exception RuntimeException as unchecked Throwable is not supported properly in this moment. Eliminate checked exceptions by custom catch statement.
 			throw $e;
 		}
 	}

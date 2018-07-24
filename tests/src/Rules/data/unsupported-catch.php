@@ -18,7 +18,16 @@ class UnsupportedCatchClass
 		try {
 			throw new RuntimeException();
 			throw new LogicException();
-		} catch (Throwable $e) { // error: Catching checked (RuntimeException) and unchecked (LogicException) exceptions in one catch statement is not supported
+		} catch (Throwable $e) { // error: Catching checked exception RuntimeException as unchecked Throwable is not supported properly in this moment. Eliminate checked exceptions by custom catch statement.
+			// ignore
+		}
+	}
+
+	public function catchCheckedAsUnchecked(): void
+	{
+		try {
+			throw new RuntimeException();
+		} catch (Throwable $e) { // error: Catching checked exception RuntimeException as unchecked Throwable is not supported properly in this moment. Eliminate checked exceptions by custom catch statement.
 			// ignore
 		}
 	}

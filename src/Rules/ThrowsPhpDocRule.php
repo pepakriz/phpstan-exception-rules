@@ -39,7 +39,6 @@ use function array_map;
 use function array_merge;
 use function array_unique;
 use function count;
-use function implode;
 use function is_string;
 use function sprintf;
 
@@ -361,21 +360,22 @@ class ThrowsPhpDocRule implements Rule
 			$caughtExceptions = $this->throwsScope->getCaughtExceptions($type);
 
 			$caughtChecked = [];
-			$caughtUnchecked = [];
 			foreach ($caughtExceptions as $caughtException) {
-				if ($this->checkedExceptionService->isCheckedException($caughtException)) {
-					$caughtChecked[] = $caughtException;
-				} else {
-					$caughtUnchecked[] = $caughtException;
+				if (!$this->checkedExceptionService->isCheckedException($caughtException)) {
+					continue;
 				}
+
+				$caughtChecked[] = $caughtException;
 			}
 
-			if (count($caughtChecked) > 0 && count($caughtUnchecked) > 0) {
-				$messages[] = sprintf(
-					'Catching checked (%s) and unchecked (%s) exceptions in one catch statement is not supported',
-					implode(', ', $caughtChecked),
-					implode(', ', $caughtUnchecked)
-				);
+			if (!$this->checkedExceptionService->isCheckedException($type->toString())) {
+				foreach ($caughtChecked as $caughtCheckedException) {
+					$messages[] = sprintf(
+						'Catching checked exception %s as unchecked %s is not supported properly in this moment. Eliminate checked exceptions by custom catch statement.',
+						$caughtCheckedException,
+						$type->toString()
+					);
+				}
 			}
 
 			$caughtExceptions = $this->checkedExceptionService->filterCheckedExceptions($caughtExceptions);
