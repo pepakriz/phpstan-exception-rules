@@ -135,9 +135,9 @@ class PrintJobFailedException extends RuntimeException
 
 ## Known limitations
 
-1) Anonymous functions are analyzed at the same place they are declared
+#### Anonymous functions are analyzed at the same place they are declared
 
-False positive when a method does not execute declared function:
+_False positive when a method does not execute declared function:_
 
 ```php
 /**
@@ -151,7 +151,7 @@ public function createFnFoo(int $arg): callable
 }
 ```
 
-But most of use-cases just works:
+_But most of use-cases just works:_
 
 ```php
 /**
@@ -173,9 +173,9 @@ public function normalizeRows(array $rows): array
 }
 ```
 
-2) `Catch` statement does not know about runtime subtypes
+#### `Catch` statement does not know about runtime subtypes
 
-Runtime exception is absorbed:
+_Runtime exception is absorbed:_
 
 ```php
 // @throws phpdoc is not required
@@ -191,7 +191,7 @@ public function methodWithoutThrowsPhpDoc(): void
 }
 ```
 
-As a workaround you could use custom catch statement:
+_As a workaround you could use custom catch statement:_
 
 ```php
 /**
