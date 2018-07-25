@@ -34,6 +34,7 @@ use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeUtils;
+use PHPStan\Type\VoidType;
 use function array_diff;
 use function array_map;
 use function array_merge;
@@ -203,7 +204,7 @@ class ThrowsPhpDocRule implements Rule
 			}
 
 			$throwType = $this->dynamicThrowTypeService->getMethodThrowType($targetMethodReflection, $node, $scope);
-			if ($throwType === null) {
+			if ($throwType instanceof VoidType) {
 				continue;
 			}
 
@@ -235,7 +236,7 @@ class ThrowsPhpDocRule implements Rule
 		$targetMethodReflections = $this->getMethodReflections($node->class, [$methodName], $scope);
 		foreach ($targetMethodReflections as $targetMethodReflection) {
 			$throwType = $this->dynamicThrowTypeService->getStaticMethodThrowType($targetMethodReflection, $node, $scope);
-			if ($throwType === null) {
+			if ($throwType instanceof VoidType) {
 				continue;
 			}
 
@@ -468,12 +469,8 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	private function processThrowsTypes(?Type $targetThrowType): array
+	private function processThrowsTypes(Type $targetThrowType): array
 	{
-		if ($targetThrowType === null) {
-			return [];
-		}
-
 		$targetExceptionClasses = TypeUtils::getDirectClassNames($targetThrowType);
 		$targetExceptionClasses = $this->throwsScope->filterExceptionsByUncaught($targetExceptionClasses);
 		$targetExceptionClasses = $this->checkedExceptionService->filterCheckedExceptions($targetExceptionClasses);

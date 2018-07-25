@@ -10,6 +10,7 @@ use PHPStan\Reflection\FunctionReflection;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Type\Type;
+use PHPStan\Type\VoidType;
 use function spl_object_hash;
 use function sprintf;
 
@@ -80,7 +81,7 @@ class DynamicThrowTypeService
 		$this->dynamicFunctionThrowTypeExtensions[] = $extension;
 	}
 
-	public function getMethodThrowType(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope): ?Type
+	public function getMethodThrowType(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope): Type
 	{
 		$classReflection = $methodReflection->getDeclaringClass();
 
@@ -104,14 +105,15 @@ class DynamicThrowTypeService
 			}
 		}
 
+		$throwType = null;
 		if ($methodReflection instanceof ThrowableReflection) {
-			return $methodReflection->getThrowType();
+			$throwType = $methodReflection->getThrowType();
 		}
 
-		return null;
+		return $throwType !== null ? $throwType : new VoidType();
 	}
 
-	public function getStaticMethodThrowType(MethodReflection $methodReflection, StaticCall $staticCall, Scope $scope): ?Type
+	public function getStaticMethodThrowType(MethodReflection $methodReflection, StaticCall $staticCall, Scope $scope): Type
 	{
 		$classReflection = $methodReflection->getDeclaringClass();
 
@@ -135,14 +137,15 @@ class DynamicThrowTypeService
 			}
 		}
 
+		$throwType = null;
 		if ($methodReflection instanceof ThrowableReflection) {
-			return $methodReflection->getThrowType();
+			$throwType = $methodReflection->getThrowType();
 		}
 
-		return null;
+		return $throwType !== null ? $throwType : new VoidType();
 	}
 
-	public function getFunctionThrowType(FunctionReflection $functionReflection, FuncCall $functionCall, Scope $scope): ?Type
+	public function getFunctionThrowType(FunctionReflection $functionReflection, FuncCall $functionCall, Scope $scope): Type
 	{
 		$functionName = $functionReflection->getName();
 		foreach ($this->dynamicFunctionThrowTypeExtensions as $extension) {
@@ -158,7 +161,9 @@ class DynamicThrowTypeService
 			}
 		}
 
-		return $functionReflection->getThrowType();
+		$throwType = $functionReflection->getThrowType();
+
+		return $throwType !== null ? $throwType : new VoidType();
 	}
 
 }
