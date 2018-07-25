@@ -7,8 +7,11 @@ use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassMethod;
 use PHPStan\Analyser\Scope;
 use PHPStan\Broker\Broker;
+use PHPStan\Broker\ClassNotFoundException;
+use PHPStan\Reflection\MissingMethodFromReflectionException;
 use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Rules\Rule;
+use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\FileTypeMapper;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
@@ -97,12 +100,18 @@ class ThrowsPhpDocInheritanceRule implements Rule
 
 		$messages = [];
 		foreach ($parentClasses as $parentClass) {
-			$parentClassReflection = $this->broker->getClass($parentClass->getName());
-			if (!$parentClassReflection->hasMethod($methodName)) {
+			try {
+				$parentClassReflection = $this->broker->getClass($parentClass->getName());
+			} catch (ClassNotFoundException $e) {
+				throw new ShouldNotHappenException();
+			}
+
+			try {
+				$methodReflection = $parentClassReflection->getMethod($methodName, $scope);
+			} catch (MissingMethodFromReflectionException $e) {
 				continue;
 			}
 
-			$methodReflection = $parentClassReflection->getMethod($methodName, $scope);
 			if (!$methodReflection instanceof ThrowableReflection) {
 				continue;
 			}

@@ -30,6 +30,7 @@ use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\MissingMethodFromReflectionException;
 use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Rules\Rule;
+use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
@@ -193,12 +194,18 @@ class ThrowsPhpDocRule implements Rule
 
 		$throwTypes = [];
 		foreach ($targetClassNames as $targetClassName) {
-			$targetClassReflection = $this->broker->getClass($targetClassName);
-			if (!$targetClassReflection->hasMethod($methodName->toString())) {
+			try {
+				$targetClassReflection = $this->broker->getClass($targetClassName);
+			} catch (ClassNotFoundException $e) {
+				throw new ShouldNotHappenException();
+			}
+
+			try {
+				$targetMethodReflection = $targetClassReflection->getMethod($methodName->toString(), $scope);
+			} catch (MissingMethodFromReflectionException $e) {
 				continue;
 			}
 
-			$targetMethodReflection = $targetClassReflection->getMethod($methodName->toString(), $scope);
 			if (!$targetMethodReflection instanceof ThrowableReflection) {
 				continue;
 			}
@@ -302,7 +309,12 @@ class ThrowsPhpDocRule implements Rule
 			return [];
 		}
 
-		$methodReflection = $classReflection->getMethod($node->name->toString(), $scope);
+		try {
+			$methodReflection = $classReflection->getMethod($node->name->toString(), $scope);
+		} catch (MissingMethodFromReflectionException $e) {
+			throw new ShouldNotHappenException();
+		}
+
 		if ($methodReflection instanceof ThrowableReflection) {
 			$this->throwsScope->enterToThrowsAnnotationBlock($methodReflection->getThrowType());
 		}

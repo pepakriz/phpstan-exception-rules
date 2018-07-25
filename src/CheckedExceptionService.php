@@ -2,25 +2,41 @@
 
 namespace Pepakriz\PHPStanExceptionRules;
 
+use LogicException;
 use function array_filter;
+use function count;
 use function is_a;
 
 class CheckedExceptionService
 {
 
 	/**
-	 * @var string[]
+	 * @var string[]|null
 	 */
 	private $checkedExceptions;
 
 	/**
+	 * @var string[]
+	 */
+	private $uncheckedExceptions;
+
+	/**
 	 * @param string[] $checkedExceptions
+	 * @param string[] $uncheckedExceptions
 	 */
 	public function __construct(
-		array $checkedExceptions
+		array $checkedExceptions,
+		array $uncheckedExceptions = []
 	)
 	{
-		$this->checkedExceptions = $checkedExceptions;
+		$checkedExceptionsCounter = count($checkedExceptions);
+		$uncheckedExceptionsCounter = count($uncheckedExceptions);
+		if ($checkedExceptionsCounter > 0 && $uncheckedExceptionsCounter > 0) {
+			throw new LogicException('$checkedExceptions and $uncheckedExceptions cannot be configured at the same time');
+		}
+
+		$this->checkedExceptions = $checkedExceptionsCounter > 0 ? $checkedExceptions : null;
+		$this->uncheckedExceptions = $uncheckedExceptions;
 	}
 
 	/**
@@ -36,13 +52,23 @@ class CheckedExceptionService
 
 	public function isCheckedException(string $exceptionClassName): bool
 	{
-		foreach ($this->checkedExceptions as $whitelistedException) {
-			if (is_a($exceptionClassName, $whitelistedException, true)) {
-				return true;
+		if ($this->checkedExceptions !== null) {
+			foreach ($this->checkedExceptions as $checkedException) {
+				if (is_a($exceptionClassName, $checkedException, true)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		foreach ($this->uncheckedExceptions as $uncheckedException) {
+			if (is_a($exceptionClassName, $uncheckedException, true)) {
+				return false;
 			}
 		}
 
-		return false;
+		return true;
 	}
 
 }

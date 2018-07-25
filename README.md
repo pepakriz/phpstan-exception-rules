@@ -48,7 +48,19 @@ parameters:
 			- RuntimeException
 ```
 
-If some third-party code defines wrong throw types, you could override definitions like this:
+You could use `uncheckedExceptions` when you prefer a list of unchecked exceptions instead. It is a safer variant, but harder to adapt to the existing project.
+
+```neon
+parameters:
+	exceptionRules:
+		uncheckedExceptions:
+			- LogicException
+			- PHPUnit\Framework\Exception
+```
+
+> `checkedExceptions` and `uncheckedExceptions` cannot be configured at the same time
+
+If some third-party code defines wrong throw types (or it doesn't use @throws annotations at all), you could override definitions like this:
 
 ```neon
 parameters:

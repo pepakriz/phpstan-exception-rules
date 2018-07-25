@@ -12,5 +12,17 @@ parameters:
 		- %rootDir%/../../../tests/*/data/*
 
 	exceptionRules:
-		checkedExceptions:
-			- Pepakriz\PHPStanExceptionRules\RuntimeException
+		uncheckedExceptions:
+			- LogicException
+			- PHPStan\ShouldNotHappenException
+			- PHPUnit\Framework\Exception
+			- Nette\DI\MissingServiceException
+		methodThrowTypeDeclarations:
+			PHPStan\Broker\Broker:
+				getClass:
+					- PHPStan\Broker\ClassNotFoundException
+				getFunction:
+					- PHPStan\Broker\FunctionNotFoundException
+			PHPStan\Reflection\ClassReflection:
+				getMethod:
+					- PHPStan\Reflection\MissingMethodFromReflectionException

@@ -2,6 +2,7 @@ parameters:
 	exceptionRules:
 		reportMaybes: true
 		checkedExceptions: []
+		uncheckedExceptions: []
 		methodThrowTypeDeclarations: []
 		functionThrowTypeDeclarations: []
 
@@ -10,7 +11,7 @@ extensions:
 
 services:
 	-
-		class: Pepakriz\PHPStanExceptionRules\CheckedExceptionService(%exceptionRules.checkedExceptions%)
+		class: Pepakriz\PHPStanExceptionRules\CheckedExceptionService(%exceptionRules.checkedExceptions%, %exceptionRules.uncheckedExceptions%)
 
 	-
 		class: Pepakriz\PHPStanExceptionRules\DefaultThrowTypeExtension(%exceptionRules.methodThrowTypeDeclarations%, %exceptionRules.functionThrowTypeDeclarations%)
