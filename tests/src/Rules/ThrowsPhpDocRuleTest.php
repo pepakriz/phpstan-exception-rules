@@ -3,7 +3,9 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
+use Pepakriz\PHPStanExceptionRules\CoreFunctionsDynamicThrowTypeExtension;
 use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
+use Pepakriz\PHPStanExceptionRules\Rules\Data\AnonymousFunctions\AnonymousFunctionsClassDynamicMethodExtension;
 use Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException;
 use Pepakriz\PHPStanExceptionRules\Rules\DynamicFunctionExtension\DynamicFunctionExtension;
 use Pepakriz\PHPStanExceptionRules\Rules\DynamicMethodExtension\DynamicMethodExtension;
@@ -22,6 +24,8 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 
 	protected function getRule(): Rule
 	{
+		$dynamicExtension = new AnonymousFunctionsClassDynamicMethodExtension();
+
 		$throwsRule = new ThrowsPhpDocRule(
 			new CheckedExceptionService(
 				[
@@ -31,10 +35,13 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			),
 			new DynamicThrowTypeService([
 				new DynamicMethodExtension(),
+				$dynamicExtension,
 			], [
 				new DynamicStaticMethodExtension(),
+				$dynamicExtension,
 			], [
 				new DynamicFunctionExtension(),
+				new CoreFunctionsDynamicThrowTypeExtension(),
 			]),
 			$this->createBroker(),
 			$this->reportUnusedCatchesOfUncheckedExceptions
@@ -102,6 +109,11 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	public function testUnsupportedCatchCheckedAndUnchecked(): void
 	{
 		$this->analyse(__DIR__ . '/data/unsupported-catch.php');
+	}
+
+	public function testClosures(): void
+	{
+		$this->analyse(__DIR__ . '/data/anonymous-functions.php');
 	}
 
 }

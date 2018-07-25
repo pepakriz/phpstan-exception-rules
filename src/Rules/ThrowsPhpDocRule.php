@@ -7,9 +7,14 @@ use IteratorAggregate;
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\Node\ClassMethodEnd;
+use Pepakriz\PHPStanExceptionRules\Node\ClosureEnd;
+use Pepakriz\PHPStanExceptionRules\Node\EndNode;
+use Pepakriz\PHPStanExceptionRules\Node\NodeHook;
 use Pepakriz\PHPStanExceptionRules\Node\TryCatchTryEnd;
+use Pepakriz\PHPStanExceptionRules\Type\ClosureWithThrowType;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
@@ -39,6 +44,7 @@ use PHPStan\Type\VoidType;
 use function array_diff;
 use function array_map;
 use function array_merge;
+use function array_pop;
 use function array_unique;
 use function count;
 use function is_string;
@@ -71,6 +77,11 @@ class ThrowsPhpDocRule implements Rule
 	 * @var bool
 	 */
 	private $reportUnusedCatchesOfUncheckedExceptions;
+
+	/**
+	 * @var EndNode[]
+	 */
+	private $endNodeStack = [];
 
 	public function __construct(
 		CheckedExceptionService $checkedExceptionService,
@@ -140,6 +151,18 @@ class ThrowsPhpDocRule implements Rule
 			return $this->processFuncCall($node, $scope);
 		}
 
+		if ($node instanceof Closure) {
+			return $this->processClosure($node);
+		}
+
+		if ($node instanceof ClosureEnd) {
+			return $this->processClosureEnd($node);
+		}
+
+		if ($node instanceof NodeHook) {
+			return $this->processNodeHook($node, $scope);
+		}
+
 		return [];
 	}
 
@@ -156,6 +179,9 @@ class ThrowsPhpDocRule implements Rule
 
 		$this->throwsScope->enterToTryCatch($node);
 
+		$endNode = new EndNode($node);
+		$this->endNodeStack[] = $endNode;
+		$node->stmts[] = $endNode;
 		$node->stmts[] = new TryCatchTryEnd($node);
 
 		return [];
@@ -166,6 +192,8 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private function processTryCatchTryEnd(): array
 	{
+		array_pop($this->endNodeStack);
+
 		$this->throwsScope->exitFromTry();
 
 		return [];
@@ -181,6 +209,10 @@ class ThrowsPhpDocRule implements Rule
 		$exceptionClassNames = $this->throwsScope->filterExceptionsByUncaught($exceptionClassNames);
 		$exceptionClassNames = $this->checkedExceptionService->filterCheckedExceptions($exceptionClassNames);
 
+		if ($this->throwsScope->isInClosure()) {
+			return [];
+		}
+
 		return array_map(function (string $exceptionClassName): string {
 			return sprintf('Missing @throws %s annotation', $exceptionClassName);
 		}, $exceptionClassNames);
@@ -191,45 +223,9 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private function processMethodCall(MethodCall $node, Scope $scope): array
 	{
-		$methodName = $node->name;
-		if (!$methodName instanceof Identifier) {
-			return [];
-		}
+		$this->endNodeStack[count($this->endNodeStack) - 1]->addNodeHook(new NodeHook($node));
 
-		$targetType = $scope->getType($node->var);
-		$targetClassNames = TypeUtils::getDirectClassNames($targetType);
-
-		$throwTypes = [];
-		foreach ($targetClassNames as $targetClassName) {
-			try {
-				$targetClassReflection = $this->broker->getClass($targetClassName);
-			} catch (ClassNotFoundException $e) {
-				throw new ShouldNotHappenException();
-			}
-
-			try {
-				$targetMethodReflection = $targetClassReflection->getMethod($methodName->toString(), $scope);
-			} catch (MissingMethodFromReflectionException $e) {
-				continue;
-			}
-
-			if (!$targetMethodReflection instanceof ThrowableReflection) {
-				continue;
-			}
-
-			$throwType = $this->dynamicThrowTypeService->getMethodThrowType($targetMethodReflection, $node, $scope);
-			if ($throwType instanceof VoidType) {
-				continue;
-			}
-
-			$throwTypes[] = $throwType;
-		}
-
-		if (count($throwTypes) === 0) {
-			return [];
-		}
-
-		return $this->processThrowsTypes(TypeCombinator::union(...$throwTypes));
+		return [];
 	}
 
 	/**
@@ -237,31 +233,9 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private function processStaticCall(StaticCall $node, Scope $scope): array
 	{
-		$methodName = $node->name;
-		if ($methodName instanceof Identifier) {
-			$methodName = $methodName->toString();
-		}
+		$this->endNodeStack[count($this->endNodeStack) - 1]->addNodeHook(new NodeHook($node));
 
-		if (!is_string($methodName)) {
-			return [];
-		}
-
-		$throwTypes = [];
-		$targetMethodReflections = $this->getMethodReflections($node->class, [$methodName], $scope);
-		foreach ($targetMethodReflections as $targetMethodReflection) {
-			$throwType = $this->dynamicThrowTypeService->getStaticMethodThrowType($targetMethodReflection, $node, $scope);
-			if ($throwType instanceof VoidType) {
-				continue;
-			}
-
-			$throwTypes[] = $throwType;
-		}
-
-		if (count($throwTypes) === 0) {
-			return [];
-		}
-
-		return $this->processThrowsTypes(TypeCombinator::union(...$throwTypes));
+		return [];
 	}
 
 	/**
@@ -326,6 +300,9 @@ class ThrowsPhpDocRule implements Rule
 			$this->throwsScope->enterToThrowsAnnotationBlock($methodReflection->getThrowType());
 		}
 
+		$endNode = new EndNode($node);
+		$this->endNodeStack[] = $endNode;
+		$node->stmts[] = $endNode;
 		$node->stmts[] = new ClassMethodEnd($node);
 
 		return [];
@@ -336,6 +313,8 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private function processClassMethodEnd(Scope $scope): array
 	{
+		array_pop($this->endNodeStack);
+
 		$usedThrowsAnnotations = $this->throwsScope->exitFromThrowsAnnotationBlock();
 		$usedThrowsAnnotations = $this->checkedExceptionService->filterCheckedExceptions($usedThrowsAnnotations);
 
@@ -425,41 +404,9 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private function processFuncCall(FuncCall $node, Scope $scope): array
 	{
-		$nodeName = $node->name;
-		if (!$nodeName instanceof Name) {
-			return []; // closure call
-		}
+		$this->endNodeStack[count($this->endNodeStack) - 1]->addNodeHook(new NodeHook($node));
 
-		$functionName = $nodeName->toString();
-		if ($functionName === 'count') {
-			return $this->processThrowTypesOnMethod($node->args[0]->value, ['count'], $scope);
-		}
-
-		if ($functionName === 'iterator_count') {
-			return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'next'], $scope);
-		}
-
-		if ($functionName === 'iterator_to_array') {
-			return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'current', 'key', 'next'], $scope);
-		}
-
-		if ($functionName === 'iterator_apply') {
-			return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'next'], $scope);
-		}
-
-		if ($functionName === 'json_encode') {
-			return $this->processThrowTypesOnMethod($node->args[0]->value, ['jsonSerialize'], $scope);
-		}
-
-		try {
-			$functionReflection = $this->broker->getFunction($nodeName, $scope);
-		} catch (FunctionNotFoundException $e) {
-			return [];
-		}
-
-		$throwType = $this->dynamicThrowTypeService->getFunctionThrowType($functionReflection, $node, $scope);
-
-		return $this->processThrowsTypes($throwType);
+		return [];
 	}
 
 	/**
@@ -503,6 +450,156 @@ class ThrowsPhpDocRule implements Rule
 		return array_map(function (string $targetExceptionClass): string {
 			return sprintf('Missing @throws %s annotation', $targetExceptionClass);
 		}, $targetExceptionClasses);
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function processClosure(Closure $node): array
+	{
+		$this->throwsScope->enterToClosure();
+
+		$endNode = new EndNode($node);
+		$this->endNodeStack[] = $endNode;
+		$node->stmts[] = $endNode;
+		$node->stmts[] = new ClosureEnd($node);
+
+		return [];
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function processClosureEnd(ClosureEnd $node): array
+	{
+		array_pop($this->endNodeStack);
+
+		$this->throwsScope->exitFromClosure($node->getClosure());
+
+		return [];
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function processNodeHook(NodeHook $node, Scope $scope): array
+	{
+		$node = $node->getNode();
+
+		if ($node instanceof FuncCall) {
+			$nodeName = $node->name;
+			if (!$nodeName instanceof Name) {
+				$throwType = $scope->getType($nodeName);
+				if (!$throwType instanceof ClosureWithThrowType) {
+					return [];
+				}
+
+				return $this->processThrowsTypes($throwType->getThrowType());
+			}
+
+			$functionName = $nodeName->toString();
+			if ($functionName === 'count') {
+				return $this->processThrowTypesOnMethod($node->args[0]->value, ['count'], $scope);
+			}
+
+			if ($functionName === 'iterator_count') {
+				return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'next'], $scope);
+			}
+
+			if ($functionName === 'iterator_to_array') {
+				return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'current', 'key', 'next'], $scope);
+			}
+
+			if ($functionName === 'iterator_apply') {
+				return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'next'], $scope);
+			}
+
+			if ($functionName === 'json_encode') {
+				return $this->processThrowTypesOnMethod($node->args[0]->value, ['jsonSerialize'], $scope);
+			}
+
+			try {
+				$functionReflection = $this->broker->getFunction($nodeName, $scope);
+			} catch (FunctionNotFoundException $e) {
+				return [];
+			}
+
+			$throwType = $this->dynamicThrowTypeService->getFunctionThrowType($functionReflection, $node, $scope);
+
+			return $this->processThrowsTypes($throwType);
+		}
+
+		if ($node instanceof MethodCall) {
+			$methodName = $node->name;
+			if (!$methodName instanceof Identifier) {
+				return [];
+			}
+
+			$targetType = $scope->getType($node->var);
+			$targetClassNames = TypeUtils::getDirectClassNames($targetType);
+
+			$throwTypes = [];
+			foreach ($targetClassNames as $targetClassName) {
+				try {
+					$targetClassReflection = $this->broker->getClass($targetClassName);
+				} catch (ClassNotFoundException $e) {
+					throw new ShouldNotHappenException();
+				}
+
+				try {
+					$targetMethodReflection = $targetClassReflection->getMethod($methodName->toString(), $scope);
+				} catch (MissingMethodFromReflectionException $e) {
+					continue;
+				}
+
+				if (!$targetMethodReflection instanceof ThrowableReflection) {
+					continue;
+				}
+
+				$throwType = $this->dynamicThrowTypeService->getMethodThrowType($targetMethodReflection, $node, $scope);
+				if ($throwType instanceof VoidType) {
+					continue;
+				}
+
+				$throwTypes[] = $throwType;
+			}
+
+			if (count($throwTypes) === 0) {
+				return [];
+			}
+
+			return $this->processThrowsTypes(TypeCombinator::union(...$throwTypes));
+		}
+
+		if ($node instanceof StaticCall) {
+			$methodName = $node->name;
+			if ($methodName instanceof Identifier) {
+				$methodName = $methodName->toString();
+			}
+
+			if (!is_string($methodName)) {
+				return [];
+			}
+
+			$throwTypes = [];
+			$targetMethodReflections = $this->getMethodReflections($node->class, [$methodName], $scope);
+			foreach ($targetMethodReflections as $targetMethodReflection) {
+				$throwType = $this->dynamicThrowTypeService->getStaticMethodThrowType($targetMethodReflection, $node, $scope);
+				if ($throwType instanceof VoidType) {
+					continue;
+				}
+
+				$throwTypes[] = $throwType;
+			}
+
+			if (count($throwTypes) === 0) {
+				return [];
+			}
+
+			return $this->processThrowsTypes(TypeCombinator::union(...$throwTypes));
+		}
+
+		throw new ShouldNotHappenException();
 	}
 
 	/**

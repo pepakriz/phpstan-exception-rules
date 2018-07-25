@@ -13,7 +13,7 @@
 	},
 	"require": {
 		"php": "^7.1",
-		"phpstan/phpstan": "^0.10"
+		"phpstan/phpstan": "^0.10.2"
 	},
 	"require-dev": {
 		"cdn77/coding-standard": "^0.7.1",

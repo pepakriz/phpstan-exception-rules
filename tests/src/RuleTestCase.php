@@ -9,8 +9,10 @@ use PhpParser\PrettyPrinter\Standard;
 use PHPStan\Analyser\Analyser;
 use PHPStan\Analyser\Error;
 use PHPStan\Analyser\NodeScopeResolver;
+use PHPStan\Analyser\ScopeFactory;
 use PHPStan\Analyser\TypeSpecifier;
 use PHPStan\Broker\AnonymousClassNameHelper;
+use PHPStan\Broker\Broker;
 use PHPStan\Cache\Cache;
 use PHPStan\File\FileHelper;
 use PHPStan\PhpDoc\PhpDocStringResolver;
@@ -133,6 +135,20 @@ abstract class RuleTestCase extends TestCase
 		);
 
 		self::assertSame(implode("\n", $expectedErrors), implode("\n", $actualErrors));
+	}
+
+	/**
+	 * @param string[] $dynamicConstantNames
+	 */
+	public function createScopeFactory(Broker $broker, TypeSpecifier $typeSpecifier, array $dynamicConstantNames = []): ScopeFactory
+	{
+		return new ScopeFactory(
+			Scope::class,
+			$broker,
+			new Standard(),
+			$typeSpecifier,
+			$dynamicConstantNames
+		);
 	}
 
 	/**

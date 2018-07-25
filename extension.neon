@@ -1,4 +1,5 @@
 parameters:
+	scopeClass: Pepakriz\PHPStanExceptionRules\Scope
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: false
 		checkedExceptions: []

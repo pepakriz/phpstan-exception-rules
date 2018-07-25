@@ -2,8 +2,10 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
+use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\TryCatch;
+use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeUtils;
 use function array_filter;
@@ -16,6 +18,7 @@ class ThrowsScope
 {
 
 	private const CAUGHT_EXCEPTIONS_ATTRIBUTE = '__CAUGHT_EXCEPTIONS_ATTRIBUTE__';
+	public const CLOSURE_THROWS_ATTRIBUTE = '__CLOSURE_THROWS_ATTRIBUTE__';
 
 	/**
 	 * @var Type|null
@@ -28,14 +31,59 @@ class ThrowsScope
 	private $usedThrowsAnnotations = [];
 
 	/**
-	 * @var TryCatch[]
+	 * @var TryCatch[][]
 	 */
 	private $tryCatchQueue = [];
+
+	/**
+	 * @var Type[][]
+	 */
+	private $closureThrowTypeStack = [];
+
+	/**
+	 * @var int
+	 */
+	private $closureThrowTypeStackIndex = -1;
+
+	/**
+	 * @var bool
+	 */
+	private $inClosure = false;
+
+	/**
+	 * ThrowsScope constructor.
+	 */
+	public function __construct()
+	{
+		$this->tryCatchQueue[$this->closureThrowTypeStackIndex] = [];
+	}
 
 	public function enterToThrowsAnnotationBlock(?Type $type): void
 	{
 		$this->throwsAnnotationBlock = $type;
 		$this->usedThrowsAnnotations = [];
+	}
+
+	public function enterToClosure(): void
+	{
+		$this->closureThrowTypeStack[++$this->closureThrowTypeStackIndex] = [];
+		$this->tryCatchQueue[$this->closureThrowTypeStackIndex] = [];
+		$this->inClosure = true;
+	}
+
+	public function exitFromClosure(Closure $node): void
+	{
+		$types = array_pop($this->closureThrowTypeStack);
+		if ($types === null) {
+			throw new ShouldNotHappenException();
+		}
+
+		$this->closureThrowTypeStackIndex--;
+		if ($this->closureThrowTypeStackIndex === -1) {
+			$this->inClosure = false;
+		}
+
+		$node->setAttribute(self::CLOSURE_THROWS_ATTRIBUTE, array_keys($types));
 	}
 
 	/**
@@ -52,12 +100,12 @@ class ThrowsScope
 
 	public function enterToTryCatch(TryCatch $tryCatch): void
 	{
-		$this->tryCatchQueue[] = $tryCatch;
+		$this->tryCatchQueue[$this->closureThrowTypeStackIndex][] = $tryCatch;
 	}
 
 	public function exitFromTry(): void
 	{
-		array_pop($this->tryCatchQueue);
+		array_pop($this->tryCatchQueue[$this->closureThrowTypeStackIndex]);
 	}
 
 	/**
@@ -81,8 +129,8 @@ class ThrowsScope
 
 	private function isExceptionCaught(string $exceptionClassName): bool
 	{
-		foreach (array_reverse(array_keys($this->tryCatchQueue)) as $catchKey) {
-			$catches = $this->tryCatchQueue[$catchKey];
+		foreach (array_reverse(array_keys($this->tryCatchQueue[$this->closureThrowTypeStackIndex])) as $catchKey) {
+			$catches = $this->tryCatchQueue[$this->closureThrowTypeStackIndex][$catchKey];
 
 			foreach ($catches->catches as $catch) {
 				foreach ($catch->types as $type) {
@@ -104,7 +152,10 @@ class ThrowsScope
 			}
 		}
 
-		if ($this->throwsAnnotationBlock !== null) {
+		if ($this->inClosure) {
+			$this->closureThrowTypeStack[$this->closureThrowTypeStackIndex][$exceptionClassName] = true;
+			return true;
+		} elseif ($this->throwsAnnotationBlock !== null) {
 			$throwsExceptionClasses = TypeUtils::getDirectClassNames($this->throwsAnnotationBlock);
 			foreach ($throwsExceptionClasses as $throwsExceptionClass) {
 				if (is_a($exceptionClassName, $throwsExceptionClass, true)) {
@@ -115,6 +166,11 @@ class ThrowsScope
 		}
 
 		return false;
+	}
+
+	public function isInClosure(): bool
+	{
+		return $this->closureThrowTypeStackIndex >= 0;
 	}
 
 }
