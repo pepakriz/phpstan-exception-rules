@@ -67,16 +67,23 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private $throwsScope;
 
+	/**
+	 * @var bool
+	 */
+	private $reportUnusedCatchesOfUncheckedExceptions;
+
 	public function __construct(
 		CheckedExceptionService $checkedExceptionService,
 		DynamicThrowTypeService $dynamicThrowTypeService,
-		Broker $broker
+		Broker $broker,
+		bool $reportUnusedCatchesOfUncheckedExceptions
 	)
 	{
 		$this->checkedExceptionService = $checkedExceptionService;
 		$this->dynamicThrowTypeService = $dynamicThrowTypeService;
 		$this->broker = $broker;
 		$this->throwsScope = new ThrowsScope();
+		$this->reportUnusedCatchesOfUncheckedExceptions = $reportUnusedCatchesOfUncheckedExceptions;
 	}
 
 	public function getNodeType(): string
@@ -391,13 +398,19 @@ class ThrowsPhpDocRule implements Rule
 				}
 			}
 
-			$caughtExceptions = $this->checkedExceptionService->filterCheckedExceptions($caughtExceptions);
-			if (count($caughtExceptions) > 0) {
+			$exceptionClass = $type->toString();
+			if (
+				!$this->reportUnusedCatchesOfUncheckedExceptions
+				&& !$this->checkedExceptionService->isCheckedException($exceptionClass)
+			) {
 				continue;
 			}
 
-			$exceptionClass = $type->toString();
-			if (!$this->checkedExceptionService->isCheckedException($exceptionClass)) {
+			if (!$this->reportUnusedCatchesOfUncheckedExceptions) {
+				$caughtExceptions = $this->checkedExceptionService->filterCheckedExceptions($caughtExceptions);
+			}
+
+			if (count($caughtExceptions) > 0) {
 				continue;
 			}
 

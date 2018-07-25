@@ -44,6 +44,7 @@ includes:
 
 parameters:
 	exceptionRules:
+		reportUnusedCatchesOfUncheckedExceptions: false
 		checkedExceptions:
 			- RuntimeException
 ```

@@ -12,6 +12,7 @@ parameters:
 		- %rootDir%/../../../tests/*/data/*
 
 	exceptionRules:
+		reportUnusedCatchesOfUncheckedExceptions: true
 		uncheckedExceptions:
 			- LogicException
 			- PHPStan\ShouldNotHappenException

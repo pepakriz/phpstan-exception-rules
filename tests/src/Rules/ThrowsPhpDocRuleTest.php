@@ -15,6 +15,11 @@ use RuntimeException;
 class ThrowsPhpDocRuleTest extends RuleTestCase
 {
 
+	/**
+	 * @var bool
+	 */
+	private $reportUnusedCatchesOfUncheckedExceptions = false;
+
 	protected function getRule(): Rule
 	{
 		$throwsRule = new ThrowsPhpDocRule(
@@ -31,7 +36,8 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			], [
 				new DynamicFunctionExtension(),
 			]),
-			$this->createBroker()
+			$this->createBroker(),
+			$this->reportUnusedCatchesOfUncheckedExceptions
 		);
 
 		return $throwsRule;
@@ -55,6 +61,12 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	public function testUnusedCatches(): void
 	{
 		$this->analyse(__DIR__ . '/data/unused-catches.php');
+	}
+
+	public function testAllUnusedCatches(): void
+	{
+		$this->reportUnusedCatchesOfUncheckedExceptions = true;
+		$this->analyse(__DIR__ . '/data/unused-catches-all.php');
 	}
 
 	public function testIterators(): void
