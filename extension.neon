@@ -18,6 +18,7 @@ services:
 		tags:
 			- exceptionRules.dynamicMethodThrowTypeExtension
 			- exceptionRules.dynamicStaticMethodThrowTypeExtension
+			- exceptionRules.dynamicConstructorThrowTypeExtension
 			- exceptionRules.dynamicFunctionThrowTypeExtension
 
 	-

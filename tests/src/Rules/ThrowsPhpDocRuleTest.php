@@ -34,6 +34,8 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 				$dynamicExtension,
 			], [
 				$dynamicExtension,
+			], [
+				$dynamicExtension,
 			]),
 			$this->createBroker(),
 			$this->reportUnusedCatchesOfUncheckedExceptions

@@ -269,26 +269,22 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private function processNew(New_ $node, Scope $scope): array
 	{
-		$class = $node->class;
-		if ($class instanceof Node\Stmt\Class_) {
-			$className = $class->name;
-			if ($className === null) {
-				$class = $class->extends;
-				if ($class === null) {
-					return []; // trait without extends
-				}
-			} else {
-				$class = new Name($className->toString());
+		$throwTypes = [];
+		$targetMethodReflections = $this->getMethodReflections($node->class, ['__construct'], $scope);
+		foreach ($targetMethodReflections as $targetMethodReflection) {
+			$throwType = $this->dynamicThrowTypeService->getConstructorThrowType($targetMethodReflection, $node, $scope);
+			if ($throwType instanceof VoidType) {
+				continue;
 			}
+
+			$throwTypes[] = $throwType;
 		}
 
-		$methodCall = new StaticCall(
-			$class,
-			new Identifier('__construct'),
-			$node->args
-		);
+		if (count($throwTypes) === 0) {
+			return [];
+		}
 
-		return $this->processStaticCall($methodCall, $scope);
+		return $this->processThrowsTypes(TypeCombinator::union(...$throwTypes));
 	}
 
 	/**

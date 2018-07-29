@@ -4,6 +4,7 @@ namespace Pepakriz\PHPStanExceptionRules;
 
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
@@ -28,6 +29,11 @@ class DynamicThrowTypeService
 	private $dynamicStaticMethodThrowTypeExtensions = [];
 
 	/**
+	 * @var DynamicConstructorThrowTypeExtension[]
+	 */
+	private $dynamicConstructorThrowTypeExtensions = [];
+
+	/**
 	 * @var DynamicFunctionThrowTypeExtension[]
 	 */
 	private $dynamicFunctionThrowTypeExtensions = [];
@@ -45,11 +51,13 @@ class DynamicThrowTypeService
 	/**
 	 * @param DynamicMethodThrowTypeExtension[] $dynamicMethodThrowTypeExtensions
 	 * @param DynamicStaticMethodThrowTypeExtension[] $dynamicStaticMethodThrowTypeExtensions
+	 * @param DynamicConstructorThrowTypeExtension[] $dynamicConstructorThrowTypeExtensions
 	 * @param DynamicFunctionThrowTypeExtension[] $dynamicFunctionThrowTypeExtensions
 	 */
 	public function __construct(
 		array $dynamicMethodThrowTypeExtensions,
 		array $dynamicStaticMethodThrowTypeExtensions,
+		array $dynamicConstructorThrowTypeExtensions,
 		array $dynamicFunctionThrowTypeExtensions
 	)
 	{
@@ -59,6 +67,10 @@ class DynamicThrowTypeService
 
 		foreach ($dynamicStaticMethodThrowTypeExtensions as $dynamicStaticMethodThrowTypeExtension) {
 			$this->addDynamicStaticMethodExtension($dynamicStaticMethodThrowTypeExtension);
+		}
+
+		foreach ($dynamicConstructorThrowTypeExtensions as $dynamicConstructorThrowTypeExtension) {
+			$this->addDynamicConstructorExtension($dynamicConstructorThrowTypeExtension);
 		}
 
 		foreach ($dynamicFunctionThrowTypeExtensions as $dynamicFunctionThrowTypeExtension) {
@@ -74,6 +86,11 @@ class DynamicThrowTypeService
 	private function addDynamicStaticMethodExtension(DynamicStaticMethodThrowTypeExtension $extension): void
 	{
 		$this->dynamicStaticMethodThrowTypeExtensions[] = $extension;
+	}
+
+	private function addDynamicConstructorExtension(DynamicConstructorThrowTypeExtension $extension): void
+	{
+		$this->dynamicConstructorThrowTypeExtensions[] = $extension;
 	}
 
 	private function addDynamicFunctionExtension(DynamicFunctionThrowTypeExtension $extension): void
@@ -134,6 +151,36 @@ class DynamicThrowTypeService
 				$this->unsupportedClasses[$classReflection->getName()][$extensionHash] = true;
 			} catch (UnsupportedFunctionException $e) {
 				$this->unsupportedFunctions[$functionName][$extensionHash] = true;
+			}
+		}
+
+		$throwType = null;
+		if ($methodReflection instanceof ThrowableReflection) {
+			$throwType = $methodReflection->getThrowType();
+		}
+
+		return $throwType !== null ? $throwType : new VoidType();
+	}
+
+	public function getConstructorThrowType(MethodReflection $methodReflection, New_ $newNode, Scope $scope): Type
+	{
+		$classReflection = $methodReflection->getDeclaringClass();
+
+		$functionName = sprintf('%s::%s', $classReflection->getName(), $methodReflection->getName());
+		foreach ($this->dynamicConstructorThrowTypeExtensions as $extension) {
+			$extensionHash = spl_object_hash($extension);
+			if (isset($this->unsupportedClasses[$classReflection->getName()][$extensionHash])) {
+				continue;
+			}
+
+			if (isset($this->unsupportedFunctions[$functionName][$extensionHash])) {
+				continue;
+			}
+
+			try {
+				return $extension->getThrowTypeFromConstructor($methodReflection, $newNode, $scope);
+			} catch (UnsupportedClassException $e) {
+				$this->unsupportedClasses[$classReflection->getName()][$extensionHash] = true;
 			}
 		}
 
