@@ -30,11 +30,11 @@ class DynamicExtension implements DynamicMethodThrowTypeExtension, DynamicStatic
 			throw new UnsupportedClassException();
 		}
 
-		if ($methodReflection->getName() !== 'throwDynamicException') {
-			throw new UnsupportedFunctionException();
+		if ($methodReflection->getName() === 'throwDynamicException') {
+			return new ObjectType(RuntimeException::class);
 		}
 
-		return new ObjectType(RuntimeException::class);
+		throw new UnsupportedFunctionException();
 	}
 
 	/**
@@ -47,11 +47,15 @@ class DynamicExtension implements DynamicMethodThrowTypeExtension, DynamicStatic
 			throw new UnsupportedClassException();
 		}
 
-		if ($methodReflection->getName() !== 'staticThrowDynamicException') {
-			throw new UnsupportedFunctionException();
+		if ($methodReflection->getName() === 'staticThrowDynamicException') {
+			return new ObjectType(RuntimeException::class);
 		}
 
-		return new ObjectType(RuntimeException::class);
+		if ($methodReflection->getName() === '__construct') {
+			return new ObjectType(RuntimeException::class);
+		}
+
+		throw new UnsupportedFunctionException();
 	}
 
 	/**
@@ -79,6 +83,10 @@ function throwDynamicException(): void {
 class TestClass
 {
 
+	public function __construct()
+	{
+	}
+
 	public function test()
 	{
 		$this->blankMethod();
@@ -89,6 +97,8 @@ class TestClass
 
 		blankFunction();
 		throwDynamicException(); // error: Missing @throws RuntimeException annotation
+
+		new self(); // error: Missing @throws RuntimeException annotation
 	}
 
 	public function blankMethod(): void
