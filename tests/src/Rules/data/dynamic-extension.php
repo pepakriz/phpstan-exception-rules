@@ -43,19 +43,27 @@ class DynamicExtension implements DynamicMethodThrowTypeExtension, DynamicStatic
 	 */
 	public function getThrowTypeFromStaticMethodCall(MethodReflection $methodReflection, StaticCall $methodCall, Scope $scope): Type
 	{
-		if ($methodReflection->getDeclaringClass()->getName() !== TestClass::class) {
-			throw new UnsupportedClassException();
+		if ($methodReflection->getDeclaringClass()->getName() === TestClass::class) {
+			if ($methodReflection->getName() === 'staticThrowDynamicException') {
+				return new ObjectType(RuntimeException::class);
+			}
+
+			if ($methodReflection->getName() === '__construct') {
+				return new ObjectType(RuntimeException::class);
+			}
+
+			throw new UnsupportedFunctionException();
 		}
 
-		if ($methodReflection->getName() === 'staticThrowDynamicException') {
-			return new ObjectType(RuntimeException::class);
+		if ($methodReflection->getDeclaringClass()->getName() === BaseTestClass::class) {
+			if ($methodReflection->getName() === 'test') {
+				return new ObjectType(RuntimeException::class);
+			}
+
+			throw new UnsupportedFunctionException();
 		}
 
-		if ($methodReflection->getName() === '__construct') {
-			return new ObjectType(RuntimeException::class);
-		}
-
-		throw new UnsupportedFunctionException();
+		throw new UnsupportedClassException();
 	}
 
 	/**
@@ -80,7 +88,17 @@ function throwDynamicException(): void {
 
 }
 
-class TestClass
+abstract class BaseTestClass
+{
+
+	public function test()
+	{
+
+	}
+
+}
+
+class TestClass extends BaseTestClass
 {
 
 	public function __construct()
@@ -99,6 +117,8 @@ class TestClass
 		throwDynamicException(); // error: Missing @throws RuntimeException annotation
 
 		new self(); // error: Missing @throws RuntimeException annotation
+
+		parent::test(); // error: Missing @throws RuntimeException annotation
 	}
 
 	public function blankMethod(): void
