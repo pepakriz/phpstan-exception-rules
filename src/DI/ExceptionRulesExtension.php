@@ -13,6 +13,7 @@ class ExceptionRulesExtension extends CompilerExtension
 
 	private const TAG_DYNAMIC_METHOD_THROW_TYPE = 'exceptionRules.dynamicMethodThrowTypeExtension';
 	private const TAG_DYNAMIC_STATIC_METHOD_THROW_TYPE = 'exceptionRules.dynamicStaticMethodThrowTypeExtension';
+	private const TAG_DYNAMIC_CONSTRUCTOR_THROW_TYPE = 'exceptionRules.dynamicConstructorThrowTypeExtension';
 	private const TAG_DYNAMIC_FUNCTION_THROW_TYPE = 'exceptionRules.dynamicFunctionThrowTypeExtension';
 
 	public function beforeCompile(): void
@@ -23,6 +24,7 @@ class ExceptionRulesExtension extends CompilerExtension
 			->setArguments([
 				$this->getServicesByNames(self::TAG_DYNAMIC_METHOD_THROW_TYPE),
 				$this->getServicesByNames(self::TAG_DYNAMIC_STATIC_METHOD_THROW_TYPE),
+				$this->getServicesByNames(self::TAG_DYNAMIC_CONSTRUCTOR_THROW_TYPE),
 				$this->getServicesByNames(self::TAG_DYNAMIC_FUNCTION_THROW_TYPE),
 			]);
 	}

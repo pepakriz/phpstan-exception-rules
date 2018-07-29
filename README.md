@@ -84,6 +84,7 @@ There are interfaces, which you can implement:
 
 * `Pepakriz\PHPStanExceptionRules\DynamicMethodThrowTypeExtension` - service tag: `exceptionRules.dynamicMethodThrowTypeExtension`
 * `Pepakriz\PHPStanExceptionRules\DynamicStaticMethodThrowTypeExtension` - service tag: `exceptionRules.dynamicStaticMethodThrowTypeExtension`
+* `Pepakriz\PHPStanExceptionRules\DynamicConstructorThrowTypeExtension` - service tag: `exceptionRules.dynamicConstructorThrowTypeExtension`
 * `Pepakriz\PHPStanExceptionRules\DynamicFunctionThrowTypeExtension` - service tag: `exceptionRules.dynamicFunctionThrowTypeExtension`
 
 and register as service with correct tag:

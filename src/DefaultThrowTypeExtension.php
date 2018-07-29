@@ -4,6 +4,7 @@ namespace Pepakriz\PHPStanExceptionRules;
 
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
@@ -15,7 +16,7 @@ use PHPStan\Type\VoidType;
 use function array_map;
 use function count;
 
-class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, DynamicMethodThrowTypeExtension, DynamicStaticMethodThrowTypeExtension
+class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, DynamicMethodThrowTypeExtension, DynamicConstructorThrowTypeExtension, DynamicStaticMethodThrowTypeExtension
 {
 
 	/**
@@ -95,6 +96,18 @@ class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, Dy
 	public function getThrowTypeFromStaticMethodCall(MethodReflection $methodReflection, StaticCall $methodCall, Scope $scope): Type
 	{
 		return $this->getMethodThrowType($methodReflection);
+	}
+
+	/**
+	 * @throws UnsupportedClassException
+	 */
+	public function getThrowTypeFromConstructor(MethodReflection $methodReflection, New_ $newNode, Scope $scope): Type
+	{
+		try {
+			return $this->getMethodThrowType($methodReflection);
+		} catch (UnsupportedFunctionException $e) {
+			throw new UnsupportedClassException();
+		}
 	}
 
 	/**

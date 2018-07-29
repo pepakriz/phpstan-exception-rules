@@ -2,6 +2,7 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules\DynamicExtension;
 
+use Pepakriz\PHPStanExceptionRules\DynamicConstructorThrowTypeExtension;
 use Pepakriz\PHPStanExceptionRules\DynamicFunctionThrowTypeExtension;
 use Pepakriz\PHPStanExceptionRules\DynamicMethodThrowTypeExtension;
 use Pepakriz\PHPStanExceptionRules\DynamicStaticMethodThrowTypeExtension;
@@ -9,6 +10,7 @@ use Pepakriz\PHPStanExceptionRules\UnsupportedClassException;
 use Pepakriz\PHPStanExceptionRules\UnsupportedFunctionException;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
@@ -17,7 +19,7 @@ use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use RuntimeException;
 
-class DynamicExtension implements DynamicMethodThrowTypeExtension, DynamicStaticMethodThrowTypeExtension, DynamicFunctionThrowTypeExtension
+class DynamicExtension implements DynamicMethodThrowTypeExtension, DynamicStaticMethodThrowTypeExtension, DynamicConstructorThrowTypeExtension, DynamicFunctionThrowTypeExtension
 {
 
 	/**
@@ -48,10 +50,6 @@ class DynamicExtension implements DynamicMethodThrowTypeExtension, DynamicStatic
 				return new ObjectType(RuntimeException::class);
 			}
 
-			if ($methodReflection->getName() === '__construct') {
-				return new ObjectType(RuntimeException::class);
-			}
-
 			throw new UnsupportedFunctionException();
 		}
 
@@ -61,6 +59,18 @@ class DynamicExtension implements DynamicMethodThrowTypeExtension, DynamicStatic
 			}
 
 			throw new UnsupportedFunctionException();
+		}
+
+		throw new UnsupportedClassException();
+	}
+
+	/**
+	 * @throws UnsupportedClassException
+	 */
+	public function getThrowTypeFromConstructor(MethodReflection $methodReflection, New_ $newNode, Scope $scope): Type
+	{
+		if ($methodReflection->getDeclaringClass()->getName() === TestClass::class) {
+			return new ObjectType(RuntimeException::class);
 		}
 
 		throw new UnsupportedClassException();
