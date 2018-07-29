@@ -5,9 +5,7 @@ namespace Pepakriz\PHPStanExceptionRules\Rules;
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException;
-use Pepakriz\PHPStanExceptionRules\Rules\DynamicFunctionExtension\DynamicFunctionExtension;
-use Pepakriz\PHPStanExceptionRules\Rules\DynamicMethodExtension\DynamicMethodExtension;
-use Pepakriz\PHPStanExceptionRules\Rules\DynamicStaticMethodExtension\DynamicStaticMethodExtension;
+use Pepakriz\PHPStanExceptionRules\Rules\DynamicExtension\DynamicExtension;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
 use PHPStan\Rules\Rule;
 use RuntimeException;
@@ -22,6 +20,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 
 	protected function getRule(): Rule
 	{
+		$dynamicExtension = new DynamicExtension();
 		$throwsRule = new ThrowsPhpDocRule(
 			new CheckedExceptionService(
 				[
@@ -30,11 +29,11 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 				]
 			),
 			new DynamicThrowTypeService([
-				new DynamicMethodExtension(),
+				$dynamicExtension,
 			], [
-				new DynamicStaticMethodExtension(),
+				$dynamicExtension,
 			], [
-				new DynamicFunctionExtension(),
+				$dynamicExtension,
 			]),
 			$this->createBroker(),
 			$this->reportUnusedCatchesOfUncheckedExceptions
@@ -84,19 +83,9 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 		$this->analyse(__DIR__ . '/data/json-serializable.php');
 	}
 
-	public function testDynamicMethodExtension(): void
+	public function testDynamicExtension(): void
 	{
-		$this->analyse(__DIR__ . '/data/dynamic-method-extension.php');
-	}
-
-	public function testDynamicStaticMethodExtension(): void
-	{
-		$this->analyse(__DIR__ . '/data/dynamic-static-method-extension.php');
-	}
-
-	public function testDynamicFunctionExtension(): void
-	{
-		$this->analyse(__DIR__ . '/data/dynamic-function-extension.php');
+		$this->analyse(__DIR__ . '/data/dynamic-extension.php');
 	}
 
 	public function testUnsupportedCatchCheckedAndUnchecked(): void
