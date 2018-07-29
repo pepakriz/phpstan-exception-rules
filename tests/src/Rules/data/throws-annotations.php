@@ -240,3 +240,29 @@ class Issue6
 	}
 
 }
+
+abstract class BaseInheritdoc
+{
+
+	/**
+	 * @throws RuntimeException
+	 */
+	public function foo(): void
+	{
+		throw new RuntimeException();
+	}
+
+}
+
+class Inheritdoc extends BaseInheritdoc
+{
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function foo(): void // error: Unused @throws RuntimeException annotation
+	{
+
+	}
+
+}
