@@ -3,6 +3,9 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
+use Pepakriz\PHPStanExceptionRules\DefaultThrowTypeService;
+use Pepakriz\PHPStanExceptionRules\UnsupportedClassException;
+use Pepakriz\PHPStanExceptionRules\UnsupportedFunctionException;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassMethod;
 use PHPStan\Analyser\Scope;
@@ -30,6 +33,11 @@ class ThrowsPhpDocInheritanceRule implements Rule
 	private $checkedExceptionService;
 
 	/**
+	 * @var DefaultThrowTypeService
+	 */
+	private $defaultThrowTypeService;
+
+	/**
 	 * @var FileTypeMapper
 	 */
 	private $fileTypeMapper;
@@ -41,11 +49,13 @@ class ThrowsPhpDocInheritanceRule implements Rule
 
 	public function __construct(
 		CheckedExceptionService $checkedExceptionService,
+		DefaultThrowTypeService $defaultThrowTypeService,
 		FileTypeMapper $fileTypeMapper,
 		Broker $broker
 	)
 	{
 		$this->checkedExceptionService = $checkedExceptionService;
+		$this->defaultThrowTypeService = $defaultThrowTypeService;
 		$this->fileTypeMapper = $fileTypeMapper;
 		$this->broker = $broker;
 	}
@@ -116,7 +126,12 @@ class ThrowsPhpDocInheritanceRule implements Rule
 				continue;
 			}
 
-			$parentThrowType = $methodReflection->getThrowType();
+			try {
+				$parentThrowType = $this->defaultThrowTypeService->getMethodThrowType($methodReflection);
+			} catch (UnsupportedClassException | UnsupportedFunctionException $e) {
+				$parentThrowType = $methodReflection->getThrowType();
+			}
+
 			if ($parentThrowType === null) {
 				$messages[] = sprintf(
 					'PHPDoc tag @throws with type %s is not compatible with parent',
