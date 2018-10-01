@@ -127,7 +127,7 @@ class DynamicThrowTypeService
 			$throwType = $methodReflection->getThrowType();
 		}
 
-		return $throwType !== null ? $throwType : new VoidType();
+		return $throwType ?? new VoidType();
 	}
 
 	public function getStaticMethodThrowType(MethodReflection $methodReflection, StaticCall $staticCall, Scope $scope): Type
@@ -159,7 +159,7 @@ class DynamicThrowTypeService
 			$throwType = $methodReflection->getThrowType();
 		}
 
-		return $throwType !== null ? $throwType : new VoidType();
+		return $throwType ?? new VoidType();
 	}
 
 	public function getConstructorThrowType(MethodReflection $methodReflection, New_ $newNode, Scope $scope): Type
@@ -189,7 +189,7 @@ class DynamicThrowTypeService
 			$throwType = $methodReflection->getThrowType();
 		}
 
-		return $throwType !== null ? $throwType : new VoidType();
+		return $throwType ?? new VoidType();
 	}
 
 	public function getFunctionThrowType(FunctionReflection $functionReflection, FuncCall $functionCall, Scope $scope): Type
@@ -210,7 +210,7 @@ class DynamicThrowTypeService
 
 		$throwType = $functionReflection->getThrowType();
 
-		return $throwType !== null ? $throwType : new VoidType();
+		return $throwType ?? new VoidType();
 	}
 
 }

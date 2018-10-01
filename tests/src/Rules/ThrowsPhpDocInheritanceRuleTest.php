@@ -13,7 +13,7 @@ class ThrowsPhpDocInheritanceRuleTest extends RuleTestCase
 
 	protected function getRule(): Rule
 	{
-		$throwsRule = new ThrowsPhpDocInheritanceRule(
+		return new ThrowsPhpDocInheritanceRule(
 			new CheckedExceptionService(
 				[
 					RuntimeException::class,
@@ -22,8 +22,6 @@ class ThrowsPhpDocInheritanceRuleTest extends RuleTestCase
 			self::getContainer()->getByType(FileTypeMapper::class),
 			$this->createBroker()
 		);
-
-		return $throwsRule;
 	}
 
 	public function testInheritance(): void

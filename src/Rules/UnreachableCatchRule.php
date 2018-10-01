@@ -43,7 +43,7 @@ class UnreachableCatchRule implements Rule
 			/** @var string[] $caughtClasses */
 			$caughtClasses = [];
 			foreach ($node->catches as $catch) {
-				$catchClasses = array_map(function (Name $node): string {
+				$catchClasses = array_map(static function (Name $node): string {
 					return $node->toString();
 				}, $catch->types);
 

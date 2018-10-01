@@ -21,7 +21,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	protected function getRule(): Rule
 	{
 		$dynamicExtension = new DynamicExtension();
-		$throwsRule = new ThrowsPhpDocRule(
+		return new ThrowsPhpDocRule(
 			new CheckedExceptionService(
 				[
 					RuntimeException::class,
@@ -40,8 +40,6 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			$this->createBroker(),
 			$this->reportUnusedCatchesOfUncheckedExceptions
 		);
-
-		return $throwsRule;
 	}
 
 	public function testBasicThrows(): void

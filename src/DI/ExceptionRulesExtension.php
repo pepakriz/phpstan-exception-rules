@@ -37,7 +37,7 @@ class ExceptionRulesExtension extends CompilerExtension
 		$containerBuilder = $this->getContainerBuilder();
 		$names = array_keys($containerBuilder->findByTag($tag));
 
-		return array_map(function (string $name) use ($containerBuilder): ServiceDefinition {
+		return array_map(static function (string $name) use ($containerBuilder): ServiceDefinition {
 			return $containerBuilder->getDefinition($name);
 		}, $names);
 	}

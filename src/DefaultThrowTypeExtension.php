@@ -46,7 +46,7 @@ class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, Dy
 				}
 
 				$this->methodThrowTypes[$className][$methodName] = TypeCombinator::union(
-					...array_map(function (string $throwType): ObjectType {
+					...array_map(static function (string $throwType): ObjectType {
 						return new ObjectType($throwType);
 					}, $throwTypes)
 				);
@@ -60,7 +60,7 @@ class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, Dy
 			}
 
 			$this->functionThrowTypes[$functionName] = TypeCombinator::union(
-				...array_map(function (string $throwType): ObjectType {
+				...array_map(static function (string $throwType): ObjectType {
 					return new ObjectType($throwType);
 				}, $throwTypes)
 			);
