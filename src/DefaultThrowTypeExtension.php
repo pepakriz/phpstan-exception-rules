@@ -9,62 +9,21 @@ use PhpParser\Node\Expr\StaticCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
 use PHPStan\Reflection\MethodReflection;
-use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
-use PHPStan\Type\TypeCombinator;
-use PHPStan\Type\VoidType;
-use function array_map;
-use function count;
 
 class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, DynamicMethodThrowTypeExtension, DynamicConstructorThrowTypeExtension, DynamicStaticMethodThrowTypeExtension
 {
 
 	/**
-	 * @var Type[][]
+	 * @var DefaultThrowTypeService
 	 */
-	private $methodThrowTypes = [];
+	private $defaultThrowTypeService;
 
-	/**
-	 * @var Type[]
-	 */
-	private $functionThrowTypes = [];
-
-	/**
-	 * @param string[][][] $methodThrowTypes
-	 * @param string[][] $functionThrowTypes
-	 */
 	public function __construct(
-		array $methodThrowTypes,
-		array $functionThrowTypes
+		DefaultThrowTypeService $defaultThrowTypeService
 	)
 	{
-		foreach ($methodThrowTypes as $className => $methods) {
-			foreach ($methods as $methodName => $throwTypes) {
-				if (count($throwTypes) === 0) {
-					$this->methodThrowTypes[$className][$methodName] = new VoidType();
-					continue;
-				}
-
-				$this->methodThrowTypes[$className][$methodName] = TypeCombinator::union(
-					...array_map(static function (string $throwType): ObjectType {
-						return new ObjectType($throwType);
-					}, $throwTypes)
-				);
-			}
-		}
-
-		foreach ($functionThrowTypes as $functionName => $throwTypes) {
-			if (count($throwTypes) === 0) {
-				$this->functionThrowTypes[$functionName] = new VoidType();
-				continue;
-			}
-
-			$this->functionThrowTypes[$functionName] = TypeCombinator::union(
-				...array_map(static function (string $throwType): ObjectType {
-					return new ObjectType($throwType);
-				}, $throwTypes)
-			);
-		}
+		$this->defaultThrowTypeService = $defaultThrowTypeService;
 	}
 
 	/**
@@ -72,12 +31,7 @@ class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, Dy
 	 */
 	public function getThrowTypeFromFunctionCall(FunctionReflection $functionReflection, FuncCall $functionCall, Scope $scope): Type
 	{
-		$functionName = $functionReflection->getName();
-		if (!isset($this->functionThrowTypes[$functionName])) {
-			throw new UnsupportedFunctionException();
-		}
-
-		return $this->functionThrowTypes[$functionName];
+		return $this->defaultThrowTypeService->getFunctionThrowType($functionReflection);
 	}
 
 	/**
@@ -86,7 +40,7 @@ class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, Dy
 	 */
 	public function getThrowTypeFromMethodCall(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope): Type
 	{
-		return $this->getMethodThrowType($methodReflection);
+		return $this->defaultThrowTypeService->getMethodThrowType($methodReflection);
 	}
 
 	/**
@@ -95,7 +49,7 @@ class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, Dy
 	 */
 	public function getThrowTypeFromStaticMethodCall(MethodReflection $methodReflection, StaticCall $methodCall, Scope $scope): Type
 	{
-		return $this->getMethodThrowType($methodReflection);
+		return $this->defaultThrowTypeService->getMethodThrowType($methodReflection);
 	}
 
 	/**
@@ -103,29 +57,7 @@ class DefaultThrowTypeExtension implements DynamicFunctionThrowTypeExtension, Dy
 	 */
 	public function getThrowTypeFromConstructor(MethodReflection $methodReflection, New_ $newNode, Scope $scope): Type
 	{
-		try {
-			return $this->getMethodThrowType($methodReflection);
-		} catch (UnsupportedFunctionException $e) {
-			throw new UnsupportedClassException();
-		}
-	}
-
-	/**
-	 * @throws UnsupportedClassException
-	 * @throws UnsupportedFunctionException
-	 */
-	private function getMethodThrowType(MethodReflection $methodReflection): Type
-	{
-		$className = $methodReflection->getDeclaringClass()->getName();
-		if (!isset($this->methodThrowTypes[$className])) {
-			throw new UnsupportedClassException();
-		}
-
-		if (!isset($this->methodThrowTypes[$className][$methodReflection->getName()])) {
-			throw new UnsupportedFunctionException();
-		}
-
-		return $this->methodThrowTypes[$className][$methodReflection->getName()];
+		return $this->defaultThrowTypeService->getConstructorThrowType($methodReflection);
 	}
 
 }
