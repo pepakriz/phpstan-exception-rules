@@ -181,7 +181,7 @@ class ThrowsPhpDocRule implements Rule
 		$exceptionClassNames = $this->throwsScope->filterExceptionsByUncaught($exceptionClassNames);
 		$exceptionClassNames = $this->checkedExceptionService->filterCheckedExceptions($exceptionClassNames);
 
-		return array_map(function (string $exceptionClassName): string {
+		return array_map(static function (string $exceptionClassName): string {
 			return sprintf('Missing @throws %s annotation', $exceptionClassName);
 		}, $exceptionClassNames);
 	}
@@ -515,7 +515,7 @@ class ThrowsPhpDocRule implements Rule
 		$targetExceptionClasses = $this->throwsScope->filterExceptionsByUncaught($targetExceptionClasses);
 		$targetExceptionClasses = $this->checkedExceptionService->filterCheckedExceptions($targetExceptionClasses);
 
-		return array_map(function (string $targetExceptionClass): string {
+		return array_map(static function (string $targetExceptionClass): string {
 			return sprintf('Missing @throws %s annotation', $targetExceptionClass);
 		}, $targetExceptionClasses);
 	}

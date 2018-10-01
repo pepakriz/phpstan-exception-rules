@@ -179,10 +179,17 @@
 		<severity>5</severity><!-- turned off by PSR2 -> turning on with default severity -->
 	</rule>
 
+	<rule ref="SlevomatCodingStandard.Arrays.DisallowImplicitArrayCreation"/>
 	<rule ref="SlevomatCodingStandard.Arrays.TrailingArrayComma"/>
 	<rule ref="SlevomatCodingStandard.Classes.ClassConstantVisibility" />
+	<rule ref="SlevomatCodingStandard.Classes.DisallowLateStaticBindingForConstants"/>
 	<rule ref="SlevomatCodingStandard.Classes.UnusedPrivateElements"/>
+	<rule ref="SlevomatCodingStandard.Classes.UselessLateStaticBinding"/>
+	<rule ref="SlevomatCodingStandard.Classes.ModernClassNameReference"/>
+	<rule ref="SlevomatCodingStandard.Classes.TraitUseDeclaration"/>
+	<rule ref="SlevomatCodingStandard.Classes.TraitUseSpacing"/>
 	<rule ref="SlevomatCodingStandard.Commenting.InlineDocCommentDeclaration"/>
+	<rule ref="SlevomatCodingStandard.Commenting.UselessInheritDocComment"/>
 	<rule ref="SlevomatCodingStandard.Commenting.ForbiddenAnnotations">
 		<properties>
 			<property name="forbiddenAnnotations" type="array"
@@ -193,10 +200,17 @@
 	<rule ref="SlevomatCodingStandard.ControlStructures.LanguageConstructWithParentheses"/>
 	<rule ref="SlevomatCodingStandard.ControlStructures.DisallowYodaComparison"/>
 	<rule ref="SlevomatCodingStandard.ControlStructures.DisallowEqualOperators" />
+	<rule ref="SlevomatCodingStandard.ControlStructures.DisallowContinueWithoutIntegerOperandInSwitch" />
 	<rule ref="SlevomatCodingStandard.ControlStructures.NewWithParentheses"/>
 	<rule ref="SlevomatCodingStandard.ControlStructures.RequireNullCoalesceOperator"/>
+	<rule ref="SlevomatCodingStandard.ControlStructures.RequireTernaryOperator"/>
+	<rule ref="SlevomatCodingStandard.ControlStructures.EarlyExit"/>
+	<rule ref="SlevomatCodingStandard.ControlStructures.UselessConditionWithReturn"/>
 	<rule ref="SlevomatCodingStandard.Exceptions.DeadCatch"/>
 	<rule ref="SlevomatCodingStandard.Exceptions.ReferenceThrowableOnly" />
+	<rule ref="SlevomatCodingStandard.Functions.UnusedInheritedVariablePassedToClosure"/>
+	<rule ref="SlevomatCodingStandard.Functions.UselessParameterDefaultValue"/>
+	<rule ref="SlevomatCodingStandard.Functions.StaticClosure"/>
 	<rule ref="SlevomatCodingStandard.Files.TypeNameMatchesFileName">
 		<properties>
 			<property name="rootNamespaces" type="array" value="src=>Pepakriz\PHPStanExceptionRules,tests/src=>Pepakriz\PHPStanExceptionRules"/>
@@ -212,6 +226,7 @@
 	<rule ref="SlevomatCodingStandard.Namespaces.DisallowGroupUse"/>
 	<rule ref="SlevomatCodingStandard.Namespaces.MultipleUsesPerLine"/>
 	<rule ref="SlevomatCodingStandard.Namespaces.UseDoesNotStartWithBackslash"/>
+	<rule ref="SlevomatCodingStandard.Namespaces.UselessAlias"/>
 	<rule ref="SlevomatCodingStandard.Namespaces.UnusedUses">
 		<properties>
 			<property name="searchAnnotations" type="bool" value="true"/>
@@ -228,6 +243,11 @@
 			<property name="allowFallbackGlobalConstants" type="bool" value="false"/>
 		</properties>
 	</rule>
+	<rule ref="SlevomatCodingStandard.Operators.RequireOnlyStandaloneIncrementAndDecrementOperators"/>
+	<rule ref="SlevomatCodingStandard.Operators.RequireCombinedAssignmentOperator"/>
+	<rule ref="SlevomatCodingStandard.PHP.UselessParentheses"/>
+	<rule ref="SlevomatCodingStandard.PHP.OptimizedFunctionsWithoutUnpacking"/>
+	<rule ref="SlevomatCodingStandard.PHP.UselessSemicolon"/>
 	<rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes">
 		<properties>
 			<property name="newlinesCountBetweenOpenTagAndDeclare" value="0"/>
@@ -251,11 +271,11 @@
 	<rule ref="SlevomatCodingStandard.TypeHints.LongTypeHints"/>
 	<rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHintSpacing"/>
 	<rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHintSpacing"/>
+	<rule ref="SlevomatCodingStandard.TypeHints.UselessConstantTypeHint"/>
 	<rule ref="SlevomatCodingStandard.Types.EmptyLinesAroundTypeBraces"/>
-	<rule ref="SlevomatCodingStandard.ControlStructures.AssignmentInCondition"/>
-	<rule ref="SlevomatCodingStandard.ControlStructures.DisallowEqualOperators"/>
-	<rule ref="SlevomatCodingStandard.ControlStructures.RequireNullCoalesceOperator"/>
-	<rule ref="SlevomatCodingStandard.ControlStructures.EarlyExit"/>
+	<rule ref="SlevomatCodingStandard.Variables.DuplicateAssignmentToVariable"/>
+	<rule ref="SlevomatCodingStandard.Variables.UnusedVariable"/>
+	<rule ref="SlevomatCodingStandard.Variables.UselessVariable"/>
 
 	<rule ref="Cdn77CodingStandard.Classes.ClassStructure"/>
 	<rule ref="Cdn77CodingStandard.Classes.ClassUsesSeparately"/>
