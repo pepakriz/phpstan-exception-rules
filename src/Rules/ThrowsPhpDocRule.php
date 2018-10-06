@@ -204,7 +204,7 @@ class ThrowsPhpDocRule implements Rule
 			try {
 				$targetClassReflection = $this->broker->getClass($targetClassName);
 			} catch (ClassNotFoundException $e) {
-				throw new ShouldNotHappenException();
+				continue;
 			}
 
 			try {
