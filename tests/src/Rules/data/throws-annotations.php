@@ -143,6 +143,20 @@ class ThrowsAnnotationsClass
 		$union::staticFoo(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
 	}
 
+	public function callUnionContainsUnknown(): void
+	{
+		/** @var UnionOne|UnknownClass $union */
+		$union = getUnion();
+		$union->foo(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
+	}
+
+	public function callStaticUnionContainsUnknown(): void
+	{
+		/** @var UnionOne|UnknownClass $union */
+		$union = getStaticUnion();
+		$union::staticFoo(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
+	}
+
 }
 
 class ThrowInConstructor
