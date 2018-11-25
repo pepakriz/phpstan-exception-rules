@@ -93,4 +93,9 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 		$this->analyse(__DIR__ . '/data/unsupported-catch.php');
 	}
 
+	public function testAnonymClass(): void
+	{
+		$this->analyse(__DIR__ . '/data/throws-anonym-class.php');
+	}
+
 }
