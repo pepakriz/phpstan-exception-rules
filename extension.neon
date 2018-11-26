@@ -25,6 +25,11 @@ services:
 			- exceptionRules.dynamicFunctionThrowTypeExtension
 
 	-
+		class: Pepakriz\PHPStanExceptionRules\Extension\ReflectionExtension
+		tags:
+			- exceptionRules.dynamicConstructorThrowTypeExtension
+
+	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule
 		arguments:
 			reportUnusedCatchesOfUncheckedExceptions: %exceptionRules.reportUnusedCatchesOfUncheckedExceptions%
