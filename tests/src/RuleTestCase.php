@@ -13,8 +13,10 @@ use PHPStan\Analyser\TypeSpecifier;
 use PHPStan\Broker\AnonymousClassNameHelper;
 use PHPStan\Cache\Cache;
 use PHPStan\File\FileHelper;
+use PHPStan\File\RelativePathHelper;
 use PHPStan\PhpDoc\PhpDocStringResolver;
 use PHPStan\PhpDoc\TypeNodeResolver;
+use PHPStan\PhpDoc\TypeNodeResolverExtension;
 use PHPStan\Rules\Registry;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\TestCase;
@@ -27,6 +29,7 @@ use function file_get_contents;
 use function implode;
 use function sprintf;
 use function trim;
+use const DIRECTORY_SEPARATOR;
 
 abstract class RuleTestCase extends TestCase
 {
@@ -62,6 +65,7 @@ abstract class RuleTestCase extends TestCase
 				$this->getMethodTypeSpecifyingExtensions(),
 				$this->getStaticMethodTypeSpecifyingExtensions()
 			);
+			$currentWorkingDirectory = $this->getCurrentWorkingDirectory();
 			$this->analyser = new Analyser(
 				$this->createScopeFactory($broker, $typeSpecifier),
 				$this->getParser(),
@@ -69,16 +73,14 @@ abstract class RuleTestCase extends TestCase
 				new NodeScopeResolver(
 					$broker,
 					$this->getParser(),
-					new FileTypeMapper($this->getParser(), self::getContainer()->getByType(PhpDocStringResolver::class), $this->createMock(Cache::class), new AnonymousClassNameHelper(new FileHelper($this->getCurrentWorkingDirectory())), new TypeNodeResolver([])),
+					new FileTypeMapper($this->getParser(), self::getContainer()->getByType(PhpDocStringResolver::class), $this->createMock(Cache::class), new AnonymousClassNameHelper(new FileHelper($currentWorkingDirectory), new RelativePathHelper($currentWorkingDirectory, DIRECTORY_SEPARATOR, [])), new TypeNodeResolver($this->getTypeNodeResolverExtensions())),
 					$fileHelper,
 					$typeSpecifier,
 					$this->shouldPolluteScopeWithLoopInitialAssignments(),
 					$this->shouldPolluteCatchScopeWithTryAssignments(),
 					[]
 				),
-				$fileHelper,
 				[],
-				null,
 				true,
 				50
 			);
@@ -99,6 +101,14 @@ abstract class RuleTestCase extends TestCase
 	 * @return StaticMethodTypeSpecifyingExtension[]
 	 */
 	protected function getStaticMethodTypeSpecifyingExtensions(): array
+	{
+		return [];
+	}
+
+	/**
+	 * @return TypeNodeResolverExtension[]
+	 */
+	protected function getTypeNodeResolverExtensions(): array
 	{
 		return [];
 	}
