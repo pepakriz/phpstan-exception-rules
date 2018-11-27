@@ -18,32 +18,32 @@ class ThrowsScope
 	private const CAUGHT_EXCEPTIONS_ATTRIBUTE = '__CAUGHT_EXCEPTIONS_ATTRIBUTE__';
 
 	/**
-	 * @var array<Type|null>
-	 */
-	private $throwsAnnotationBlock = [];
-
-	/**
 	 * @var int
 	 */
-	private $throwsAnnotationBlockIndex = -1;
+	private $stackIndex = -1;
+
+	/**
+	 * @var array<Type|null>
+	 */
+	private $throwsAnnotationBlockStack = [];
 
 	/**
 	 * @var bool[][]
 	 */
-	private $usedThrowsAnnotations = [];
+	private $usedThrowsAnnotationsStack = [];
 
 	/**
 	 * @var TryCatch[][]
 	 */
-	private $tryCatchQueue = [];
+	private $tryCatchStack = [];
 
 	public function enterToThrowsAnnotationBlock(?Type $type): void
 	{
-		$this->throwsAnnotationBlockIndex++;
+		$this->stackIndex++;
 
-		$this->throwsAnnotationBlock[$this->throwsAnnotationBlockIndex] = $type;
-		$this->usedThrowsAnnotations[$this->throwsAnnotationBlockIndex] = [];
-		$this->tryCatchQueue[$this->throwsAnnotationBlockIndex] = [];
+		$this->throwsAnnotationBlockStack[$this->stackIndex] = $type;
+		$this->usedThrowsAnnotationsStack[$this->stackIndex] = [];
+		$this->tryCatchStack[$this->stackIndex] = [];
 	}
 
 	/**
@@ -51,25 +51,25 @@ class ThrowsScope
 	 */
 	public function exitFromThrowsAnnotationBlock(): array
 	{
-		$usedThrowsAnnotations = $this->usedThrowsAnnotations[$this->throwsAnnotationBlockIndex];
+		$usedThrowsAnnotations = $this->usedThrowsAnnotationsStack[$this->stackIndex];
 
-		unset($this->throwsAnnotationBlock[$this->throwsAnnotationBlockIndex]);
-		unset($this->usedThrowsAnnotations[$this->throwsAnnotationBlockIndex]);
-		unset($this->tryCatchQueue[$this->throwsAnnotationBlockIndex]);
+		unset($this->throwsAnnotationBlockStack[$this->stackIndex]);
+		unset($this->usedThrowsAnnotationsStack[$this->stackIndex]);
+		unset($this->tryCatchStack[$this->stackIndex]);
 
-		$this->throwsAnnotationBlockIndex--;
+		$this->stackIndex--;
 
 		return array_keys($usedThrowsAnnotations);
 	}
 
 	public function enterToTryCatch(TryCatch $tryCatch): void
 	{
-		$this->tryCatchQueue[$this->throwsAnnotationBlockIndex][] = $tryCatch;
+		$this->tryCatchStack[$this->stackIndex][] = $tryCatch;
 	}
 
 	public function exitFromTry(): void
 	{
-		array_pop($this->tryCatchQueue[$this->throwsAnnotationBlockIndex]);
+		array_pop($this->tryCatchStack[$this->stackIndex]);
 	}
 
 	/**
@@ -93,8 +93,8 @@ class ThrowsScope
 
 	private function isExceptionCaught(string $exceptionClassName): bool
 	{
-		foreach (array_reverse(array_keys($this->tryCatchQueue[$this->throwsAnnotationBlockIndex])) as $catchKey) {
-			$catches = $this->tryCatchQueue[$this->throwsAnnotationBlockIndex][$catchKey];
+		foreach (array_reverse(array_keys($this->tryCatchStack[$this->stackIndex])) as $catchKey) {
+			$catches = $this->tryCatchStack[$this->stackIndex][$catchKey];
 
 			foreach ($catches->catches as $catch) {
 				foreach ($catch->types as $type) {
@@ -116,11 +116,11 @@ class ThrowsScope
 			}
 		}
 
-		if ($this->throwsAnnotationBlock[$this->throwsAnnotationBlockIndex] !== null) {
-			$throwsExceptionClasses = TypeUtils::getDirectClassNames($this->throwsAnnotationBlock[$this->throwsAnnotationBlockIndex]);
+		if ($this->throwsAnnotationBlockStack[$this->stackIndex] !== null) {
+			$throwsExceptionClasses = TypeUtils::getDirectClassNames($this->throwsAnnotationBlockStack[$this->stackIndex]);
 			foreach ($throwsExceptionClasses as $throwsExceptionClass) {
 				if (is_a($exceptionClassName, $throwsExceptionClass, true)) {
-					$this->usedThrowsAnnotations[$this->throwsAnnotationBlockIndex][$throwsExceptionClass] = true;
+					$this->usedThrowsAnnotationsStack[$this->stackIndex][$throwsExceptionClass] = true;
 					return true;
 				}
 			}
