@@ -30,6 +30,11 @@ services:
 			- exceptionRules.dynamicConstructorThrowTypeExtension
 
 	-
+		class: Pepakriz\PHPStanExceptionRules\Extension\DateTimeExtension
+		tags:
+			- exceptionRules.dynamicConstructorThrowTypeExtension
+
+	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule
 		arguments:
 			reportUnusedCatchesOfUncheckedExceptions: %exceptionRules.reportUnusedCatchesOfUncheckedExceptions%

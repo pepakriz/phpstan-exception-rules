@@ -4,7 +4,6 @@ namespace Pepakriz\PHPStanExceptionRules\Rules;
 
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
-use Pepakriz\PHPStanExceptionRules\Extension\ReflectionExtension;
 use Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException;
 use Pepakriz\PHPStanExceptionRules\Rules\DynamicExtension\DynamicExtension;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
@@ -23,7 +22,6 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	protected function getRule(): Rule
 	{
 		$dynamicExtension = new DynamicExtension();
-		$reflectionClassExtension = new ReflectionExtension($this->createBroker());
 		return new ThrowsPhpDocRule(
 			new CheckedExceptionService(
 				[
@@ -38,7 +36,6 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 				$dynamicExtension,
 			], [
 				$dynamicExtension,
-				$reflectionClassExtension,
 			], [
 				$dynamicExtension,
 			]),
@@ -101,11 +98,6 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	public function testAnonymClass(): void
 	{
 		$this->analyse(__DIR__ . '/data/throws-anonym-class.php');
-	}
-
-	public function testPhpInternalFunctions(): void
-	{
-		$this->analyse(__DIR__ . '/data/throws-php-internal-functions.php');
 	}
 
 }
