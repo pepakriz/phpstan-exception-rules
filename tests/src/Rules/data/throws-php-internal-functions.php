@@ -66,25 +66,9 @@ class Example
 		new DateTimeImmutable('2018-01-01');
 		new DateTimeImmutable('invalid format'); // error: Missing @throws Exception annotation
 
-		$date1 = '2018-01-01';
-		if (rand(0, 1) === 0) {
-			$date1 = '2019-01-01';
-		}
-		new DateTime($date1);
-
-		if (rand(0, 1) === 0) {
-			$date2 = '2019-01-01';
-		} else {
-			$date2 = null;
-		}
-		new DateTime($date2);
-
-		if (rand(0, 1) === 0) {
-			$date3 = '2019-01-01';
-		} else {
-			$date3 = 123;
-		}
-		new DateTime($date3); // error: Missing @throws Exception annotation
+		new DateTime(rand(0, 1) === 0 ? '2018-01-01' : '2019-01-01');
+		new DateTime(rand(0, 1) === 0 ? '2018-01-01' : null);
+		new DateTime(rand(0, 1) === 0 ? '2018-01-01' : 123); // error: Missing @throws Exception annotation
 	}
 
 }
