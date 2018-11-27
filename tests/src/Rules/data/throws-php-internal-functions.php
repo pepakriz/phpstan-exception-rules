@@ -4,16 +4,28 @@ namespace Pepakriz\PHPStanExceptionRules\Rules\PhpInternalFunctions;
 
 use DateTime;
 use DateTimeImmutable;
-use function rand;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionProperty;
 use ReflectionZendExtension;
+use Throwable;
+use function rand;
+
+class ValueObject
+{
+
+	private $property;
+
+	private $secondProperty;
+
+}
 
 class Example
 {
 
 	private $property;
+
+	private $secondProperty;
 
 	public function testReflection(): void
 	{
@@ -29,6 +41,17 @@ class Example
 		new ReflectionFunction('undefinedFunction'); // error: Missing @throws ReflectionException annotation
 
 		new ReflectionZendExtension('unknownZendExtension'); // error: Missing @throws ReflectionException annotation
+
+		new ReflectionClass(rand(0, 1) === 0 ? self::class : Throwable::class);
+		new ReflectionClass(rand(0, 1) === 0 ? self::class : null); // error: Missing @throws ReflectionException annotation
+		new ReflectionClass(rand(0, 1) === 0 ? self::class : 'undefinedClass'); // error: Missing @throws ReflectionException annotation
+
+		new ReflectionProperty(rand(0, 1) === 0 ? self::class : ValueObject::class, rand(0, 1) === 0 ? 'property' : 'secondProperty');
+		new ReflectionProperty(rand(0, 1) === 0 ? self::class : null, rand(0, 1) === 0 ? 'property' : 'secondProperty'); // error: Missing @throws ReflectionException annotation
+		new ReflectionProperty(rand(0, 1) === 0 ? self::class : Throwable::class, rand(0, 1) === 0 ? 'property' : 'undefinedProperty'); // error: Missing @throws ReflectionException annotation
+
+		new ReflectionFunction(rand(0, 1) === 0 ? 'count' : 'sort');
+		new ReflectionFunction(rand(0, 1) === 0 ? 'count' : 'undefinedFunction'); // error: Missing @throws ReflectionException annotation
 	}
 
 	public function testDateTime(): void
