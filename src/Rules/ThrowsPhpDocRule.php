@@ -471,10 +471,6 @@ class ThrowsPhpDocRule implements Rule
 			return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'next'], $scope);
 		}
 
-		if ($functionName === 'json_encode') {
-			return $this->processThrowTypesOnMethod($node->args[0]->value, ['jsonSerialize'], $scope);
-		}
-
 		try {
 			$functionReflection = $this->broker->getFunction($nodeName, $scope);
 		} catch (FunctionNotFoundException $e) {
@@ -483,16 +479,24 @@ class ThrowsPhpDocRule implements Rule
 
 		$throwType = $this->dynamicThrowTypeService->getFunctionThrowType($functionReflection, $node, $scope);
 
+		if ($functionName === 'json_encode') {
+			$throwType = TypeCombinator::union(
+				$throwType,
+				...$this->getThrowTypesOnMethod($node->args[0]->value, ['jsonSerialize'], $scope)
+			);
+		}
+
 		return $this->processThrowsTypes($throwType);
 	}
 
 	/**
 	 * @param Name|Expr|ClassLike $class
 	 * @param string[] $methods
-	 * @return string[]
+	 * @return Type[]
 	 */
-	private function processThrowTypesOnMethod($class, array $methods, Scope $scope): array
+	private function getThrowTypesOnMethod($class, array $methods, Scope $scope): array
 	{
+		/** @var Type[] $throwTypes */
 		$throwTypes = [];
 		$targetMethodReflections = $this->getMethodReflections($class, $methods, $scope);
 		foreach ($targetMethodReflections as $targetMethodReflection) {
@@ -511,6 +515,18 @@ class ThrowsPhpDocRule implements Rule
 		if (count($throwTypes) === 0) {
 			return [];
 		}
+
+		return $throwTypes;
+	}
+
+	/**
+	 * @param Name|Expr|ClassLike $class
+	 * @param string[] $methods
+	 * @return string[]
+	 */
+	private function processThrowTypesOnMethod($class, array $methods, Scope $scope): array
+	{
+		$throwTypes = $this->getThrowTypesOnMethod($class, $methods, $scope);
 
 		return $this->processThrowsTypes(TypeCombinator::union(...$throwTypes));
 	}

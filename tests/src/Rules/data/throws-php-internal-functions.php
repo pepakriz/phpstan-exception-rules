@@ -54,6 +54,9 @@ class Example
 		new ReflectionFunction(rand(0, 1) === 0 ? 'count' : 'undefinedFunction'); // error: Missing @throws ReflectionException annotation
 	}
 
+	/**
+	 * @requires PHP 7.3
+	 */
 	public function testDateTime(): void
 	{
 		new DateTime();
