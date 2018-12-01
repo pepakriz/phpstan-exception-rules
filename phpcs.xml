@@ -259,6 +259,7 @@
 			<property name="usefulAnnotations" type="array" value="
 				@throws,
 				@dataProvider,
+				@requires,
 			"/>
 			<property name="traversableTypeHints" type="array" value="
 				Generator,

@@ -35,6 +35,11 @@ services:
 			- exceptionRules.dynamicConstructorThrowTypeExtension
 
 	-
+		class: Pepakriz\PHPStanExceptionRules\Extension\JsonEncodeDecodeExtension
+		tags:
+			- exceptionRules.dynamicFunctionThrowTypeExtension
+
+	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule
 		arguments:
 			reportUnusedCatchesOfUncheckedExceptions: %exceptionRules.reportUnusedCatchesOfUncheckedExceptions%
