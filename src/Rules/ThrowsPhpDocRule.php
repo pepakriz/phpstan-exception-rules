@@ -47,6 +47,9 @@ use function sprintf;
 class ThrowsPhpDocRule implements Rule
 {
 
+	private const ATTRIBUTE_HAS_CLASS_METHOD_END = '__HAS_CLASS_METHOD_END__';
+	private const ATTRIBUTE_HAS_TRY_CATCH_END = '__HAS_TRY_CATCH_END__';
+
 	/**
 	 * @var CheckedExceptionService
 	 */
@@ -156,7 +159,10 @@ class ThrowsPhpDocRule implements Rule
 
 		$this->throwsScope->enterToTryCatch($node);
 
-		$node->stmts[] = new TryCatchTryEnd($node);
+		if (!$node->hasAttribute(self::ATTRIBUTE_HAS_TRY_CATCH_END)) {
+			$node->setAttribute(self::ATTRIBUTE_HAS_TRY_CATCH_END, true);
+			$node->stmts[] = new TryCatchTryEnd($node);
+		}
 
 		return [];
 	}
@@ -341,7 +347,10 @@ class ThrowsPhpDocRule implements Rule
 			$this->throwsScope->enterToThrowsAnnotationBlock($methodReflection->getThrowType());
 		}
 
-		$node->stmts[] = new ClassMethodEnd($node);
+		if (!$node->hasAttribute(self::ATTRIBUTE_HAS_CLASS_METHOD_END)) {
+			$node->setAttribute(self::ATTRIBUTE_HAS_CLASS_METHOD_END, true);
+			$node->stmts[] = new ClassMethodEnd($node);
+		}
 
 		return [];
 	}
