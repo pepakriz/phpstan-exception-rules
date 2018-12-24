@@ -6,7 +6,7 @@ use Iterator;
 use IteratorAggregate;
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
-use Pepakriz\PHPStanExceptionRules\Node\ClassMethodEnd;
+use Pepakriz\PHPStanExceptionRules\Node\FunctionEnd;
 use Pepakriz\PHPStanExceptionRules\Node\TryCatchTryEnd;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
@@ -123,12 +123,12 @@ class ThrowsPhpDocRule implements Rule
 			return $this->processNew($node, $scope);
 		}
 
-		if ($node instanceof ClassMethod) {
-			return $this->processClassMethod($node, $scope);
+		if ($node instanceof Node\FunctionLike) {
+			return $this->processFunction($node, $scope);
 		}
 
-		if ($node instanceof ClassMethodEnd) {
-			return $this->processClassMethodEnd($scope);
+		if ($node instanceof FunctionEnd) {
+			return $this->processFunctionEnd($scope);
 		}
 
 		if ($node instanceof Catch_) {
@@ -326,21 +326,32 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	private function processClassMethod(ClassMethod $node, Scope $scope): array
+	private function processFunction(Node\FunctionLike $node, Scope $scope): array
 	{
+		if (
+			!$node instanceof ClassMethod
+			&& !$node instanceof Node\Stmt\Function_
+		) {
+			return [];
+		}
+
 		if ($node->stmts === null) {
 			$node->stmts = [];
 		}
 
 		$classReflection = $scope->getClassReflection();
 		if ($classReflection === null) {
-			return [];
-		}
-
-		try {
-			$methodReflection = $classReflection->getMethod($node->name->toString(), $scope);
-		} catch (MissingMethodFromReflectionException $e) {
-			throw new ShouldNotHappenException();
+			try {
+				$methodReflection = $this->broker->getFunction(new Name($node->name->toString()), $scope);
+			} catch (FunctionNotFoundException $e) {
+				return [];
+			}
+		} else {
+			try {
+				$methodReflection = $classReflection->getMethod($node->name->toString(), $scope);
+			} catch (MissingMethodFromReflectionException $e) {
+				throw new ShouldNotHappenException();
+			}
 		}
 
 		if ($methodReflection instanceof ThrowableReflection) {
@@ -349,7 +360,7 @@ class ThrowsPhpDocRule implements Rule
 
 		if (!$node->hasAttribute(self::ATTRIBUTE_HAS_CLASS_METHOD_END)) {
 			$node->setAttribute(self::ATTRIBUTE_HAS_CLASS_METHOD_END, true);
-			$node->stmts[] = new ClassMethodEnd($node);
+			$node->stmts[] = new FunctionEnd($node);
 		}
 
 		return [];
@@ -358,7 +369,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	private function processClassMethodEnd(Scope $scope): array
+	private function processFunctionEnd(Scope $scope): array
 	{
 		$usedThrowsAnnotations = $this->throwsScope->exitFromThrowsAnnotationBlock();
 		$usedThrowsAnnotations = $this->checkedExceptionService->filterCheckedExceptions($usedThrowsAnnotations);

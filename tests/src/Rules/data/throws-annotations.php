@@ -14,6 +14,13 @@ class NextRuntimeException extends BaseRuntimeException {}
 class ConcreteNextRuntimeException extends NextRuntimeException {}
 class CheckedException extends Exception {}
 
+/**
+ * @throws RuntimeException
+ */
+function foo()  {
+	throw new RuntimeException();
+}
+
 class ThrowsAnnotationsClass
 {
 
