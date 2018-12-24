@@ -2,13 +2,13 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Node;
 
-use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\Nop;
 
-class ClassMethodEnd extends Nop
+class FunctionEnd extends Nop
 {
 
-	public function __construct(ClassMethod $node)
+	public function __construct(FunctionLike $node)
 	{
 		parent::__construct([
 			'startLine' => $node->getLine(),
