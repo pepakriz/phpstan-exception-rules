@@ -219,10 +219,6 @@ class ThrowsPhpDocRule implements Rule
 				continue;
 			}
 
-			if (!$targetMethodReflection instanceof ThrowableReflection) {
-				continue;
-			}
-
 			$throwType = $this->dynamicThrowTypeService->getMethodThrowType($targetMethodReflection, $node, $scope);
 			if ($throwType instanceof VoidType) {
 				continue;

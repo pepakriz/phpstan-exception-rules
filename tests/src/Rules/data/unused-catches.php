@@ -3,6 +3,7 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules\UnusedCatches;
 
 use LogicException;
+use PharData;
 use RuntimeException;
 
 class FooException extends RuntimeException
@@ -103,6 +104,15 @@ class UnusedCatches
 	private function throwLogic(): void // error: Unused @throws LogicException annotation
 	{
 		throw new LogicException();
+	}
+
+	private function dynamicThrowType(): void
+	{
+		try {
+			$tar = new PharData('input.txt');
+			$tar->extractTo('output');
+		} catch (RuntimeException $exception) {
+		}
 	}
 
 }

@@ -3,10 +3,13 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
+use Pepakriz\PHPStanExceptionRules\DefaultThrowTypeExtension;
+use Pepakriz\PHPStanExceptionRules\DefaultThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException;
 use Pepakriz\PHPStanExceptionRules\Rules\DynamicExtension\DynamicExtension;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
+use PharData;
 use PHPStan\Rules\Rule;
 use ReflectionException;
 use RuntimeException;
@@ -21,7 +24,19 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 
 	protected function getRule(): Rule
 	{
-		$dynamicExtension = new DynamicExtension();
+		$extensions = [
+			new DynamicExtension(),
+			new DefaultThrowTypeExtension(
+				new DefaultThrowTypeService([
+					PharData::class => [
+						'extractTo' => [
+							RuntimeException::class,
+						],
+					],
+				], [])
+			),
+		];
+
 		return new ThrowsPhpDocRule(
 			new CheckedExceptionService(
 				[
@@ -30,15 +45,12 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 					ReflectionException::class,
 				]
 			),
-			new DynamicThrowTypeService([
-				$dynamicExtension,
-			], [
-				$dynamicExtension,
-			], [
-				$dynamicExtension,
-			], [
-				$dynamicExtension,
-			]),
+			new DynamicThrowTypeService(
+				$extensions,
+				$extensions,
+				$extensions,
+				$extensions
+			),
 			$this->createBroker(),
 			$this->reportUnusedCatchesOfUncheckedExceptions
 		);
