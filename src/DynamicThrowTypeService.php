@@ -18,6 +18,9 @@ use function sprintf;
 class DynamicThrowTypeService
 {
 
+	private const VARIANT_CONSTRUCTOR = 'constructor';
+	private const VARIANT_METHOD = 'method';
+
 	/**
 	 * @var DynamicMethodThrowTypeExtension[]
 	 */
@@ -39,7 +42,7 @@ class DynamicThrowTypeService
 	private $dynamicFunctionThrowTypeExtensions = [];
 
 	/**
-	 * @var bool[][]
+	 * @var bool[][][]
 	 */
 	private $unsupportedClasses = [];
 
@@ -105,7 +108,7 @@ class DynamicThrowTypeService
 		$functionName = sprintf('%s::%s', $classReflection->getName(), $methodReflection->getName());
 		foreach ($this->dynamicMethodThrowTypeExtensions as $extension) {
 			$extensionHash = spl_object_hash($extension);
-			if (isset($this->unsupportedClasses[$classReflection->getName()][$extensionHash])) {
+			if (isset($this->unsupportedClasses[self::VARIANT_METHOD][$classReflection->getName()][$extensionHash])) {
 				continue;
 			}
 
@@ -116,7 +119,7 @@ class DynamicThrowTypeService
 			try {
 				return $extension->getThrowTypeFromMethodCall($methodReflection, $methodCall, $scope);
 			} catch (UnsupportedClassException $e) {
-				$this->unsupportedClasses[$classReflection->getName()][$extensionHash] = true;
+				$this->unsupportedClasses[self::VARIANT_METHOD][$classReflection->getName()][$extensionHash] = true;
 			} catch (UnsupportedFunctionException $e) {
 				$this->unsupportedFunctions[$functionName][$extensionHash] = true;
 			}
@@ -137,7 +140,7 @@ class DynamicThrowTypeService
 		$functionName = sprintf('%s::%s', $classReflection->getName(), $methodReflection->getName());
 		foreach ($this->dynamicStaticMethodThrowTypeExtensions as $extension) {
 			$extensionHash = spl_object_hash($extension);
-			if (isset($this->unsupportedClasses[$classReflection->getName()][$extensionHash])) {
+			if (isset($this->unsupportedClasses[self::VARIANT_METHOD][$classReflection->getName()][$extensionHash])) {
 				continue;
 			}
 
@@ -148,7 +151,7 @@ class DynamicThrowTypeService
 			try {
 				return $extension->getThrowTypeFromStaticMethodCall($methodReflection, $staticCall, $scope);
 			} catch (UnsupportedClassException $e) {
-				$this->unsupportedClasses[$classReflection->getName()][$extensionHash] = true;
+				$this->unsupportedClasses[self::VARIANT_METHOD][$classReflection->getName()][$extensionHash] = true;
 			} catch (UnsupportedFunctionException $e) {
 				$this->unsupportedFunctions[$functionName][$extensionHash] = true;
 			}
@@ -169,7 +172,7 @@ class DynamicThrowTypeService
 		$functionName = sprintf('%s::%s', $classReflection->getName(), $methodReflection->getName());
 		foreach ($this->dynamicConstructorThrowTypeExtensions as $extension) {
 			$extensionHash = spl_object_hash($extension);
-			if (isset($this->unsupportedClasses[$classReflection->getName()][$extensionHash])) {
+			if (isset($this->unsupportedClasses[self::VARIANT_CONSTRUCTOR][$classReflection->getName()][$extensionHash])) {
 				continue;
 			}
 
@@ -180,7 +183,7 @@ class DynamicThrowTypeService
 			try {
 				return $extension->getThrowTypeFromConstructor($methodReflection, $newNode, $scope);
 			} catch (UnsupportedClassException $e) {
-				$this->unsupportedClasses[$classReflection->getName()][$extensionHash] = true;
+				$this->unsupportedClasses[self::VARIANT_CONSTRUCTOR][$classReflection->getName()][$extensionHash] = true;
 			}
 		}
 
