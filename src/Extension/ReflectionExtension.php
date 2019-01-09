@@ -19,8 +19,10 @@ use PHPStan\Type\VoidType;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
+use ReflectionObject;
 use ReflectionProperty;
 use ReflectionZendExtension;
+use function extension_loaded;
 use function is_a;
 
 class ReflectionExtension implements DynamicConstructorThrowTypeExtension
@@ -45,9 +47,9 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 	{
 		$className = $methodReflection->getDeclaringClass()->getName();
 
-        if (is_a($className, \ReflectionObject::class, true)) {
-            return new VoidType();
-        }
+		if (is_a($className, ReflectionObject::class, true)) {
+			return new VoidType();
+		}
 
 		if (is_a($className, ReflectionClass::class, true)) {
 			return $this->resolveReflectionClass($newNode, $scope);
@@ -157,28 +159,28 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 		return new VoidType();
 	}
 
-    private function resolveReflectionExtension(New_ $newNode, Scope $scope): Type
-    {
-        $reflectionExceptionType = new ObjectType(ReflectionException::class);
-        if (!isset($newNode->args[0])) {
-            return $reflectionExceptionType;
-        }
+	private function resolveReflectionExtension(New_ $newNode, Scope $scope): Type
+	{
+		$reflectionExceptionType = new ObjectType(ReflectionException::class);
+		if (!isset($newNode->args[0])) {
+			return $reflectionExceptionType;
+		}
 
-        $valueType = $scope->getType($newNode->args[0]->value);
+		$valueType = $scope->getType($newNode->args[0]->value);
 
-        foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
-            if (!\extension_loaded($constantString->getValue())) {
-                return $reflectionExceptionType;
-            }
+		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
+			if (!extension_loaded($constantString->getValue())) {
+				return $reflectionExceptionType;
+			}
 
-            $valueType = TypeCombinator::remove($valueType, $constantString);
-        }
+			$valueType = TypeCombinator::remove($valueType, $constantString);
+		}
 
-        if (!$valueType instanceof NeverType) {
-            return $reflectionExceptionType;
-        }
+		if (!$valueType instanceof NeverType) {
+			return $reflectionExceptionType;
+		}
 
-        return new VoidType();
-    }
+		return new VoidType();
+	}
 
 }
