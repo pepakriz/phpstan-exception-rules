@@ -29,6 +29,8 @@ class Example
 
 	public function testReflection(): void
 	{
+        new \ReflectionObject(new \stdClass());
+
 		new ReflectionClass(self::class);
 		new ReflectionClass('undefinedClass'); // error: Missing @throws ReflectionException annotation
 
@@ -40,6 +42,7 @@ class Example
 		new ReflectionFunction('count');
 		new ReflectionFunction('undefinedFunction'); // error: Missing @throws ReflectionException annotation
 
+		new ReflectionZendExtension('json');
 		new ReflectionZendExtension('unknownZendExtension'); // error: Missing @throws ReflectionException annotation
 
 		new ReflectionClass(rand(0, 1) === 0 ? self::class : Throwable::class);
