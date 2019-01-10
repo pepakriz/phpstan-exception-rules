@@ -6,8 +6,10 @@ use DateTime;
 use DateTimeImmutable;
 use ReflectionClass;
 use ReflectionFunction;
+use ReflectionObject;
 use ReflectionProperty;
 use ReflectionZendExtension;
+use stdClass;
 use Throwable;
 use function rand;
 
@@ -29,7 +31,7 @@ class Example
 
 	public function testReflection(): void
 	{
-        new \ReflectionObject(new \stdClass());
+		new ReflectionObject(new stdClass());
 
 		new ReflectionClass(self::class);
 		new ReflectionClass('undefinedClass'); // error: Missing @throws ReflectionException annotation
