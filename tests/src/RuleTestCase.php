@@ -78,8 +78,10 @@ abstract class RuleTestCase extends TestCase
 					$typeSpecifier,
 					$this->shouldPolluteScopeWithLoopInitialAssignments(),
 					$this->shouldPolluteCatchScopeWithTryAssignments(),
+					$this->shouldPpolluteScopeWithAlwaysIterableForeach(),
 					[]
 				),
+				$fileHelper,
 				[],
 				true,
 				50
@@ -179,6 +181,11 @@ abstract class RuleTestCase extends TestCase
 	}
 
 	protected function shouldPolluteCatchScopeWithTryAssignments(): bool
+	{
+		return false;
+	}
+
+	protected function shouldPpolluteScopeWithAlwaysIterableForeach(): bool
 	{
 		return false;
 	}
