@@ -21,6 +21,8 @@ use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeUtils;
 use PHPStan\Type\VerbosityLevel;
+use function array_filter;
+use function array_merge;
 use function count;
 use function sprintf;
 
@@ -66,11 +68,14 @@ class ThrowsPhpDocInheritanceRule implements Rule
 	}
 
 	/**
-	 * @param ClassMethod $node
 	 * @return string[]
 	 */
 	public function processNode(Node $node, Scope $scope): array
 	{
+		if (!$node instanceof ClassMethod) {
+			return [];
+		}
+
 		$classReflection = $scope->getClassReflection();
 		if ($classReflection === null) {
 			return [];
@@ -102,11 +107,9 @@ class ThrowsPhpDocInheritanceRule implements Rule
 		}
 
 		$throwType = $throwsTag->getType();
-		$parentClasses = $classReflection->getInterfaces();
-		$parentClass = $classReflection->getParentClass();
-		if ($parentClass !== false) {
-			$parentClasses[] = $parentClass;
-		}
+		$parentClasses = array_filter(
+			array_merge($classReflection->getInterfaces(), [$classReflection->getParentClass()])
+		);
 
 		$messages = [];
 		foreach ($parentClasses as $parentClass) {
