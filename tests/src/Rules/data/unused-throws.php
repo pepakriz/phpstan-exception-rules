@@ -8,6 +8,13 @@ use RuntimeException;
 class FooException extends RuntimeException {}
 class BarException extends RuntimeException {}
 
+/**
+ * @throws RuntimeException
+ */
+function foo() { // error: Unused @throws RuntimeException annotation
+
+}
+
 class UnusedThrows
 {
 

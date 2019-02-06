@@ -370,13 +370,13 @@ class ThrowsPhpDocRule implements Rule
 		$usedThrowsAnnotations = $this->throwsScope->exitFromThrowsAnnotationBlock();
 		$usedThrowsAnnotations = $this->checkedExceptionService->filterCheckedExceptions($usedThrowsAnnotations);
 
-		$classReflection = $scope->getClassReflection();
 		$methodReflection = $scope->getFunction();
-		if ($classReflection === null || $methodReflection === null) {
+		if ($methodReflection === null) {
 			return [];
 		}
 
-		if ($classReflection->isInterface() || $classReflection->isAbstract()) {
+		$classReflection = $scope->getClassReflection();
+		if ($classReflection !== null && ($classReflection->isInterface() || $classReflection->isAbstract())) {
 			return [];
 		}
 
