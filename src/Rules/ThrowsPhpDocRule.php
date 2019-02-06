@@ -370,8 +370,8 @@ class ThrowsPhpDocRule implements Rule
 		$usedThrowsAnnotations = $this->throwsScope->exitFromThrowsAnnotationBlock();
 		$usedThrowsAnnotations = $this->checkedExceptionService->filterCheckedExceptions($usedThrowsAnnotations);
 
-		$methodReflection = $scope->getFunction();
-		if ($methodReflection === null) {
+		$functionReflection = $scope->getFunction();
+		if ($functionReflection === null) {
 			return [];
 		}
 
@@ -380,11 +380,11 @@ class ThrowsPhpDocRule implements Rule
 			return [];
 		}
 
-		if (!$methodReflection instanceof ThrowableReflection) {
+		if (!$functionReflection instanceof ThrowableReflection) {
 			return [];
 		}
 
-		$throwType = $methodReflection->getThrowType();
+		$throwType = $functionReflection->getThrowType();
 		if ($throwType === null) {
 			return [];
 		}
