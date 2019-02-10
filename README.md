@@ -10,8 +10,8 @@ This extension provides following rules and features:
 
 * Require `@throws` annotation when some checked exception is thrown ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-annotations.php))
 * Exception propagation over:
-	* function calls
-	* dynamic and static method calls
+	* Function calls
+	* Magic, dynamic and static method calls
 	* Iterable interface in foreach and in `iterator_*()` functions ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/iterators.php))
 	* Countable interface combinated with `count()` function ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/countables.php))
 	* JsonSerializable interface combinated with `json_encode()` function ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/json-serializable.php))

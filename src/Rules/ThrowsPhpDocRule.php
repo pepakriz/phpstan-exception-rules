@@ -216,7 +216,11 @@ class ThrowsPhpDocRule implements Rule
 			try {
 				$targetMethodReflection = $targetClassReflection->getMethod($methodName->toString(), $scope);
 			} catch (MissingMethodFromReflectionException $e) {
-				continue;
+				try {
+					$targetMethodReflection = $targetClassReflection->getMethod('__call', $scope);
+				} catch (MissingMethodFromReflectionException $e) {
+					continue;
+				}
 			}
 
 			$throwType = $this->dynamicThrowTypeService->getMethodThrowType($targetMethodReflection, $node, $scope);
