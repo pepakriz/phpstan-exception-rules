@@ -8,6 +8,7 @@ use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\Node\FunctionEnd;
 use Pepakriz\PHPStanExceptionRules\Node\TryCatchTryEnd;
+use Pepakriz\PHPStanExceptionRules\ThrowsAnnotationReader;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\FuncCall;
@@ -36,11 +37,15 @@ use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeUtils;
 use PHPStan\Type\VoidType;
+use ReflectionException;
+use ReflectionFunction;
 use function array_diff;
+use function array_filter;
 use function array_map;
 use function array_merge;
 use function array_unique;
 use function count;
+use function in_array;
 use function is_string;
 use function sprintf;
 
@@ -61,6 +66,11 @@ class ThrowsPhpDocRule implements Rule
 	private $dynamicThrowTypeService;
 
 	/**
+	 * @var ThrowsAnnotationReader
+	 */
+	private $throwsAnnotationReader;
+
+	/**
 	 * @var Broker
 	 */
 	private $broker;
@@ -75,18 +85,27 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private $reportUnusedCatchesOfUncheckedExceptions;
 
+	/**
+	 * @var bool
+	 */
+	private $ignoreDescriptiveUncheckedExceptions;
+
 	public function __construct(
 		CheckedExceptionService $checkedExceptionService,
 		DynamicThrowTypeService $dynamicThrowTypeService,
+		ThrowsAnnotationReader $throwsAnnotationReader,
 		Broker $broker,
-		bool $reportUnusedCatchesOfUncheckedExceptions
+		bool $reportUnusedCatchesOfUncheckedExceptions,
+		bool $ignoreDescriptiveUncheckedExceptions
 	)
 	{
 		$this->checkedExceptionService = $checkedExceptionService;
 		$this->dynamicThrowTypeService = $dynamicThrowTypeService;
+		$this->throwsAnnotationReader = $throwsAnnotationReader;
 		$this->broker = $broker;
 		$this->throwsScope = new ThrowsScope();
 		$this->reportUnusedCatchesOfUncheckedExceptions = $reportUnusedCatchesOfUncheckedExceptions;
+		$this->ignoreDescriptiveUncheckedExceptions = $ignoreDescriptiveUncheckedExceptions;
 	}
 
 	public function getNodeType(): string
@@ -368,7 +387,6 @@ class ThrowsPhpDocRule implements Rule
 	private function processFunctionEnd(Scope $scope): array
 	{
 		$usedThrowsAnnotations = $this->throwsScope->exitFromThrowsAnnotationBlock();
-		$usedThrowsAnnotations = $this->checkedExceptionService->filterCheckedExceptions($usedThrowsAnnotations);
 
 		$functionReflection = $scope->getFunction();
 		if ($functionReflection === null) {
@@ -390,14 +408,54 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		$declaredThrows = TypeUtils::getDirectClassNames($throwType);
+		$unusedThrows = $this->filterUnusedExceptions($declaredThrows, $usedThrowsAnnotations, $scope);
 
 		$messages = [];
-		$diff = array_diff($declaredThrows, $usedThrowsAnnotations);
-		foreach ($diff as $unusedClass) {
+		foreach ($unusedThrows as $unusedClass) {
 			$messages[] = sprintf('Unused @throws %s annotation', $unusedClass);
 		}
 
 		return $messages;
+	}
+
+	/**
+	 * @param string[] $declaredThrows
+	 * @param string[] $usedThrowsAnnotations
+	 *
+	 * @return string[]
+	 */
+	private function filterUnusedExceptions(array $declaredThrows, array $usedThrowsAnnotations, Scope $scope): array
+	{
+		$checkedThrowsAnnotations = $this->checkedExceptionService->filterCheckedExceptions($usedThrowsAnnotations);
+		$unusedThrows = array_diff($declaredThrows, $checkedThrowsAnnotations);
+
+		if (!$this->ignoreDescriptiveUncheckedExceptions) {
+			return $unusedThrows;
+		}
+
+		$functionReflection = $scope->getFunction();
+		if ($functionReflection === null) {
+			return $unusedThrows;
+		}
+
+		try {
+			if ($functionReflection instanceof MethodReflection) {
+				$nativeClassReflection = $functionReflection->getDeclaringClass()->getNativeReflection();
+				$nativeFunctionReflection = $nativeClassReflection->getMethod($functionReflection->getName());
+			} else {
+				$nativeFunctionReflection = new ReflectionFunction($functionReflection->getName());
+			}
+		} catch (ReflectionException $exception) {
+			return $unusedThrows;
+		}
+
+		$throwsAnnotations = $this->throwsAnnotationReader->read($nativeFunctionReflection);
+
+		return array_filter($unusedThrows, static function (string $type) use ($throwsAnnotations, $usedThrowsAnnotations): bool {
+			return !in_array($type, $usedThrowsAnnotations, true)
+				|| !isset($throwsAnnotations[$type])
+				|| in_array('', $throwsAnnotations[$type], true);
+		});
 	}
 
 	/**

@@ -17,6 +17,8 @@ use PHPStan\File\RelativePathHelper;
 use PHPStan\PhpDoc\PhpDocStringResolver;
 use PHPStan\PhpDoc\TypeNodeResolver;
 use PHPStan\PhpDoc\TypeNodeResolverExtension;
+use PHPStan\PhpDocParser\Lexer\Lexer;
+use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use PHPStan\Rules\Registry;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\TestCase;
@@ -48,6 +50,15 @@ abstract class RuleTestCase extends TestCase
 			$this->createBroker(),
 			$this->getMethodTypeSpecifyingExtensions(),
 			$this->getStaticMethodTypeSpecifyingExtensions()
+		);
+	}
+
+	protected function createThrowsAnnotationReader(): ThrowsAnnotationReader
+	{
+		return new ThrowsAnnotationReader(
+			$this->getParser(),
+			self::getContainer()->getByType(Lexer::class),
+			self::getContainer()->getByType(PhpDocParser::class)
 		);
 	}
 
