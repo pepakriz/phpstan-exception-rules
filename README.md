@@ -17,6 +17,7 @@ This extension provides following rules and features:
 	* JsonSerializable interface combinated with `json_encode()` function ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/json-serializable.php))
 * Ignore caught checked exceptions ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/try-catch.php))
 * Unnecessary `@throws` annotation detection ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-throws.php))
+* Optionally ignore descriptive `@throws` annotations ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-descriptive-throws.php))
 * `@throws` annotation variance validation ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-inheritance.php))
 * [Dynamic throw types based on arguments](#extensibility)
 * Unreachable catch statements
@@ -45,6 +46,7 @@ includes:
 parameters:
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: false
+		ignoreDescriptiveUncheckedExceptions: false
 		checkedExceptions:
 			- RuntimeException
 ```

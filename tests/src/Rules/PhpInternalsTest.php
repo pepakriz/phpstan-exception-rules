@@ -36,7 +36,9 @@ class PhpInternalsTest extends RuleTestCase
 					$jsonEncodeDecodeExtension,
 				]
 			),
+			$this->createThrowsAnnotationReader(),
 			$this->createBroker(),
+			true,
 			true
 		);
 	}

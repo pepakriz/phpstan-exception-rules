@@ -22,6 +22,11 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	 */
 	private $reportUnusedCatchesOfUncheckedExceptions = false;
 
+	/**
+	 * @var bool
+	 */
+	private $ignoreDescriptiveUncheckedExceptions = false;
+
 	protected function getRule(): Rule
 	{
 		$extensions = [
@@ -51,8 +56,10 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 				$extensions,
 				$extensions
 			),
+			$this->createThrowsAnnotationReader(),
 			$this->createBroker(),
-			$this->reportUnusedCatchesOfUncheckedExceptions
+			$this->reportUnusedCatchesOfUncheckedExceptions,
+			$this->ignoreDescriptiveUncheckedExceptions
 		);
 	}
 
@@ -80,6 +87,13 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	{
 		$this->reportUnusedCatchesOfUncheckedExceptions = true;
 		$this->analyse(__DIR__ . '/data/unused-catches-all.php');
+	}
+
+	public function testDescriptiveUnusedCatches(): void
+	{
+		$this->reportUnusedCatchesOfUncheckedExceptions = true;
+		$this->ignoreDescriptiveUncheckedExceptions = true;
+		$this->analyse(__DIR__ . '/data/unused-descriptive-throws.php');
 	}
 
 	public function testIterators(): void

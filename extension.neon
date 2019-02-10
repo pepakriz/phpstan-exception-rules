@@ -1,6 +1,7 @@
 parameters:
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: false
+		ignoreDescriptiveUncheckedExceptions: false
 		checkedExceptions: []
 		uncheckedExceptions: []
 		methodThrowTypeDeclarations: []
@@ -10,6 +11,8 @@ extensions:
 	exceptionRules: Pepakriz\PHPStanExceptionRules\DI\ExceptionRulesExtension
 
 services:
+	-
+		class: Pepakriz\PHPStanExceptionRules\ThrowsAnnotationReader
 	-
 		class: Pepakriz\PHPStanExceptionRules\CheckedExceptionService(%exceptionRules.checkedExceptions%, %exceptionRules.uncheckedExceptions%)
 
@@ -43,6 +46,7 @@ services:
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule
 		arguments:
 			reportUnusedCatchesOfUncheckedExceptions: %exceptionRules.reportUnusedCatchesOfUncheckedExceptions%
+			ignoreDescriptiveUncheckedExceptions: %exceptionRules.ignoreDescriptiveUncheckedExceptions%
 		tags: [phpstan.rules.rule]
 
 	-
