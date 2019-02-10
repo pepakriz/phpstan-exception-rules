@@ -3,6 +3,7 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
+use Pepakriz\PHPStanExceptionRules\DefaultThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\Extension\DateTimeExtension;
 use Pepakriz\PHPStanExceptionRules\Extension\JsonEncodeDecodeExtension;
@@ -36,6 +37,7 @@ class PhpInternalsTest extends RuleTestCase
 					$jsonEncodeDecodeExtension,
 				]
 			),
+			new DefaultThrowTypeService([], []),
 			$this->createThrowsAnnotationReader(),
 			$this->createBroker(),
 			true,

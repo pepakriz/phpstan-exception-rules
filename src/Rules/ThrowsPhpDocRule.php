@@ -5,10 +5,13 @@ namespace Pepakriz\PHPStanExceptionRules\Rules;
 use Iterator;
 use IteratorAggregate;
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
+use Pepakriz\PHPStanExceptionRules\DefaultThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\Node\FunctionEnd;
 use Pepakriz\PHPStanExceptionRules\Node\TryCatchTryEnd;
 use Pepakriz\PHPStanExceptionRules\ThrowsAnnotationReader;
+use Pepakriz\PHPStanExceptionRules\UnsupportedClassException;
+use Pepakriz\PHPStanExceptionRules\UnsupportedFunctionException;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\FuncCall;
@@ -66,6 +69,11 @@ class ThrowsPhpDocRule implements Rule
 	private $dynamicThrowTypeService;
 
 	/**
+	 * @var DefaultThrowTypeService
+	 */
+	private $defaultThrowTypeService;
+
+	/**
 	 * @var ThrowsAnnotationReader
 	 */
 	private $throwsAnnotationReader;
@@ -93,6 +101,7 @@ class ThrowsPhpDocRule implements Rule
 	public function __construct(
 		CheckedExceptionService $checkedExceptionService,
 		DynamicThrowTypeService $dynamicThrowTypeService,
+		DefaultThrowTypeService $defaultThrowTypeService,
 		ThrowsAnnotationReader $throwsAnnotationReader,
 		Broker $broker,
 		bool $reportUnusedCatchesOfUncheckedExceptions,
@@ -101,6 +110,7 @@ class ThrowsPhpDocRule implements Rule
 	{
 		$this->checkedExceptionService = $checkedExceptionService;
 		$this->dynamicThrowTypeService = $dynamicThrowTypeService;
+		$this->defaultThrowTypeService = $defaultThrowTypeService;
 		$this->throwsAnnotationReader = $throwsAnnotationReader;
 		$this->broker = $broker;
 		$this->throwsScope = new ThrowsScope();
@@ -438,10 +448,6 @@ class ThrowsPhpDocRule implements Rule
 		$checkedThrowsAnnotations = $this->checkedExceptionService->filterCheckedExceptions($usedThrowsAnnotations);
 		$unusedThrows = array_diff($declaredThrows, $checkedThrowsAnnotations);
 
-		if (!$this->ignoreDescriptiveUncheckedExceptions) {
-			return $unusedThrows;
-		}
-
 		$functionReflection = $scope->getFunction();
 		if ($functionReflection === null) {
 			return $unusedThrows;
@@ -449,12 +455,31 @@ class ThrowsPhpDocRule implements Rule
 
 		try {
 			if ($functionReflection instanceof MethodReflection) {
+				$defaultThrowsType = $functionReflection->getName() === '__construct' ?
+					$this->defaultThrowTypeService->getConstructorThrowType($functionReflection) :
+					$this->defaultThrowTypeService->getMethodThrowType($functionReflection);
+			} else {
+				$defaultThrowsType = $this->defaultThrowTypeService->getFunctionThrowType($functionReflection);
+			}
+		} catch (UnsupportedClassException | UnsupportedFunctionException $exception) {
+			$defaultThrowsType = new VoidType();
+		}
+
+		$unusedThrows = array_diff($unusedThrows, TypeUtils::getDirectClassNames($defaultThrowsType));
+
+		try {
+			if ($functionReflection instanceof MethodReflection) {
 				$nativeClassReflection = $functionReflection->getDeclaringClass()->getNativeReflection();
 				$nativeFunctionReflection = $nativeClassReflection->getMethod($functionReflection->getName());
+
 			} else {
 				$nativeFunctionReflection = new ReflectionFunction($functionReflection->getName());
 			}
 		} catch (ReflectionException $exception) {
+			return $unusedThrows;
+		}
+
+		if (!$this->ignoreDescriptiveUncheckedExceptions) {
 			return $unusedThrows;
 		}
 

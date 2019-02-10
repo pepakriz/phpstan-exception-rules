@@ -115,5 +115,12 @@ class UnusedCatches
 		}
 	}
 
-}
+	/**
+	 * @throws FooException
+	 */
+	private function methodWithDefaultThrowType(callable $callable): void
+	{
+		$callable();
+	}
 
+}
