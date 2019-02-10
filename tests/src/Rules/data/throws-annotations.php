@@ -21,6 +21,19 @@ function foo()  {
 	throw new RuntimeException();
 }
 
+class MagicService
+{
+
+	/**
+	 * @throws CheckedException
+	 */
+	public function __call($name, $arguments): void
+	{
+		throw new CheckedException();
+	}
+
+}
+
 class ThrowsAnnotationsClass
 {
 
@@ -162,6 +175,11 @@ class ThrowsAnnotationsClass
 		/** @var UnionOne|UnknownClass $union */
 		$union = getStaticUnion();
 		$union::staticFoo(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
+	}
+
+	public function callMagicMethod(): void
+	{
+		(new MagicService())->foo(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException annotation
 	}
 
 }
