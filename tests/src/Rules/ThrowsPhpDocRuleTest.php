@@ -8,6 +8,8 @@ use Pepakriz\PHPStanExceptionRules\DefaultThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException;
 use Pepakriz\PHPStanExceptionRules\Rules\DynamicExtension\DynamicExtension;
+use Pepakriz\PHPStanExceptionRules\Rules\UnusedCatches\FooException;
+use Pepakriz\PHPStanExceptionRules\Rules\UnusedCatches\UnusedCatches;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
 use PharData;
 use PHPStan\Rules\Rule;
@@ -27,19 +29,26 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	 */
 	private $ignoreDescriptiveUncheckedExceptions = false;
 
+	/**
+	 * @var mixed[]
+	 */
+	private $methodThrowTypes = [];
+
+	/**
+	 * @var mixed[]
+	 */
+	private $functionThrowTypes = [];
+
 	protected function getRule(): Rule
 	{
+		$defaultThrowTypeService = new DefaultThrowTypeService(
+			$this->methodThrowTypes,
+			$this->functionThrowTypes
+		);
+
 		$extensions = [
 			new DynamicExtension(),
-			new DefaultThrowTypeExtension(
-				new DefaultThrowTypeService([
-					PharData::class => [
-						'extractTo' => [
-							RuntimeException::class,
-						],
-					],
-				], [])
-			),
+			new DefaultThrowTypeExtension($defaultThrowTypeService),
 		];
 
 		return new ThrowsPhpDocRule(
@@ -56,6 +65,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 				$extensions,
 				$extensions
 			),
+			$defaultThrowTypeService,
 			$this->createThrowsAnnotationReader(),
 			$this->createBroker(),
 			$this->reportUnusedCatchesOfUncheckedExceptions,
@@ -80,6 +90,19 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 
 	public function testUnusedCatches(): void
 	{
+		$this->methodThrowTypes = [
+			PharData::class => [
+				'extractTo' => [
+					RuntimeException::class,
+				],
+			],
+			UnusedCatches::class => [
+				'methodWithDefaultThrowType' => [
+					FooException::class,
+				],
+			],
+		];
+
 		$this->analyse(__DIR__ . '/data/unused-catches.php');
 	}
 
