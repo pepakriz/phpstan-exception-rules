@@ -273,6 +273,11 @@ class ThrowsPhpDocRule implements Rule
 
 		$throwTypes = [];
 		$targetMethodReflections = $this->getMethodReflections($node->class, [$methodName], $scope);
+
+		if (count($targetMethodReflections) === 0) {
+			$targetMethodReflections = $this->getMethodReflections($node->class, ['__callStatic'], $scope);
+		}
+
 		foreach ($targetMethodReflections as $targetMethodReflection) {
 			$throwType = $this->dynamicThrowTypeService->getStaticMethodThrowType($targetMethodReflection, $node, $scope);
 			if ($throwType instanceof VoidType) {

@@ -32,6 +32,14 @@ class MagicService
 		throw new CheckedException();
 	}
 
+	/**
+	 * @throws CheckedException
+	 */
+	public static function __callStatic($name, $arguments)
+	{
+		throw new CheckedException();
+	}
+
 }
 
 class ThrowsAnnotationsClass
@@ -180,6 +188,11 @@ class ThrowsAnnotationsClass
 	public function callMagicMethod(): void
 	{
 		(new MagicService())->foo(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException annotation
+	}
+
+	public function callStaticMagicMethod(): void
+	{
+		MagicService::staticFoo(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException annotation
 	}
 
 }
