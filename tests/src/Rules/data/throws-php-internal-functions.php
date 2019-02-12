@@ -34,9 +34,11 @@ class Example
 		new ReflectionObject(new stdClass());
 
 		new ReflectionClass(self::class);
+		new ReflectionClass(static::class);
 		new ReflectionClass('undefinedClass'); // error: Missing @throws ReflectionException annotation
 
 		new ReflectionProperty(self::class, 'property');
+		new ReflectionProperty(static::class, 'property');
 		new ReflectionProperty(self::class, 'undefinedProperty'); // error: Missing @throws ReflectionException annotation
 		new ReflectionProperty('undefinedClass', 'property'); // error: Missing @throws ReflectionException annotation
 		new ReflectionProperty('undefinedClass', 'undefinedProperty'); // error: Missing @throws ReflectionException annotation
@@ -48,10 +50,12 @@ class Example
 		new ReflectionZendExtension('unknownZendExtension'); // error: Missing @throws ReflectionException annotation
 
 		new ReflectionClass(rand(0, 1) === 0 ? self::class : Throwable::class);
+		new ReflectionClass(rand(0, 1) === 0 ? static::class : Throwable::class); // error: Missing @throws ReflectionException annotation
 		new ReflectionClass(rand(0, 1) === 0 ? self::class : null); // error: Missing @throws ReflectionException annotation
 		new ReflectionClass(rand(0, 1) === 0 ? self::class : 'undefinedClass'); // error: Missing @throws ReflectionException annotation
 
 		new ReflectionProperty(rand(0, 1) === 0 ? self::class : ValueObject::class, rand(0, 1) === 0 ? 'property' : 'secondProperty');
+		new ReflectionProperty(rand(0, 1) === 0 ? static::class : ValueObject::class, rand(0, 1) === 0 ? 'property' : 'secondProperty'); // error: Missing @throws ReflectionException annotation
 		new ReflectionProperty(rand(0, 1) === 0 ? self::class : null, rand(0, 1) === 0 ? 'property' : 'secondProperty'); // error: Missing @throws ReflectionException annotation
 		new ReflectionProperty(rand(0, 1) === 0 ? self::class : Throwable::class, rand(0, 1) === 0 ? 'property' : 'undefinedProperty'); // error: Missing @throws ReflectionException annotation
 

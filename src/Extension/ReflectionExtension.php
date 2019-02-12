@@ -4,6 +4,7 @@ namespace Pepakriz\PHPStanExceptionRules\Extension;
 
 use Pepakriz\PHPStanExceptionRules\DynamicConstructorThrowTypeExtension;
 use Pepakriz\PHPStanExceptionRules\UnsupportedClassException;
+use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Name;
 use PHPStan\Analyser\Scope;
@@ -77,7 +78,17 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 			return $reflectionExceptionType;
 		}
 
-		$valueType = $scope->getType($newNode->args[0]->value);
+		$valueNode = $newNode->args[0]->value;
+		if (
+			$valueNode instanceof ClassConstFetch
+			&& $valueNode->class->toString() === 'static'
+			&& $valueNode->name->toString() === 'class'
+		) {
+			$valueNode = clone $valueNode;
+			$valueNode->class->parts[0] = 'self';
+		}
+
+		$valueType = $scope->getType($valueNode);
 
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
 			if (!$this->broker->hasClass($constantString->getValue())) {
@@ -124,7 +135,17 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 			return $reflectionExceptionType;
 		}
 
-		$valueType = $scope->getType($newNode->args[0]->value);
+		$valueNode = $newNode->args[0]->value;
+		if (
+			$valueNode instanceof ClassConstFetch
+			&& $valueNode->class->toString() === 'static'
+			&& $valueNode->name->toString() === 'class'
+		) {
+			$valueNode = clone $valueNode;
+			$valueNode->class->parts[0] = 'self';
+		}
+
+		$valueType = $scope->getType($valueNode);
 		$propertyType = $scope->getType($newNode->args[1]->value);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
 			if (!$this->broker->hasClass($constantString->getValue())) {
