@@ -4,13 +4,20 @@ namespace Pepakriz\PHPStanExceptionRules\Extension;
 
 use Pepakriz\PHPStanExceptionRules\DynamicConstructorThrowTypeExtension;
 use Pepakriz\PHPStanExceptionRules\UnsupportedClassException;
+use PhpParser\Node;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\CloningVisitor;
+use PhpParser\NodeVisitorAbstract;
 use PHPStan\Analyser\Scope;
 use PHPStan\Broker\Broker;
 use PHPStan\Broker\ClassNotFoundException;
 use PHPStan\Reflection\MethodReflection;
+use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\NeverType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
@@ -79,15 +86,7 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 		}
 
 		$valueNode = $newNode->args[0]->value;
-		if (
-			$valueNode instanceof ClassConstFetch
-			&& $valueNode->class->toString() === 'static'
-			&& $valueNode->name->toString() === 'class'
-		) {
-			$valueNode = clone $valueNode;
-			$valueNode->class->parts[0] = 'self';
-		}
-
+		$valueNode = $this->replaceStaticBySelf($valueNode);
 		$valueType = $scope->getType($valueNode);
 
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
@@ -136,15 +135,7 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 		}
 
 		$valueNode = $newNode->args[0]->value;
-		if (
-			$valueNode instanceof ClassConstFetch
-			&& $valueNode->class->toString() === 'static'
-			&& $valueNode->name->toString() === 'class'
-		) {
-			$valueNode = clone $valueNode;
-			$valueNode->class->parts[0] = 'self';
-		}
-
+		$valueNode = $this->replaceStaticBySelf($valueNode);
 		$valueType = $scope->getType($valueNode);
 		$propertyType = $scope->getType($newNode->args[1]->value);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
@@ -178,6 +169,37 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 		}
 
 		return new VoidType();
+	}
+
+	private function replaceStaticBySelf(Expr $node): Expr
+	{
+		$traverser = new NodeTraverser();
+		$traverser->addVisitor(new CloningVisitor()); // deep copy
+		$traverser->addVisitor(new class extends NodeVisitorAbstract {
+
+			public function enterNode(Node $node): Node
+			{
+				if (
+					$node instanceof ClassConstFetch
+					&& $node->class instanceof Name
+					&& $node->name instanceof Identifier
+					&& $node->class->toString() === 'static'
+					&& $node->name->toString() === 'class'
+				) {
+					$node->class->parts[0] = 'self';
+				}
+
+				return $node;
+			}
+
+		});
+
+		$node = $traverser->traverse([$node])[0];
+		if (!$node instanceof Expr) {
+			throw new ShouldNotHappenException();
+		}
+
+		return $node;
 	}
 
 	private function resolveReflectionExtension(New_ $newNode, Scope $scope): Type
