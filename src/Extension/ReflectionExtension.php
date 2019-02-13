@@ -18,6 +18,7 @@ use PHPStan\Broker\Broker;
 use PHPStan\Broker\ClassNotFoundException;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\ShouldNotHappenException;
+use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\NeverType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
@@ -85,10 +86,7 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 			return $reflectionExceptionType;
 		}
 
-		$valueNode = $newNode->args[0]->value;
-		$valueNode = $this->replaceStaticBySelf($valueNode);
-		$valueType = $scope->getType($valueNode);
-
+		$valueType = $this->resolveType($newNode->args[0]->value, $scope);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
 			if (!$this->broker->hasClass($constantString->getValue())) {
 				return $reflectionExceptionType;
@@ -111,7 +109,7 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 			return $reflectionExceptionType;
 		}
 
-		$valueType = $scope->getType($newNode->args[0]->value);
+		$valueType = $this->resolveType($newNode->args[0]->value, $scope);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
 			if (!$this->broker->hasFunction(new Name($constantString->getValue()), $scope)) {
 				return $reflectionExceptionType;
@@ -134,10 +132,8 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 			return $reflectionExceptionType;
 		}
 
-		$valueNode = $newNode->args[0]->value;
-		$valueNode = $this->replaceStaticBySelf($valueNode);
-		$valueType = $scope->getType($valueNode);
-		$propertyType = $scope->getType($newNode->args[1]->value);
+		$valueType = $this->resolveType($newNode->args[0]->value, $scope);
+		$propertyType = $this->resolveType($newNode->args[1]->value, $scope);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
 			if (!$this->broker->hasClass($constantString->getValue())) {
 				return $reflectionExceptionType;
@@ -171,8 +167,44 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 		return new VoidType();
 	}
 
-	private function replaceStaticBySelf(Expr $node): Expr
+	private function resolveReflectionExtension(New_ $newNode, Scope $scope): Type
 	{
+		$reflectionExceptionType = new ObjectType(ReflectionException::class);
+		if (!isset($newNode->args[0])) {
+			return $reflectionExceptionType;
+		}
+
+		$valueType = $this->resolveType($newNode->args[0]->value, $scope);
+		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
+			if (!extension_loaded($constantString->getValue())) {
+				return $reflectionExceptionType;
+			}
+
+			$valueType = TypeCombinator::remove($valueType, $constantString);
+		}
+
+		if (!$valueType instanceof NeverType) {
+			return $reflectionExceptionType;
+		}
+
+		return new VoidType();
+	}
+
+	private function resolveType(Expr $node, Scope $scope): Type
+	{
+		$classReflection = $scope->getClassReflection();
+
+		if (
+			$classReflection !== null
+			&& $node instanceof ClassConstFetch
+			&& $node->class instanceof Name
+			&& $node->name instanceof Identifier
+			&& $node->class->toString() === 'static'
+			&& $node->name->toString() === 'class'
+		) {
+			return new ConstantStringType($classReflection->getName());
+		}
+
 		$traverser = new NodeTraverser();
 		$traverser->addVisitor(new CloningVisitor()); // deep copy
 		$traverser->addVisitor(new class extends NodeVisitorAbstract {
@@ -199,31 +231,7 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 			throw new ShouldNotHappenException();
 		}
 
-		return $node;
-	}
-
-	private function resolveReflectionExtension(New_ $newNode, Scope $scope): Type
-	{
-		$reflectionExceptionType = new ObjectType(ReflectionException::class);
-		if (!isset($newNode->args[0])) {
-			return $reflectionExceptionType;
-		}
-
-		$valueType = $scope->getType($newNode->args[0]->value);
-
-		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
-			if (!extension_loaded($constantString->getValue())) {
-				return $reflectionExceptionType;
-			}
-
-			$valueType = TypeCombinator::remove($valueType, $constantString);
-		}
-
-		if (!$valueType instanceof NeverType) {
-			return $reflectionExceptionType;
-		}
-
-		return new VoidType();
+		return $scope->getType($node);
 	}
 
 }
