@@ -4,12 +4,21 @@ namespace Pepakriz\PHPStanExceptionRules\Extension;
 
 use Pepakriz\PHPStanExceptionRules\DynamicConstructorThrowTypeExtension;
 use Pepakriz\PHPStanExceptionRules\UnsupportedClassException;
+use PhpParser\Node;
+use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\CloningVisitor;
+use PhpParser\NodeVisitorAbstract;
 use PHPStan\Analyser\Scope;
 use PHPStan\Broker\Broker;
 use PHPStan\Broker\ClassNotFoundException;
 use PHPStan\Reflection\MethodReflection;
+use PHPStan\ShouldNotHappenException;
+use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\NeverType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
@@ -77,8 +86,7 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 			return $reflectionExceptionType;
 		}
 
-		$valueType = $scope->getType($newNode->args[0]->value);
-
+		$valueType = $this->resolveType($newNode->args[0]->value, $scope);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
 			if (!$this->broker->hasClass($constantString->getValue())) {
 				return $reflectionExceptionType;
@@ -101,7 +109,7 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 			return $reflectionExceptionType;
 		}
 
-		$valueType = $scope->getType($newNode->args[0]->value);
+		$valueType = $this->resolveType($newNode->args[0]->value, $scope);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
 			if (!$this->broker->hasFunction(new Name($constantString->getValue()), $scope)) {
 				return $reflectionExceptionType;
@@ -124,8 +132,8 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 			return $reflectionExceptionType;
 		}
 
-		$valueType = $scope->getType($newNode->args[0]->value);
-		$propertyType = $scope->getType($newNode->args[1]->value);
+		$valueType = $this->resolveType($newNode->args[0]->value, $scope);
+		$propertyType = $this->resolveType($newNode->args[1]->value, $scope);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
 			if (!$this->broker->hasClass($constantString->getValue())) {
 				return $reflectionExceptionType;
@@ -166,8 +174,7 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 			return $reflectionExceptionType;
 		}
 
-		$valueType = $scope->getType($newNode->args[0]->value);
-
+		$valueType = $this->resolveType($newNode->args[0]->value, $scope);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
 			if (!extension_loaded($constantString->getValue())) {
 				return $reflectionExceptionType;
@@ -181,6 +188,50 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 		}
 
 		return new VoidType();
+	}
+
+	private function resolveType(Expr $node, Scope $scope): Type
+	{
+		$classReflection = $scope->getClassReflection();
+
+		if (
+			$classReflection !== null
+			&& $node instanceof ClassConstFetch
+			&& $node->class instanceof Name
+			&& $node->name instanceof Identifier
+			&& $node->class->toString() === 'static'
+			&& $node->name->toString() === 'class'
+		) {
+			return new ConstantStringType($classReflection->getName());
+		}
+
+		$traverser = new NodeTraverser();
+		$traverser->addVisitor(new CloningVisitor()); // deep copy
+		$traverser->addVisitor(new class extends NodeVisitorAbstract {
+
+			public function enterNode(Node $node): Node
+			{
+				if (
+					$node instanceof ClassConstFetch
+					&& $node->class instanceof Name
+					&& $node->name instanceof Identifier
+					&& $node->class->toString() === 'static'
+					&& $node->name->toString() === 'class'
+				) {
+					$node->class->parts[0] = 'self';
+				}
+
+				return $node;
+			}
+
+		});
+
+		$node = $traverser->traverse([$node])[0];
+		if (!$node instanceof Expr) {
+			throw new ShouldNotHappenException();
+		}
+
+		return $scope->getType($node);
 	}
 
 }
