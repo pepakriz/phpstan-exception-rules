@@ -69,6 +69,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			$this->createThrowsAnnotationReader(),
 			$this->createBroker(),
 			$this->reportUnusedCatchesOfUncheckedExceptions,
+			true,
 			$this->ignoreDescriptiveUncheckedExceptions
 		);
 	}
@@ -147,6 +148,11 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	public function testAnonymClass(): void
 	{
 		$this->analyse(__DIR__ . '/data/throws-anonym-class.php');
+	}
+
+	public function testThrowsInGlobalScope(): void
+	{
+		$this->analyse(__DIR__ . '/data/throws-in-global-scope.php');
 	}
 
 }

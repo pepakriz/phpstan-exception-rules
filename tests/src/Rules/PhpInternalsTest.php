@@ -41,6 +41,7 @@ class PhpInternalsTest extends RuleTestCase
 			$this->createThrowsAnnotationReader(),
 			$this->createBroker(),
 			true,
+			true,
 			true
 		);
 	}

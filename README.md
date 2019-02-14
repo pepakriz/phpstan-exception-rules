@@ -46,6 +46,7 @@ includes:
 parameters:
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: false
+		reportCheckedThrowsInGlobalScope: false
 		ignoreDescriptiveUncheckedExceptions: false
 		checkedExceptions:
 			- RuntimeException

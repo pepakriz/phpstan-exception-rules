@@ -13,6 +13,7 @@ parameters:
 
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: true
+		reportCheckedThrowsInGlobalScope: true
 		uncheckedExceptions:
 			- LogicException
 			- PHPStan\ShouldNotHappenException
