@@ -222,8 +222,8 @@ class ThrowsPhpDocRule implements Rule
 			return [];
 		}
 
-		return array_map(function (string $exceptionClassName) use ($isInGlobalScope): string {
-			if ($this->reportCheckedThrowsInGlobalScope && $isInGlobalScope) {
+		return array_map(static function (string $exceptionClassName) use ($isInGlobalScope): string {
+			if ($isInGlobalScope) {
 				return sprintf('Throwing checked exception %s in global scope is prohibited', $exceptionClassName);
 			}
 
