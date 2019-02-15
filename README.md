@@ -23,6 +23,7 @@ This extension provides following rules and features:
 * Unreachable catch statements
 	* exception has been caught in some previous catch statement ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unreachable-catches.php))
 	* checked exception is never thrown in the corresponding try block ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-catches.php))
+* Report throwing checked exceptions in the global scope ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-in-global-scope.php))
 
 Features and rules provided by PHPStan core (we rely on):
 
@@ -46,6 +47,7 @@ includes:
 parameters:
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: false
+		reportCheckedThrowsInGlobalScope: false
 		ignoreDescriptiveUncheckedExceptions: false
 		checkedExceptions:
 			- RuntimeException

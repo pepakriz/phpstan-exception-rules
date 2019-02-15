@@ -1,6 +1,7 @@
 parameters:
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: false
+		reportCheckedThrowsInGlobalScope: false
 		ignoreDescriptiveUncheckedExceptions: false
 		checkedExceptions: []
 		uncheckedExceptions: []
@@ -46,6 +47,7 @@ services:
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule
 		arguments:
 			reportUnusedCatchesOfUncheckedExceptions: %exceptionRules.reportUnusedCatchesOfUncheckedExceptions%
+			reportCheckedThrowsInGlobalScope: %exceptionRules.reportCheckedThrowsInGlobalScope%
 			ignoreDescriptiveUncheckedExceptions: %exceptionRules.ignoreDescriptiveUncheckedExceptions%
 		tags: [phpstan.rules.rule]
 

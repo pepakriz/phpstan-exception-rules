@@ -20,22 +20,22 @@ class ThrowsScope
 	/**
 	 * @var int
 	 */
-	private $stackIndex = -1;
+	private $stackIndex = 0;
 
 	/**
 	 * @var array<Type|null>
 	 */
-	private $throwsAnnotationBlockStack = [];
+	private $throwsAnnotationBlockStack = [null];
 
 	/**
 	 * @var bool[][]
 	 */
-	private $usedThrowsAnnotationsStack = [];
+	private $usedThrowsAnnotationsStack = [[]];
 
 	/**
 	 * @var TryCatch[][]
 	 */
-	private $tryCatchStack = [];
+	private $tryCatchStack = [[]];
 
 	public function enterToThrowsAnnotationBlock(?Type $type): void
 	{
@@ -60,6 +60,11 @@ class ThrowsScope
 		$this->stackIndex--;
 
 		return array_keys($usedThrowsAnnotations);
+	}
+
+	public function isInGlobalScope(): bool
+	{
+		return $this->stackIndex === 0;
 	}
 
 	public function enterToTryCatch(TryCatch $tryCatch): void

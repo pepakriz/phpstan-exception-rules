@@ -30,6 +30,11 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	private $ignoreDescriptiveUncheckedExceptions = false;
 
 	/**
+	 * @var bool
+	 */
+	private $reportCheckedThrowsInGlobalScope = false;
+
+	/**
 	 * @var mixed[]
 	 */
 	private $methodThrowTypes = [];
@@ -69,6 +74,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			$this->createThrowsAnnotationReader(),
 			$this->createBroker(),
 			$this->reportUnusedCatchesOfUncheckedExceptions,
+			$this->reportCheckedThrowsInGlobalScope,
 			$this->ignoreDescriptiveUncheckedExceptions
 		);
 	}
@@ -147,6 +153,12 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	public function testAnonymClass(): void
 	{
 		$this->analyse(__DIR__ . '/data/throws-anonym-class.php');
+	}
+
+	public function testThrowsInGlobalScope(): void
+	{
+		$this->reportCheckedThrowsInGlobalScope = true;
+		$this->analyse(__DIR__ . '/data/throws-in-global-scope.php');
 	}
 
 }

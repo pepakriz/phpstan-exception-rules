@@ -96,6 +96,11 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @var bool
 	 */
+	private $reportCheckedThrowsInGlobalScope;
+
+	/**
+	 * @var bool
+	 */
 	private $ignoreDescriptiveUncheckedExceptions;
 
 	public function __construct(
@@ -105,6 +110,7 @@ class ThrowsPhpDocRule implements Rule
 		ThrowsAnnotationReader $throwsAnnotationReader,
 		Broker $broker,
 		bool $reportUnusedCatchesOfUncheckedExceptions,
+		bool $reportCheckedThrowsInGlobalScope,
 		bool $ignoreDescriptiveUncheckedExceptions
 	)
 	{
@@ -115,6 +121,7 @@ class ThrowsPhpDocRule implements Rule
 		$this->broker = $broker;
 		$this->throwsScope = new ThrowsScope();
 		$this->reportUnusedCatchesOfUncheckedExceptions = $reportUnusedCatchesOfUncheckedExceptions;
+		$this->reportCheckedThrowsInGlobalScope = $reportCheckedThrowsInGlobalScope;
 		$this->ignoreDescriptiveUncheckedExceptions = $ignoreDescriptiveUncheckedExceptions;
 	}
 
@@ -129,7 +136,7 @@ class ThrowsPhpDocRule implements Rule
 	public function processNode(Node $node, Scope $scope): array
 	{
 		if ($node instanceof TryCatch) {
-			return $this->processTryCatch($node, $scope);
+			return $this->processTryCatch($node);
 		}
 
 		if ($node instanceof TryCatchTryEnd) {
@@ -178,14 +185,8 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	private function processTryCatch(TryCatch $node, Scope $scope): array
+	private function processTryCatch(TryCatch $node): array
 	{
-		$classReflection = $scope->getClassReflection();
-		$methodReflection = $scope->getFunction();
-		if ($classReflection === null || $methodReflection === null) {
-			return [];
-		}
-
 		$this->throwsScope->enterToTryCatch($node);
 
 		if (!$node->hasAttribute(self::ATTRIBUTE_HAS_TRY_CATCH_END)) {
@@ -216,7 +217,16 @@ class ThrowsPhpDocRule implements Rule
 		$exceptionClassNames = $this->throwsScope->filterExceptionsByUncaught($exceptionClassNames);
 		$exceptionClassNames = $this->checkedExceptionService->filterCheckedExceptions($exceptionClassNames);
 
-		return array_map(static function (string $exceptionClassName): string {
+		$isInGlobalScope = $this->throwsScope->isInGlobalScope();
+		if (!$this->reportCheckedThrowsInGlobalScope && $isInGlobalScope) {
+			return [];
+		}
+
+		return array_map(static function (string $exceptionClassName) use ($isInGlobalScope): string {
+			if ($isInGlobalScope) {
+				return sprintf('Throwing checked exception %s in global scope is prohibited', $exceptionClassName);
+			}
+
 			return sprintf('Missing @throws %s annotation', $exceptionClassName);
 		}, $exceptionClassNames);
 	}
