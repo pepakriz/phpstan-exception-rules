@@ -16,6 +16,7 @@ use PhpParser\NodeVisitorAbstract;
 use PHPStan\Analyser\Scope;
 use PHPStan\Broker\Broker;
 use PHPStan\Broker\ClassNotFoundException;
+use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\Constant\ConstantStringType;
@@ -28,6 +29,7 @@ use PHPStan\Type\VoidType;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
+use ReflectionMethod;
 use ReflectionObject;
 use ReflectionProperty;
 use ReflectionZendExtension;
@@ -66,6 +68,10 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 
 		if (is_a($className, ReflectionProperty::class, true)) {
 			return $this->resolveReflectionProperty($newNode, $scope);
+		}
+
+		if (is_a($className, ReflectionMethod::class, true)) {
+			return $this->resolveReflectionMethod($newNode, $scope);
 		}
 
 		if (is_a($className, ReflectionFunction::class, true)) {
@@ -127,6 +133,20 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 
 	private function resolveReflectionProperty(New_ $newNode, Scope $scope): Type
 	{
+		return $this->resolveReflectionMethodOrProperty($newNode, $scope, static function (ClassReflection $classReflection, ConstantStringType $type): bool {
+			return $classReflection->hasProperty($type->getValue());
+		});
+	}
+
+	private function resolveReflectionMethod(New_ $newNode, Scope $scope): Type
+	{
+		return $this->resolveReflectionMethodOrProperty($newNode, $scope, static function (ClassReflection $classReflection, ConstantStringType $type): bool {
+			return $classReflection->hasMethod($type->getValue());
+		});
+	}
+
+	private function resolveReflectionMethodOrProperty(New_ $newNode, Scope $scope, callable $existenceChecker): Type
+	{
 		$reflectionExceptionType = new ObjectType(ReflectionException::class);
 		if (!isset($newNode->args[1])) {
 			return $reflectionExceptionType;
@@ -135,16 +155,14 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 		$valueType = $this->resolveType($newNode->args[0]->value, $scope);
 		$propertyType = $this->resolveType($newNode->args[1]->value, $scope);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
-			if (!$this->broker->hasClass($constantString->getValue())) {
+			try {
+				$classReflection = $this->broker->getClass($constantString->getValue());
+			} catch (ClassNotFoundException $e) {
 				return $reflectionExceptionType;
 			}
 
 			foreach (TypeUtils::getConstantStrings($propertyType) as $constantPropertyString) {
-				try {
-					if (!$this->broker->getClass($constantString->getValue())->hasProperty($constantPropertyString->getValue())) {
-						return $reflectionExceptionType;
-					}
-				} catch (ClassNotFoundException $e) {
+				if (!$existenceChecker($classReflection, $constantPropertyString)) {
 					return $reflectionExceptionType;
 				}
 			}
