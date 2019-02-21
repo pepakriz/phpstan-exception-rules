@@ -40,8 +40,6 @@ use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeUtils;
 use PHPStan\Type\VoidType;
-use ReflectionException;
-use ReflectionFunction;
 use function array_diff;
 use function array_filter;
 use function array_map;
@@ -477,23 +475,11 @@ class ThrowsPhpDocRule implements Rule
 
 		$unusedThrows = array_diff($unusedThrows, TypeUtils::getDirectClassNames($defaultThrowsType));
 
-		try {
-			if ($functionReflection instanceof MethodReflection) {
-				$nativeClassReflection = $functionReflection->getDeclaringClass()->getNativeReflection();
-				$nativeFunctionReflection = $nativeClassReflection->getMethod($functionReflection->getName());
-
-			} else {
-				$nativeFunctionReflection = new ReflectionFunction($functionReflection->getName());
-			}
-		} catch (ReflectionException $exception) {
-			return $unusedThrows;
-		}
-
 		if (!$this->ignoreDescriptiveUncheckedExceptions) {
 			return $unusedThrows;
 		}
 
-		$throwsAnnotations = $this->throwsAnnotationReader->read($nativeFunctionReflection);
+		$throwsAnnotations = $this->throwsAnnotationReader->read($scope);
 
 		return array_filter($unusedThrows, static function (string $type) use ($throwsAnnotations, $usedThrowsAnnotations): bool {
 			return !in_array($type, $usedThrowsAnnotations, true)

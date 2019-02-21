@@ -6,12 +6,14 @@ use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 use PHPStan\Analyser\NameScope;
+use PHPStan\Analyser\Scope;
 use PHPStan\Parser\Parser;
 use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use PHPStan\PhpDocParser\Parser\TokenIterator;
-use ReflectionFunctionAbstract;
-use ReflectionMethod;
+use PHPStan\Reflection\MethodReflection;
+use ReflectionException;
+use ReflectionFunction;
 use function sprintf;
 use function strtolower;
 
@@ -46,31 +48,54 @@ class ThrowsAnnotationReader
 	/**
 	 * @return string[][]
 	 */
-	public function read(ReflectionFunctionAbstract $reflection): array
+	public function read(Scope $scope): array
 	{
-		$functionName = $reflection->getName();
+		$reflection = $scope->getFunction();
 
-		if (!isset($this->annotations[$functionName])) {
-			$this->annotations[$functionName] = $this->parse($reflection);
-		}
-
-		return $this->annotations[$functionName];
-	}
-
-	/**
-	 * @return string[][]
-	 */
-	private function parse(ReflectionFunctionAbstract $reflection): array
-	{
-		$docComment = $reflection->getDocComment();
-
-		if ($docComment === false) {
+		if ($reflection === null) {
 			return [];
 		}
 
-		$tokens = new TokenIterator($this->phpDocLexer->tokenize($docComment));
+		$namespace = $scope->getNamespace();
+		$sourceFile = $scope->getFile();
+
+		$key = $namespace . '::' . $sourceFile . '::';
+
+		$classReflection = $scope->getClassReflection();
+
+		if ($classReflection !== null) {
+			$key .= $classReflection->getName();
+		}
+
+		$key .= $reflection->getName();
+
+		if (!isset($this->annotations[$key])) {
+			$this->annotations[$key] = $this->parse($reflection, $sourceFile, $namespace);
+		}
+
+		return $this->annotations[$key];
+	}
+
+	/**
+	 * @param \PHPStan\Reflection\FunctionReflection|\PHPStan\Reflection\MethodReflection $reflection
+	 *
+	 * @return string[][]
+	 */
+	private function parse($reflection, string $sourceFile, ?string $namespace = null): array
+	{
+		try {
+			$docBlock = $this->getDocblock($reflection);
+		} catch (ReflectionException $exception) {
+			return [];
+		}
+
+		if ($docBlock === null) {
+			return [];
+		}
+
+		$tokens = new TokenIterator($this->phpDocLexer->tokenize($docBlock));
 		$phpDocNode = $this->phpDocParser->parse($tokens);
-		$nameScope = $this->createNameScope($reflection);
+		$nameScope = $this->createNameScope($sourceFile, $namespace);
 
 		$annotations = [];
 		foreach ($phpDocNode->getThrowsTagValues() as $tagValue) {
@@ -86,17 +111,31 @@ class ThrowsAnnotationReader
 		return $annotations;
 	}
 
-	private function createNameScope(ReflectionFunctionAbstract $reflection): NameScope
+	/**
+	 * @param \PHPStan\Reflection\FunctionReflection|\PHPStan\Reflection\MethodReflection $reflection
+	 *
+	 * @throws ReflectionException
+	 */
+	private function getDocblock($reflection): ?string
 	{
-		$namespace = $reflection instanceof ReflectionMethod ?
-			$reflection->getDeclaringClass()->getNamespaceName() :
-			$reflection->getNamespaceName();
+		if ($reflection instanceof MethodReflection) {
+			$declaringClass = $reflection->getDeclaringClass();
+			$nativeClassReflection = $declaringClass->getNativeReflection();
+			$nativeMethodReflection = $nativeClassReflection->getMethod($reflection->getName());
+			$docBlock = $nativeMethodReflection->getDocComment();
 
-		/** @var string $fileName */
-		$fileName = $reflection->getFileName();
-		$usesMap = $this->getUsesMap($fileName, $namespace);
+			return $docBlock !== false ? $docBlock : null;
+		}
 
-		return new NameScope($namespace, $usesMap);
+		$functionReflection = new ReflectionFunction($reflection->getName());
+		$docBlock = $functionReflection->getDocComment();
+
+		return $docBlock !== false ? $docBlock : null;
+	}
+
+	private function createNameScope(string $sourceFile, ?string $namespace = null): NameScope
+	{
+		return new NameScope($namespace, $this->getUsesMap($sourceFile, (string) $namespace));
 	}
 
 	/**
@@ -114,7 +153,7 @@ class ThrowsAnnotationReader
 	/**
 	 * @return string[][]
 	 */
-	private function createUsesMap(string $fileName): array
+	private function createUsesMap(string $sourceFile): array
 	{
 		$visitor = new class extends NodeVisitorAbstract {
 
@@ -170,7 +209,7 @@ class ThrowsAnnotationReader
 
 		$traverser = new NodeTraverser();
 		$traverser->addVisitor($visitor);
-		$traverser->traverse($this->phpParser->parseFile($fileName));
+		$traverser->traverse($this->phpParser->parseFile($sourceFile));
 
 		return $visitor->uses;
 	}

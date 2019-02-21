@@ -103,14 +103,14 @@ class UnusedThrows
 		$this->throwFooExceptions();
 	}
 
-/**
- * @throws FooException
- * @throws BarException Description
- */
-public function unusedDescriptiveAnnotation(): void // error: Unused @throws Pepakriz\PHPStanExceptionRules\Rules\UnusedDescriptiveThrows\BarException annotation
-{
-	$this->throwFooExceptions();
-}
+	/**
+	 * @throws FooException
+	 * @throws BarException Description
+	 */
+	public function unusedDescriptiveAnnotation(): void // error: Unused @throws Pepakriz\PHPStanExceptionRules\Rules\UnusedDescriptiveThrows\BarException annotation
+	{
+		$this->throwFooExceptions();
+	}
 
 	/**
 	 * @throws LogicException Description.
@@ -137,3 +137,15 @@ public function unusedDescriptiveAnnotation(): void // error: Unused @throws Pep
 	}
 
 }
+
+new class {
+
+	/**
+	 * @throws RuntimeException Overridden description.
+	 */
+	public function descriptiveAnnotationAlias(): void
+	{
+		throw new RuntimeException();
+	}
+
+};
