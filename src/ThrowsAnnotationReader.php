@@ -56,6 +56,16 @@ class ThrowsAnnotationReader
 			return [];
 		}
 
+		return $this->readByReflection($reflection, $scope);
+	}
+
+	/**
+	 * @param \PHPStan\Reflection\FunctionReflection|\PHPStan\Reflection\MethodReflection $reflection
+	 *
+	 * @return string[][]
+	 */
+	public function readByReflection($reflection, Scope $scope): array
+	{
 		$namespace = $scope->getNamespace();
 		$sourceFile = $scope->getFile();
 

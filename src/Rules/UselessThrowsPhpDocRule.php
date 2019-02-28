@@ -8,11 +8,11 @@ use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PHPStan\Analyser\Scope;
+use PHPStan\Broker\Broker;
+use PHPStan\Broker\FunctionNotFoundException;
+use PHPStan\Reflection\MissingMethodFromReflectionException;
 use PHPStan\Rules\Rule;
 use PHPStan\ShouldNotHappenException;
-use ReflectionException;
-use ReflectionFunction;
-use ReflectionMethod;
 use function array_keys;
 use function is_a;
 use function ltrim;
@@ -22,12 +22,21 @@ class UselessThrowsPhpDocRule implements Rule
 {
 
 	/**
+	 * @var Broker
+	 */
+	private $broker;
+
+	/**
 	 * @var ThrowsAnnotationReader
 	 */
 	private $throwsAnnotationReader;
 
-	public function __construct(ThrowsAnnotationReader $throwsAnnotationReader)
+	public function __construct(
+		Broker $broker,
+		ThrowsAnnotationReader $throwsAnnotationReader
+	)
 	{
+		$this->broker = $broker;
 		$this->throwsAnnotationReader = $throwsAnnotationReader;
 	}
 
@@ -54,16 +63,16 @@ class UselessThrowsPhpDocRule implements Rule
 
 			$methodName = $node->name->toString();
 			try {
-				$nativeFunctionReflection = new ReflectionMethod($classReflection->getName(), $methodName);
-			} catch (ReflectionException $e) {
+				$functionReflection = $classReflection->getMethod($methodName, $scope);
+			} catch (MissingMethodFromReflectionException $e) {
 				throw new ShouldNotHappenException();
 			}
 
 		} elseif ($node instanceof Function_) {
 			$functionName = ltrim($scope->getNamespace() . '\\' . $node->name->toString(), '\\');
 			try {
-				$nativeFunctionReflection = new ReflectionFunction($functionName);
-			} catch (ReflectionException $e) {
+				$functionReflection = $this->broker->getFunction(new Node\Name\FullyQualified($functionName), $scope);
+			} catch (FunctionNotFoundException $e) {
 				throw new ShouldNotHappenException();
 			}
 
@@ -71,7 +80,7 @@ class UselessThrowsPhpDocRule implements Rule
 			return [];
 		}
 
-		$throwsAnnotations = $this->throwsAnnotationReader->read($nativeFunctionReflection);
+		$throwsAnnotations = $this->throwsAnnotationReader->readByReflection($functionReflection, $scope);
 
 		return $this->checkUselessThrows($throwsAnnotations);
 	}

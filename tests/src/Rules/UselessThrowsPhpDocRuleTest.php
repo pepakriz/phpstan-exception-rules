@@ -11,6 +11,7 @@ class UselessThrowsPhpDocRuleTest extends RuleTestCase
 	protected function getRule(): Rule
 	{
 		return new UselessThrowsPhpDocRule(
+			$this->createBroker([]),
 			$this->createThrowsAnnotationReader()
 		);
 	}
