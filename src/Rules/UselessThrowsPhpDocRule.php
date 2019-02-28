@@ -9,14 +9,15 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Broker\Broker;
+use PHPStan\Broker\ClassNotFoundException;
 use PHPStan\Broker\FunctionNotFoundException;
 use PHPStan\Reflection\MissingMethodFromReflectionException;
 use PHPStan\Rules\Rule;
 use PHPStan\ShouldNotHappenException;
 use function array_keys;
-use function is_a;
 use function ltrim;
 use function sprintf;
+use function uksort;
 
 class UselessThrowsPhpDocRule implements Rule
 {
@@ -82,17 +83,25 @@ class UselessThrowsPhpDocRule implements Rule
 
 		$throwsAnnotations = $this->throwsAnnotationReader->readByReflection($functionReflection, $scope);
 
-		return $this->checkUselessThrows($throwsAnnotations);
+		try {
+			return $this->checkUselessThrows($throwsAnnotations);
+		} catch (ClassNotFoundException $exception) {
+			return [];
+		}
 	}
 
 	/**
 	 * @param string[][] $throwsAnnotations
 	 * @return string[]
+	 *
+	 * @throws ClassNotFoundException
 	 */
 	private function checkUselessThrows(array $throwsAnnotations): array
 	{
 		/** @var string[] $errors */
 		$errors = [];
+
+		$this->sortThrowsAnnotationsHierarchically($throwsAnnotations);
 
 		/** @var bool[] $usefulThrows */
 		$usefulThrows = [];
@@ -116,16 +125,52 @@ class UselessThrowsPhpDocRule implements Rule
 
 	/**
 	 * @param string[] $usefulThrows
+	 *
+	 * @throws ClassNotFoundException
 	 */
 	private function isSubtypeOfUsefulThrows(string $exceptionClass, array $usefulThrows): bool
 	{
+		$classReflection = $this->broker->getClass($exceptionClass);
+
 		foreach ($usefulThrows as $usefulThrow) {
-			if (is_a($exceptionClass, $usefulThrow, true)) {
+			if ($classReflection->isSubclassOf($usefulThrow)) {
 				return true;
 			}
 		}
 
 		return false;
+	}
+
+	/**
+	 * @param string[][] $throwsAnnotations
+	 *
+	 * @throws ClassNotFoundException
+	 */
+	private function sortThrowsAnnotationsHierarchically(array &$throwsAnnotations): void
+	{
+		uksort($throwsAnnotations, function (string $leftClass, string $rightClass): int {
+			$leftReflection = $this->broker->getClass($leftClass);
+			$rightReflection = $this->broker->getClass($rightClass);
+
+			// Ensure canonical class names
+			$leftClass = $leftReflection->getName();
+			$rightClass = $rightReflection->getName();
+
+			if ($leftClass === $rightClass) {
+				return 0;
+			}
+
+			if ($leftReflection->isSubclassOf($rightClass)) {
+				return 1;
+			}
+
+			if ($rightReflection->isSubclassOf($leftClass)) {
+				return -1;
+			}
+
+			// Doesn't matter, sort consistently on classname
+			return $leftClass <=> $rightClass;
+		});
 	}
 
 }

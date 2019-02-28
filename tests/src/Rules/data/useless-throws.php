@@ -3,8 +3,11 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules\UselessThrows;
 
 use RuntimeException;
+use LogicException;
 
 class FooException extends RuntimeException {}
+
+class BarException extends LogicException {}
 
 /**
  * @throws RuntimeException
@@ -59,6 +62,20 @@ class UselessThrows
 	public function inheritedAnnotation(): void // error: Useless @throws Pepakriz\PHPStanExceptionRules\Rules\UselessThrows\FooException annotation
 	{
 		throw new FooException();
+	}
+
+	/**
+	 * @throws FooException
+	 * @throws BarException
+	 * @throws RuntimeException
+	 */
+	public function unorderedExceptions(): void // error: Useless @throws Pepakriz\PHPStanExceptionRules\Rules\UselessThrows\FooException annotation
+	{
+		if (2 % 2 === 0) {
+			throw new FooException();
+		}
+
+		throw new BarException();
 	}
 
 	/**
