@@ -58,3 +58,7 @@ services:
 	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\UnreachableCatchRule
 		tags: [phpstan.rules.rule]
+
+	-
+		class: Pepakriz\PHPStanExceptionRules\Rules\UselessThrowsPhpDocRule
+		tags: [phpstan.rules.rule]
