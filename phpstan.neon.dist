@@ -15,8 +15,10 @@ parameters:
 		reportUnusedCatchesOfUncheckedExceptions: true
 		uncheckedExceptions:
 			- LogicException
+			- ReflectionException
 			- PHPStan\ShouldNotHappenException
 			- PHPUnit\Framework\Exception
+			- PHPUnit\Framework\MockObject\RuntimeException
 			- Nette\DI\MissingServiceException
 		methodThrowTypeDeclarations:
 			PHPStan\Broker\Broker:
