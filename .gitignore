@@ -1,5 +1,3 @@
-/.phpcs-cache
 /vendor/
 /composer.lock
-/tmp/
 /tests/tmp/
