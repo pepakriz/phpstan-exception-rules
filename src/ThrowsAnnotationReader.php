@@ -12,6 +12,7 @@ use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\Reflection\MethodReflection;
+use ReflectionException;
 use ReflectionFunction;
 use function sprintf;
 use function strtolower;
@@ -92,7 +93,12 @@ class ThrowsAnnotationReader
 	 */
 	private function parse($reflection, string $sourceFile, ?string $namespace = null): array
 	{
-		$docBlock = $this->getDocblock($reflection);
+		try {
+			$docBlock = $this->getDocblock($reflection);
+		} catch (ReflectionException $exception) {
+			return [];
+		}
+
 		if ($docBlock === null) {
 			return [];
 		}
@@ -117,6 +123,8 @@ class ThrowsAnnotationReader
 
 	/**
 	 * @param \PHPStan\Reflection\FunctionReflection|\PHPStan\Reflection\MethodReflection $reflection
+	 *
+	 * @throws ReflectionException
 	 */
 	private function getDocblock($reflection): ?string
 	{
