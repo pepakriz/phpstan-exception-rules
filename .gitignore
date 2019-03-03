@@ -1,3 +1,4 @@
+/.phpcs-cache
 /vendor/
 /composer.lock
 /tmp/
