@@ -377,10 +377,6 @@ class ThrowsPhpDocRule implements Rule
 			return [];
 		}
 
-		if ($node->stmts === null) {
-			$node->stmts = [];
-		}
-
 		$classReflection = $scope->getClassReflection();
 		if ($classReflection === null) {
 			try {
@@ -394,6 +390,10 @@ class ThrowsPhpDocRule implements Rule
 			} catch (MissingMethodFromReflectionException $e) {
 				throw new ShouldNotHappenException();
 			}
+
+			if ($classReflection->getNativeReflection()->getMethod($methodReflection->getName())->isAbstract()) {
+				return [];
+			}
 		}
 
 		if ($methodReflection instanceof ThrowableReflection) {
@@ -402,6 +402,9 @@ class ThrowsPhpDocRule implements Rule
 
 		if (!$node->hasAttribute(self::ATTRIBUTE_HAS_CLASS_METHOD_END)) {
 			$node->setAttribute(self::ATTRIBUTE_HAS_CLASS_METHOD_END, true);
+			if ($node->stmts === null) {
+				$node->stmts = [];
+			}
 			$node->stmts[] = new FunctionEnd($node);
 		}
 
