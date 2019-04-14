@@ -48,6 +48,11 @@ services:
 			- exceptionRules.dynamicFunctionThrowTypeExtension
 
 	-
+		class: Pepakriz\PHPStanExceptionRules\Extension\IntdivExtension
+		tags:
+			- exceptionRules.dynamicFunctionThrowTypeExtension
+
+	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule
 		arguments:
 			reportUnusedCatchesOfUncheckedExceptions: %exceptionRules.reportUnusedCatchesOfUncheckedExceptions%
