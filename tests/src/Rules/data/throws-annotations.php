@@ -3,6 +3,7 @@
 namespace Pepakriz\PHPStanExceptionRules\Rules\Data;
 
 use Exception;
+use Generator;
 use LogicException;
 use RuntimeException;
 
@@ -315,6 +316,58 @@ class Inheritdoc extends BaseInheritdoc
 	public function foo(): void // error: Unused @throws RuntimeException annotation
 	{
 
+	}
+
+}
+
+/**
+ * @return Generator|int[]
+ *
+ * @throws RuntimeException
+ */
+function functionInner(): Generator
+{
+	throw new RuntimeException('abc');
+	yield 1;
+	yield 2;
+	yield 3;
+}
+
+class YieldFrom
+{
+
+	/**
+	 * @return Generator|int[]
+	 *
+	 * @throws RuntimeException
+	 */
+	public function inner(): Generator
+	{
+		throw new RuntimeException('abc');
+		yield 1;
+		yield 2;
+		yield 3;
+	}
+
+	/**
+	 * @return Generator|int[]
+	 *
+	 * @throws RuntimeException
+	 */
+	public static function staticInner(): Generator
+	{
+		throw new RuntimeException('abc');
+		yield 1;
+		yield 2;
+		yield 3;
+	}
+
+	public function gen() {
+		yield 0;
+		yield from $this->inner(); // error: Missing @throws RuntimeException annotation
+		yield from self::staticInner(); // error: Missing @throws RuntimeException annotation
+		yield from functionInner(); // error: Missing @throws RuntimeException annotation
+		yield 4;
 	}
 
 }
