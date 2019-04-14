@@ -8,10 +8,14 @@ parameters:
 		methodThrowTypeDeclarations: []
 		functionThrowTypeDeclarations: []
 
-extensions:
-	exceptionRules: Pepakriz\PHPStanExceptionRules\DI\ExceptionRulesExtension
-
 services:
+	-
+		class: Pepakriz\PHPStanExceptionRules\DynamicThrowTypeServiceFactory
+
+	-
+		class: Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService
+		factory: @Pepakriz\PHPStanExceptionRules\DynamicThrowTypeServiceFactory::create
+
 	-
 		class: Pepakriz\PHPStanExceptionRules\ThrowsAnnotationReader
 	-
