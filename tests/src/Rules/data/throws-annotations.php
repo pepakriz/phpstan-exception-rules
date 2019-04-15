@@ -2,10 +2,13 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules\Data;
 
+use ArrayIterator;
 use Exception;
 use Generator;
+use IteratorAggregate;
 use LogicException;
 use RuntimeException;
+use Traversable;
 
 class CustomLogicException extends LogicException {}
 abstract class BaseRuntimeException extends RuntimeException {}
@@ -333,6 +336,32 @@ function functionInner(): Generator
 	yield 3;
 }
 
+class YieldFromIteratorAggregate implements IteratorAggregate
+{
+
+	/**
+	 * @throws RuntimeException
+	 */
+	public function getIterator(): Traversable
+	{
+		throw new RuntimeException();
+	}
+
+}
+
+class YieldFromIterator extends ArrayIterator
+{
+
+	/**
+	 * @throws RuntimeException
+	 */
+	public function valid()
+	{
+		throw new RuntimeException();
+	}
+
+}
+
 class YieldFrom
 {
 
@@ -367,6 +396,8 @@ class YieldFrom
 		yield from $this->inner(); // error: Missing @throws RuntimeException annotation
 		yield from self::staticInner(); // error: Missing @throws RuntimeException annotation
 		yield from functionInner(); // error: Missing @throws RuntimeException annotation
+		yield from new YieldFromIteratorAggregate(); // error: Missing @throws RuntimeException annotation
+		yield from new YieldFromIterator(); // error: Missing @throws RuntimeException annotation
 		yield 4;
 	}
 

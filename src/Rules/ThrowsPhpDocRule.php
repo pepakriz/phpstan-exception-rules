@@ -56,6 +56,10 @@ class ThrowsPhpDocRule implements Rule
 	private const ATTRIBUTE_HAS_CLASS_METHOD_END = '__HAS_CLASS_METHOD_END__';
 	private const ATTRIBUTE_HAS_TRY_CATCH_END = '__HAS_TRY_CATCH_END__';
 
+	private const ITERATOR_METHODS_WITHOUT_KEY = ['rewind', 'valid', 'current', 'next'];
+	private const ITERATOR_METHODS = self::ITERATOR_METHODS_WITHOUT_KEY + ['key'];
+	private const ITERATOR_AGGREGATE_METHODS = ['getIterator'];
+
 	/**
 	 * @var CheckedExceptionService
 	 */
@@ -155,6 +159,10 @@ class ThrowsPhpDocRule implements Rule
 
 		if ($node instanceof New_) {
 			return $this->processNew($node, $scope);
+		}
+
+		if ($node instanceof Expr\YieldFrom) {
+			return $this->processYieldFrom($node, $scope);
 		}
 
 		if ($node instanceof Node\FunctionLike) {
@@ -338,6 +346,38 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
+	private function processYieldFrom(Expr\YieldFrom $node, Scope $scope): array
+	{
+		$messages = [];
+
+		$expr = $node->expr;
+		if ($expr instanceof New_) {
+			$classType = $this->getClassType($expr->class, $scope);
+			if ($classType === null) {
+				return [];
+			}
+
+			foreach (TypeUtils::getDirectClassNames($classType) as $className) {
+				try {
+					$classReflection = $this->broker->getClass($className);
+				} catch (ClassNotFoundException $e) {
+					continue;
+				}
+
+				if ($classReflection->isSubclassOf(Iterator::class)) {
+					$messages = array_merge($messages, $this->processThrowTypesOnMethod($node->expr, self::ITERATOR_METHODS, $scope));
+				} elseif ($classReflection->isSubclassOf(IteratorAggregate::class)) {
+					$messages = array_merge($messages, $this->processThrowTypesOnMethod($node->expr, self::ITERATOR_AGGREGATE_METHODS, $scope));
+				}
+			}
+		}
+
+		return array_unique($messages);
+	}
+
+	/**
+	 * @return string[]
+	 */
 	private function processForeach(Foreach_ $node, Scope $scope): array
 	{
 		$type = $scope->getType($node->expr);
@@ -352,13 +392,17 @@ class ThrowsPhpDocRule implements Rule
 			}
 
 			if ($classReflection->isSubclassOf(Iterator::class)) {
-				$iteratorMethods = ['rewind', 'valid', 'current', 'next'];
-				if ($node->keyVar !== null) {
-					$iteratorMethods[] = 'key';
-				}
-				$messages = array_merge($messages, $this->processThrowTypesOnMethod($node->expr, $iteratorMethods, $scope));
+				$messages = array_merge($messages, $this->processThrowTypesOnMethod(
+					$node->expr,
+					$node->keyVar === null ? self::ITERATOR_METHODS_WITHOUT_KEY : self::ITERATOR_METHODS,
+					$scope
+				));
 			} elseif ($classReflection->isSubclassOf(IteratorAggregate::class)) {
-				$messages = array_merge($messages, $this->processThrowTypesOnMethod($node->expr, ['getIterator'], $scope));
+				$messages = array_merge($messages, $this->processThrowTypesOnMethod(
+					$node->expr,
+					self::ITERATOR_AGGREGATE_METHODS,
+					$scope
+				));
 			}
 		}
 
@@ -654,18 +698,9 @@ class ThrowsPhpDocRule implements Rule
 		Scope $scope
 	): array
 	{
-		if ($class instanceof ClassLike) {
-			$className = $class->name;
-			if ($className === null) {
-				return [];
-			}
-
-			$calledOnType = new ObjectType($className->name);
-
-		} elseif ($class instanceof Name) {
-			$calledOnType = new ObjectType($scope->resolveName($class));
-		} else {
-			$calledOnType = $scope->getType($class);
+		$calledOnType = $this->getClassType($class, $scope);
+		if ($calledOnType === null) {
+			return [];
 		}
 
 		$methodReflections = [];
@@ -687,6 +722,28 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		return $methodReflections;
+	}
+
+	/**
+	 * @param Name|Expr|ClassLike $class
+	 */
+	private function getClassType($class, Scope $scope): ?Type
+	{
+		if ($class instanceof ClassLike) {
+			$className = $class->name;
+			if ($className === null) {
+				return null;
+			}
+
+			return new ObjectType($className->name);
+
+		}
+
+		if ($class instanceof Name) {
+			return new ObjectType($scope->resolveName($class));
+		}
+
+		return $scope->getType($class);
 	}
 
 }
