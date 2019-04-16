@@ -348,31 +348,7 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private function processYieldFrom(Expr\YieldFrom $node, Scope $scope): array
 	{
-		$messages = [];
-
-		$expr = $node->expr;
-		if ($expr instanceof New_) {
-			$classType = $this->getClassType($expr->class, $scope);
-			if ($classType === null) {
-				return [];
-			}
-
-			foreach (TypeUtils::getDirectClassNames($classType) as $className) {
-				try {
-					$classReflection = $this->broker->getClass($className);
-				} catch (ClassNotFoundException $e) {
-					continue;
-				}
-
-				if ($classReflection->isSubclassOf(Iterator::class)) {
-					$messages = array_merge($messages, $this->processThrowTypesOnMethod($node->expr, self::ITERATOR_METHODS, $scope));
-				} elseif ($classReflection->isSubclassOf(IteratorAggregate::class)) {
-					$messages = array_merge($messages, $this->processThrowTypesOnMethod($node->expr, self::ITERATOR_AGGREGATE_METHODS, $scope));
-				}
-			}
-		}
-
-		return array_unique($messages);
+		return $this->processExprExecution($node->expr, $scope, true);
 	}
 
 	/**
@@ -380,7 +356,15 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private function processForeach(Foreach_ $node, Scope $scope): array
 	{
-		$type = $scope->getType($node->expr);
+		return $this->processExprExecution($node->expr, $scope, $node->keyVar !== null);
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function processExprExecution(Expr $expr, Scope $scope, bool $useKey): array
+	{
+		$type = $scope->getType($expr);
 
 		$messages = [];
 		$classNames = TypeUtils::getDirectClassNames($type);
@@ -393,13 +377,13 @@ class ThrowsPhpDocRule implements Rule
 
 			if ($classReflection->isSubclassOf(Iterator::class)) {
 				$messages = array_merge($messages, $this->processThrowTypesOnMethod(
-					$node->expr,
-					$node->keyVar === null ? self::ITERATOR_METHODS_WITHOUT_KEY : self::ITERATOR_METHODS,
+					$expr,
+					$useKey ? self::ITERATOR_METHODS : self::ITERATOR_METHODS_WITHOUT_KEY,
 					$scope
 				));
 			} elseif ($classReflection->isSubclassOf(IteratorAggregate::class)) {
 				$messages = array_merge($messages, $this->processThrowTypesOnMethod(
-					$node->expr,
+					$expr,
 					self::ITERATOR_AGGREGATE_METHODS,
 					$scope
 				));
