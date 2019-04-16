@@ -162,7 +162,7 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		if ($node instanceof Expr\YieldFrom) {
-			return $this->processYieldFrom($node, $scope);
+			return $this->processExprTraversing($node->expr, $scope, true);
 		}
 
 		if ($node instanceof Node\FunctionLike) {
@@ -178,7 +178,7 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		if ($node instanceof Foreach_) {
-			return $this->processForeach($node, $scope);
+			return $this->processExprTraversing($node->expr, $scope, $node->keyVar !== null);
 		}
 
 		if ($node instanceof FuncCall) {
@@ -346,23 +346,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @return string[]
 	 */
-	private function processYieldFrom(Expr\YieldFrom $node, Scope $scope): array
-	{
-		return $this->processExprExecution($node->expr, $scope, true);
-	}
-
-	/**
-	 * @return string[]
-	 */
-	private function processForeach(Foreach_ $node, Scope $scope): array
-	{
-		return $this->processExprExecution($node->expr, $scope, $node->keyVar !== null);
-	}
-
-	/**
-	 * @return string[]
-	 */
-	private function processExprExecution(Expr $expr, Scope $scope, bool $useKey): array
+	private function processExprTraversing(Expr $expr, Scope $scope, bool $useKey): array
 	{
 		$type = $scope->getType($expr);
 
