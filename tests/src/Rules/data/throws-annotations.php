@@ -2,9 +2,13 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules\Data;
 
+use ArrayIterator;
 use Exception;
+use Generator;
+use IteratorAggregate;
 use LogicException;
 use RuntimeException;
+use Traversable;
 
 class CustomLogicException extends LogicException {}
 abstract class BaseRuntimeException extends RuntimeException {}
@@ -315,6 +319,86 @@ class Inheritdoc extends BaseInheritdoc
 	public function foo(): void // error: Unused @throws RuntimeException annotation
 	{
 
+	}
+
+}
+
+/**
+ * @return Generator|int[]
+ *
+ * @throws RuntimeException
+ */
+function functionInner(): Generator
+{
+	throw new RuntimeException('abc');
+	yield 1;
+	yield 2;
+	yield 3;
+}
+
+class YieldFromIteratorAggregate implements IteratorAggregate
+{
+
+	/**
+	 * @throws RuntimeException
+	 */
+	public function getIterator(): Traversable
+	{
+		throw new RuntimeException();
+	}
+
+}
+
+class YieldFromIterator extends ArrayIterator
+{
+
+	/**
+	 * @throws RuntimeException
+	 */
+	public function valid()
+	{
+		throw new RuntimeException();
+	}
+
+}
+
+class YieldFrom
+{
+
+	/**
+	 * @return Generator|int[]
+	 *
+	 * @throws RuntimeException
+	 */
+	public function inner(): Generator
+	{
+		throw new RuntimeException('abc');
+		yield 1;
+		yield 2;
+		yield 3;
+	}
+
+	/**
+	 * @return Generator|int[]
+	 *
+	 * @throws RuntimeException
+	 */
+	public static function staticInner(): Generator
+	{
+		throw new RuntimeException('abc');
+		yield 1;
+		yield 2;
+		yield 3;
+	}
+
+	public function gen() {
+		yield 0;
+		yield from $this->inner(); // error: Missing @throws RuntimeException annotation
+		yield from self::staticInner(); // error: Missing @throws RuntimeException annotation
+		yield from functionInner(); // error: Missing @throws RuntimeException annotation
+		yield from new YieldFromIteratorAggregate(); // error: Missing @throws RuntimeException annotation
+		yield from new YieldFromIterator(); // error: Missing @throws RuntimeException annotation
+		yield 4;
 	}
 
 }
