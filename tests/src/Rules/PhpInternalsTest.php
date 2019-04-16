@@ -6,6 +6,7 @@ use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\DefaultThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\Extension\DateTimeExtension;
+use Pepakriz\PHPStanExceptionRules\Extension\IntdivExtension;
 use Pepakriz\PHPStanExceptionRules\Extension\JsonEncodeDecodeExtension;
 use Pepakriz\PHPStanExceptionRules\Extension\ReflectionExtension;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
@@ -20,6 +21,7 @@ class PhpInternalsTest extends RuleTestCase
 		$reflectionClassExtension = new ReflectionExtension($this->createBroker());
 		$dateTimeExtension = new DateTimeExtension();
 		$jsonEncodeDecodeExtension = new JsonEncodeDecodeExtension();
+		$intdivExtension = new IntdivExtension();
 		return new ThrowsPhpDocRule(
 			new CheckedExceptionService(
 				[
@@ -35,6 +37,7 @@ class PhpInternalsTest extends RuleTestCase
 				],
 				[
 					$jsonEncodeDecodeExtension,
+					$intdivExtension,
 				]
 			),
 			new DefaultThrowTypeService([], []),

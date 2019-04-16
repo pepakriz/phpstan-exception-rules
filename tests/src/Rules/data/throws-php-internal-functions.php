@@ -103,5 +103,26 @@ class Example
 		new DateTime(rand(0, 1) === 0 ? '2018-01-01' : 123); // error: Missing @throws Exception annotation
 	}
 
+	public function testIntdiv(): void
+	{
+		/** @var int $integer */
+		$integer = rand(0, 9999999);
+
+		intdiv(8, -1);
+		intdiv($integer, -1); // error: Missing @throws ArithmeticError annotation
+		intdiv(8, 0); // error: Missing @throws DivisionByZeroError annotation
+		intdiv($integer, 0); // error: Missing @throws ArithmeticError annotation
+		intdiv($integer, $integer); // error: Missing @throws ArithmeticError annotation
+		intdiv(8, 4);
+
+		intdiv(rand(0, 1) === 0 ? 8 : 10, -1);
+		intdiv(rand(0, 1) === 0 ? $integer : 10, -1); // error: Missing @throws ArithmeticError annotation
+		intdiv(rand(0, 1) === 0 ? 8 : 10, 0); // error: Missing @throws DivisionByZeroError annotation
+		intdiv(rand(0, 1) === 0 ? $integer : 10, 0); // error: Missing @throws ArithmeticError annotation
+		intdiv(rand(0, 1) === 0 ? $integer : $integer, 0); // error: Missing @throws ArithmeticError annotation
+		intdiv(8, rand(0, 1) === 0 ? $integer : 10); // error: Missing @throws ArithmeticError annotation
+		intdiv(rand(0, 1) === 0 ? 20 : 10, rand(0, 1) === 0 ? 5 : 10);
+	}
+
 }
 
