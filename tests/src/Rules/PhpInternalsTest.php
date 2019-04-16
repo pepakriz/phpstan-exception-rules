@@ -62,4 +62,9 @@ class PhpInternalsTest extends RuleTestCase
 		$this->analyse(__DIR__ . '/data/throws-php-internal-functions-php7.3.php');
 	}
 
+	public function testPhpInternalOperators(): void
+	{
+		$this->analyse(__DIR__ . '/data/throws-php-internal-operators.php');
+	}
+
 }

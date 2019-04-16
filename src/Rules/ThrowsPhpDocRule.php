@@ -2,6 +2,8 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
+use ArithmeticError;
+use DivisionByZeroError;
 use Iterator;
 use IteratorAggregate;
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
@@ -35,6 +37,7 @@ use PHPStan\Reflection\MissingMethodFromReflectionException;
 use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Rules\Rule;
 use PHPStan\ShouldNotHappenException;
+use PHPStan\Type\NeverType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
@@ -183,6 +186,22 @@ class ThrowsPhpDocRule implements Rule
 
 		if ($node instanceof FuncCall) {
 			return $this->processFuncCall($node, $scope);
+		}
+
+		if ($node instanceof Expr\BinaryOp\Div || $node instanceof Expr\BinaryOp\Mod) {
+			return $this->processDiv($node->right, $scope);
+		}
+
+		if ($node instanceof Expr\AssignOp\Div || $node instanceof Expr\AssignOp\Mod) {
+			return $this->processDiv($node->expr, $scope);
+		}
+
+		if ($node instanceof Expr\BinaryOp\ShiftLeft || $node instanceof Expr\BinaryOp\ShiftRight) {
+			return $this->processShift($node->right, $scope);
+		}
+
+		if ($node instanceof Expr\AssignOp\ShiftLeft || $node instanceof Expr\AssignOp\ShiftRight) {
+			return $this->processShift($node->expr, $scope);
 		}
 
 		return [];
@@ -597,6 +616,53 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		return $this->processThrowsTypes($throwType);
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function processDiv(Expr $divisor, Scope $scope): array
+	{
+		$divisionByZero = false;
+		$divisorType = $scope->getType($divisor);
+		foreach (TypeUtils::getConstantScalars($divisorType) as $constantScalarType) {
+			if ($constantScalarType->getValue() === 0) {
+				$divisionByZero = true;
+			}
+
+			$divisorType = TypeCombinator::remove($divisorType, $constantScalarType);
+		}
+
+		if (!$divisorType instanceof NeverType) {
+			return $this->processThrowsTypes(new ObjectType(ArithmeticError::class));
+		}
+
+		if ($divisionByZero) {
+			return $this->processThrowsTypes(new ObjectType(DivisionByZeroError::class));
+		}
+
+		return [];
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function processShift(Expr $value, Scope $scope): array
+	{
+		$valueType = $scope->getType($value);
+		foreach (TypeUtils::getConstantScalars($valueType) as $constantScalarType) {
+			if ($constantScalarType->getValue() < 0) {
+				return $this->processThrowsTypes(new ObjectType(ArithmeticError::class));
+			}
+
+			$valueType = TypeCombinator::remove($valueType, $constantScalarType);
+		}
+
+		if (!$valueType instanceof NeverType) {
+			return $this->processThrowsTypes(new ObjectType(ArithmeticError::class));
+		}
+
+		return [];
 	}
 
 	/**
