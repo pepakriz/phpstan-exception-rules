@@ -1,6 +1,7 @@
 {
 	"name": "pepakriz/phpstan-exception-rules",
 	"description": "Exception rules for PHPStan",
+	"type": "phpstan-extension",
 	"license": [
 		"MIT"
 	],
@@ -8,6 +9,11 @@
 	"extra": {
 		"branch-alias": {
 			"dev-master": "0.8-dev"
+		},
+		"phpstan": {
+			"includes": [
+				"extension.neon"
+			]
 		}
 	},
 	"require": {
