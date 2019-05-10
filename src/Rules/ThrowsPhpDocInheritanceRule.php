@@ -21,6 +21,7 @@ use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeUtils;
 use PHPStan\Type\VerbosityLevel;
+use PHPStan\Type\VoidType;
 use function array_filter;
 use function array_merge;
 use function count;
@@ -102,7 +103,7 @@ class ThrowsPhpDocInheritanceRule implements Rule
 		);
 
 		$throwsTag = $resolvedPhpDoc->getThrowsTag();
-		if ($throwsTag === null) {
+		if ($throwsTag === null || $throwsTag->getType() instanceof VoidType) {
 			return [];
 		}
 
