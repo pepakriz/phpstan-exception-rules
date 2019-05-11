@@ -2,9 +2,7 @@
 
 namespace Pepakriz\PHPStanExceptionRules;
 
-use Nette\DI\Container;
-use function array_keys;
-use function array_map;
+use PHPStan\DependencyInjection\Container;
 
 class DynamicThrowTypeServiceFactory
 {
@@ -26,17 +24,11 @@ class DynamicThrowTypeServiceFactory
 
 	public function create(): DynamicThrowTypeService
 	{
-		$tagToService = function (array $tags) {
-			return array_map(function (string $serviceName) {
-				return $this->container->getService($serviceName);
-			}, array_keys($tags));
-		};
-
 		return new DynamicThrowTypeService(
-			$tagToService($this->container->findByTag(self::TAG_DYNAMIC_METHOD_THROW_TYPE)),
-			$tagToService($this->container->findByTag(self::TAG_DYNAMIC_STATIC_METHOD_THROW_TYPE)),
-			$tagToService($this->container->findByTag(self::TAG_DYNAMIC_CONSTRUCTOR_THROW_TYPE)),
-			$tagToService($this->container->findByTag(self::TAG_DYNAMIC_FUNCTION_THROW_TYPE))
+			$this->container->getServicesByTag(self::TAG_DYNAMIC_METHOD_THROW_TYPE),
+			$this->container->getServicesByTag(self::TAG_DYNAMIC_STATIC_METHOD_THROW_TYPE),
+			$this->container->getServicesByTag(self::TAG_DYNAMIC_CONSTRUCTOR_THROW_TYPE),
+			$this->container->getServicesByTag(self::TAG_DYNAMIC_FUNCTION_THROW_TYPE)
 		);
 	}
 
