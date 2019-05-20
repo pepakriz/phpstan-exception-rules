@@ -8,6 +8,17 @@ parameters:
 		methodThrowTypeDeclarations: []
 		functionThrowTypeDeclarations: []
 
+parametersSchema:
+	exceptionRules: structure([
+		reportUnusedCatchesOfUncheckedExceptions: bool()
+		reportCheckedThrowsInGlobalScope: bool()
+		ignoreDescriptiveUncheckedExceptions: bool()
+		checkedExceptions: listOf(string())
+		uncheckedExceptions: listOf(string())
+		methodThrowTypeDeclarations: arrayOf(arrayOf(listOf(string())))
+		functionThrowTypeDeclarations: arrayOf(listOf(string()))
+	])
+
 services:
 	-
 		class: Pepakriz\PHPStanExceptionRules\DynamicThrowTypeServiceFactory
