@@ -30,10 +30,12 @@ services:
 	-
 		class: Pepakriz\PHPStanExceptionRules\ThrowsAnnotationReader
 	-
-		class: Pepakriz\PHPStanExceptionRules\CheckedExceptionService(%exceptionRules.checkedExceptions%, %exceptionRules.uncheckedExceptions%)
+		class: Pepakriz\PHPStanExceptionRules\CheckedExceptionService
+		factory: Pepakriz\PHPStanExceptionRules\CheckedExceptionService(%exceptionRules.checkedExceptions%, %exceptionRules.uncheckedExceptions%)
 
 	-
-		class: Pepakriz\PHPStanExceptionRules\DefaultThrowTypeService(%exceptionRules.methodThrowTypeDeclarations%, %exceptionRules.functionThrowTypeDeclarations%)
+		class: Pepakriz\PHPStanExceptionRules\DefaultThrowTypeService
+		factory: Pepakriz\PHPStanExceptionRules\DefaultThrowTypeService(%exceptionRules.methodThrowTypeDeclarations%, %exceptionRules.functionThrowTypeDeclarations%)
 
 	-
 		class: Pepakriz\PHPStanExceptionRules\DefaultThrowTypeExtension
