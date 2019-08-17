@@ -90,7 +90,8 @@ abstract class RuleTestCase extends TestCase
 					$this->shouldPolluteScopeWithLoopInitialAssignments(),
 					$this->shouldPolluteCatchScopeWithTryAssignments(),
 					$this->shouldPolluteScopeWithAlwaysIterableForeach(),
-					[]
+					[],
+					false
 				),
 				$fileHelper,
 				[],
