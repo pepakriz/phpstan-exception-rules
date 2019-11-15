@@ -36,6 +36,11 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	private $reportCheckedThrowsInGlobalScope = false;
 
 	/**
+	 * @var bool
+	 */
+	private $allowImplementationUnusedThrows = false;
+
+	/**
 	 * @var array<string, string>
 	 */
 	private $methodWhitelist = [];
@@ -82,6 +87,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			$this->reportUnusedCatchesOfUncheckedExceptions,
 			$this->reportCheckedThrowsInGlobalScope,
 			$this->ignoreDescriptiveUncheckedExceptions,
+			$this->allowImplementationUnusedThrows,
 			$this->methodWhitelist
 		);
 	}
@@ -172,6 +178,12 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	{
 		$this->methodWhitelist = [TestCase::class => '/^test/'];
 		$this->analyse(__DIR__ . '/data/method-whitelisting.php');
+	}
+
+	public function testIntentionallyUnusedThrows(): void
+	{
+		$this->allowImplementationUnusedThrows = true;
+		$this->analyse(__DIR__ . '/data/intentionally-unused-throws.php');
 	}
 
 }

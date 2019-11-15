@@ -109,6 +109,11 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private $ignoreDescriptiveUncheckedExceptions;
 
+	/**
+	 * @var bool
+	 */
+	private $allowImplementationUnusedThrows;
+
 	/** @var string[] */
 	private $methodWhitelist;
 
@@ -124,6 +129,7 @@ class ThrowsPhpDocRule implements Rule
 		bool $reportUnusedCatchesOfUncheckedExceptions,
 		bool $reportCheckedThrowsInGlobalScope,
 		bool $ignoreDescriptiveUncheckedExceptions,
+		bool $allowImplementationUnusedThrows,
 		array $methodWhitelist
 	)
 	{
@@ -136,6 +142,7 @@ class ThrowsPhpDocRule implements Rule
 		$this->reportUnusedCatchesOfUncheckedExceptions = $reportUnusedCatchesOfUncheckedExceptions;
 		$this->reportCheckedThrowsInGlobalScope = $reportCheckedThrowsInGlobalScope;
 		$this->ignoreDescriptiveUncheckedExceptions = $ignoreDescriptiveUncheckedExceptions;
+		$this->allowImplementationUnusedThrows = $allowImplementationUnusedThrows;
 		$this->methodWhitelist = $methodWhitelist;
 	}
 
@@ -563,6 +570,16 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		$unusedThrows = array_diff($unusedThrows, TypeUtils::getDirectClassNames($defaultThrowsType));
+
+		if ($this->allowImplementationUnusedThrows && $functionReflection instanceof MethodReflection) {
+			$declaringClass = $functionReflection->getDeclaringClass();
+			$nativeClassReflection = $declaringClass->getNativeReflection();
+			$nativeMethodReflection = $nativeClassReflection->getMethod($functionReflection->getName());
+
+			if ($nativeMethodReflection->getDocComment() === false) {
+				return [];
+			}
+		}
 
 		if (!$this->ignoreDescriptiveUncheckedExceptions) {
 			return $unusedThrows;
