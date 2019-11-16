@@ -130,9 +130,19 @@ class ThrowsAnnotationReader
 	{
 		if ($reflection instanceof MethodReflection) {
 			$declaringClass = $reflection->getDeclaringClass();
-			$nativeClassReflection = $declaringClass->getNativeReflection();
-			$nativeMethodReflection = $nativeClassReflection->getMethod($reflection->getName());
-			$docBlock = $nativeMethodReflection->getDocComment();
+			$classReflection = $declaringClass->getNativeReflection();
+			$methodReflection = $classReflection->getMethod($reflection->getName());
+			$docBlock = $methodReflection->getDocComment();
+
+			while ($docBlock === false) {
+				try {
+					$methodReflection = $methodReflection->getPrototype();
+				} catch (ReflectionException $exception) {
+					return null;
+				}
+
+				$docBlock = $methodReflection->getDocComment();
+			}
 
 			return $docBlock !== false ? $docBlock : null;
 		}

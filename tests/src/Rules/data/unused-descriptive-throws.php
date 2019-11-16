@@ -57,8 +57,21 @@ function descriptiveAnnotationAlias(): void
 	throw new LogicException();
 }
 
-class UnusedThrows
+interface Foo {
+
+	/**
+	 * @throws LogicException Description.
+	 */
+	public function uncheckedException(): void;
+}
+
+class UnusedThrows implements Foo
 {
+
+	public function uncheckedException() : void
+	{
+		throw new LogicException();
+	}
 
 	/**
 	 * @throws RuntimeException
