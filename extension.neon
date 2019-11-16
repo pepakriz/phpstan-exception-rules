@@ -3,6 +3,7 @@ parameters:
 		reportUnusedCatchesOfUncheckedExceptions: false
 		reportCheckedThrowsInGlobalScope: true
 		ignoreDescriptiveUncheckedExceptions: false
+		allowUnusedThrowsInImplementation: false
 		checkedExceptions: []
 		uncheckedExceptions: []
 		methodThrowTypeDeclarations: []
@@ -14,6 +15,7 @@ parametersSchema:
 		reportUnusedCatchesOfUncheckedExceptions: bool()
 		reportCheckedThrowsInGlobalScope: bool()
 		ignoreDescriptiveUncheckedExceptions: bool()
+		allowUnusedThrowsInImplementation: bool()
 		checkedExceptions: listOf(string())
 		uncheckedExceptions: listOf(string())
 		methodThrowTypeDeclarations: arrayOf(arrayOf(listOf(string())))
@@ -73,6 +75,7 @@ services:
 			reportUnusedCatchesOfUncheckedExceptions: %exceptionRules.reportUnusedCatchesOfUncheckedExceptions%
 			reportCheckedThrowsInGlobalScope: %exceptionRules.reportCheckedThrowsInGlobalScope%
 			ignoreDescriptiveUncheckedExceptions: %exceptionRules.ignoreDescriptiveUncheckedExceptions%
+			allowUnusedThrowsInImplementation: %exceptionRules.allowUnusedThrowsInImplementation%
 			methodWhitelist: %exceptionRules.methodWhitelist%
 		tags: [phpstan.rules.rule]
 

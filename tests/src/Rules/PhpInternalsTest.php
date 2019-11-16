@@ -46,6 +46,7 @@ class PhpInternalsTest extends RuleTestCase
 			true,
 			true,
 			true,
+			false,
 			[]
 		);
 	}
