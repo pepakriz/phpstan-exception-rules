@@ -38,7 +38,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	/**
 	 * @var bool
 	 */
-	private $allowImplementationUnusedThrows = false;
+	private $allowUnusedThrowsInImplementation = false;
 
 	/**
 	 * @var array<string, string>
@@ -87,7 +87,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			$this->reportUnusedCatchesOfUncheckedExceptions,
 			$this->reportCheckedThrowsInGlobalScope,
 			$this->ignoreDescriptiveUncheckedExceptions,
-			$this->allowImplementationUnusedThrows,
+			$this->allowUnusedThrowsInImplementation,
 			$this->methodWhitelist
 		);
 	}
@@ -182,7 +182,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 
 	public function testIntentionallyUnusedThrows(): void
 	{
-		$this->allowImplementationUnusedThrows = true;
+		$this->allowUnusedThrowsInImplementation = true;
 		$this->analyse(__DIR__ . '/data/intentionally-unused-throws.php');
 	}
 

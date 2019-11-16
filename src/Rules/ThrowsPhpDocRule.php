@@ -43,6 +43,8 @@ use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeUtils;
 use PHPStan\Type\VoidType;
+use ReflectionException;
+use ReflectionMethod;
 use function array_diff;
 use function array_filter;
 use function array_map;
@@ -112,7 +114,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @var bool
 	 */
-	private $allowImplementationUnusedThrows;
+	private $allowUnusedThrowsInImplementation;
 
 	/** @var string[] */
 	private $methodWhitelist;
@@ -129,7 +131,7 @@ class ThrowsPhpDocRule implements Rule
 		bool $reportUnusedCatchesOfUncheckedExceptions,
 		bool $reportCheckedThrowsInGlobalScope,
 		bool $ignoreDescriptiveUncheckedExceptions,
-		bool $allowImplementationUnusedThrows,
+		bool $allowUnusedThrowsInImplementation,
 		array $methodWhitelist
 	)
 	{
@@ -142,7 +144,7 @@ class ThrowsPhpDocRule implements Rule
 		$this->reportUnusedCatchesOfUncheckedExceptions = $reportUnusedCatchesOfUncheckedExceptions;
 		$this->reportCheckedThrowsInGlobalScope = $reportCheckedThrowsInGlobalScope;
 		$this->ignoreDescriptiveUncheckedExceptions = $ignoreDescriptiveUncheckedExceptions;
-		$this->allowImplementationUnusedThrows = $allowImplementationUnusedThrows;
+		$this->allowUnusedThrowsInImplementation = $allowUnusedThrowsInImplementation;
 		$this->methodWhitelist = $methodWhitelist;
 	}
 
@@ -557,6 +559,16 @@ class ThrowsPhpDocRule implements Rule
 			return $unusedThrows;
 		}
 
+		if ($this->allowUnusedThrowsInImplementation && $functionReflection instanceof MethodReflection) {
+			$declaringClass = $functionReflection->getDeclaringClass();
+			$nativeClassReflection = $declaringClass->getNativeReflection();
+			$nativeMethodReflection = $nativeClassReflection->getMethod($functionReflection->getName());
+
+			if ($this->isImplementation($nativeMethodReflection)) {
+				return [];
+			}
+		}
+
 		try {
 			if ($functionReflection instanceof MethodReflection) {
 				$defaultThrowsType = $functionReflection->getName() === '__construct' ?
@@ -571,16 +583,6 @@ class ThrowsPhpDocRule implements Rule
 
 		$unusedThrows = array_diff($unusedThrows, TypeUtils::getDirectClassNames($defaultThrowsType));
 
-		if ($this->allowImplementationUnusedThrows && $functionReflection instanceof MethodReflection) {
-			$declaringClass = $functionReflection->getDeclaringClass();
-			$nativeClassReflection = $declaringClass->getNativeReflection();
-			$nativeMethodReflection = $nativeClassReflection->getMethod($functionReflection->getName());
-
-			if ($nativeMethodReflection->getDocComment() === false) {
-				return [];
-			}
-		}
-
 		if (!$this->ignoreDescriptiveUncheckedExceptions) {
 			return $unusedThrows;
 		}
@@ -592,6 +594,21 @@ class ThrowsPhpDocRule implements Rule
 				|| !isset($throwsAnnotations[$type])
 				|| in_array('', $throwsAnnotations[$type], true);
 		});
+	}
+
+	private function isImplementation(ReflectionMethod $reflection): bool
+	{
+		if ($reflection->isAbstract()) {
+			return false;
+		}
+
+		try {
+			$reflection->getPrototype();
+		} catch (ReflectionException $exception) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
