@@ -135,7 +135,12 @@ class ThrowsAnnotationReader
 			$docBlock = $methodReflection->getDocComment();
 
 			while ($docBlock === false) {
-				$methodReflection = $methodReflection->getPrototype();
+				try {
+					$methodReflection = $methodReflection->getPrototype();
+				} catch (ReflectionException $exception) {
+					return null;
+				}
+
 				$docBlock = $methodReflection->getDocComment();
 			}
 
