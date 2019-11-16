@@ -51,6 +51,7 @@ use function array_unique;
 use function count;
 use function in_array;
 use function is_string;
+use function preg_match;
 use function sprintf;
 
 class ThrowsPhpDocRule implements Rule
@@ -108,6 +109,12 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private $ignoreDescriptiveUncheckedExceptions;
 
+	/** @var string[] */
+	private $methodWhitelist;
+
+	/**
+	 * @param string[] $methodWhitelist
+	 */
 	public function __construct(
 		CheckedExceptionService $checkedExceptionService,
 		DynamicThrowTypeService $dynamicThrowTypeService,
@@ -116,7 +123,8 @@ class ThrowsPhpDocRule implements Rule
 		Broker $broker,
 		bool $reportUnusedCatchesOfUncheckedExceptions,
 		bool $reportCheckedThrowsInGlobalScope,
-		bool $ignoreDescriptiveUncheckedExceptions
+		bool $ignoreDescriptiveUncheckedExceptions,
+		array $methodWhitelist
 	)
 	{
 		$this->checkedExceptionService = $checkedExceptionService;
@@ -128,6 +136,7 @@ class ThrowsPhpDocRule implements Rule
 		$this->reportUnusedCatchesOfUncheckedExceptions = $reportUnusedCatchesOfUncheckedExceptions;
 		$this->reportCheckedThrowsInGlobalScope = $reportCheckedThrowsInGlobalScope;
 		$this->ignoreDescriptiveUncheckedExceptions = $ignoreDescriptiveUncheckedExceptions;
+		$this->methodWhitelist = $methodWhitelist;
 	}
 
 	public function getNodeType(): string
@@ -173,6 +182,12 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		if ($node instanceof FunctionEnd) {
+			$method = $scope->getFunction();
+
+			if ($method instanceof MethodReflection && $this->isWhitelistedMethod($method)) {
+				return $this->processWhitelistedMethod($method);
+			}
+
 			return $this->processFunctionEnd($scope);
 		}
 
@@ -205,6 +220,46 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		return [];
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function processWhitelistedMethod(MethodReflection $methodReflection): array
+	{
+		if (!$methodReflection instanceof ThrowableReflection) {
+			return [];
+		}
+
+		$throwType = $methodReflection->getThrowType();
+
+		if ($throwType === null) {
+			return [];
+		}
+
+		return array_map(
+			static function (string $throwClass): string {
+				return sprintf('Unused @throws %s annotation', $throwClass);
+			},
+			TypeUtils::getDirectClassNames($throwType)
+		);
+	}
+
+	private function isWhitelistedMethod(MethodReflection $methodReflection): bool
+	{
+		$classReflection = $methodReflection->getDeclaringClass();
+
+		foreach ($this->methodWhitelist as $className => $pattern) {
+			if (!$classReflection->isSubclassOf($className)) {
+				continue;
+			}
+
+			if (preg_match($pattern, $methodReflection->getName()) === 1) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

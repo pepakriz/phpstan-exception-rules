@@ -81,6 +81,16 @@ parameters:
 				- FooException
 ```
 
+In some cases, you may want to ignore exception-related errors as per class basis, as is usually the case for testing:
+
+```neon
+parameters:
+	exceptionRules:
+		methodWhitelist:
+			PHPUnit\Framework\TestCase:
+				- '#^(setup|setupbeforeclass|teardown|teardownafterclass|test.+)$#i'
+```
+
 ## Extensibility
 
 `Dynamic throw type extensions` - If the throw type is not always the same, but depends on an argument passed to the method. (Similar feature as [Dynamic return type extensions](https://github.com/phpstan/phpstan#dynamic-return-type-extensions))

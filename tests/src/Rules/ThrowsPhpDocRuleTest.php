@@ -13,6 +13,7 @@ use Pepakriz\PHPStanExceptionRules\Rules\UnusedCatches\UnusedCatches;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
 use PharData;
 use PHPStan\Rules\Rule;
+use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use RuntimeException;
 
@@ -33,6 +34,11 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	 * @var bool
 	 */
 	private $reportCheckedThrowsInGlobalScope = false;
+
+	/**
+	 * @var array<string, string>
+	 */
+	private $methodWhitelist = [];
 
 	/**
 	 * @var mixed[]
@@ -75,7 +81,8 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			$this->createBroker(),
 			$this->reportUnusedCatchesOfUncheckedExceptions,
 			$this->reportCheckedThrowsInGlobalScope,
-			$this->ignoreDescriptiveUncheckedExceptions
+			$this->ignoreDescriptiveUncheckedExceptions,
+			$this->methodWhitelist
 		);
 	}
 
@@ -159,6 +166,12 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	{
 		$this->reportCheckedThrowsInGlobalScope = true;
 		$this->analyse(__DIR__ . '/data/throws-in-global-scope.php');
+	}
+
+	public function testMethodWhitelist(): void
+	{
+		$this->methodWhitelist = [TestCase::class => '/^test/'];
+		$this->analyse(__DIR__ . '/data/method-whitelisting.php');
 	}
 
 }

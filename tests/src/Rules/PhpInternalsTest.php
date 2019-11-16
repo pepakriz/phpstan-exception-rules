@@ -45,7 +45,8 @@ class PhpInternalsTest extends RuleTestCase
 			$this->createBroker(),
 			true,
 			true,
-			true
+			true,
+			[]
 		);
 	}
 
