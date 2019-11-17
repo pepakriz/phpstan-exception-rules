@@ -23,7 +23,7 @@ class DeadCatchUnion
     public function theSameUnion(): void
     {
         try {
-        } catch (FooException | FooException $e) { // error: Type Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\FooException is caught twice
+        } catch (FooException | FooException $e) { // error: Type Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\FooException is redundant
 
         }
     }
@@ -40,6 +40,14 @@ class DeadCatchUnion
 	{
 		try {
 		} catch (FooException | BarException | BazException $e) { // error: Type Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\BarException is already caught by Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\FooException; Type Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\BazException is already caught by Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\FooException
+
+		}
+	}
+
+	public function theReversedOrderUnion(): void
+	{
+		try {
+		} catch (BazException | BarException | FooException $e) { // error: Type Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\BazException is already caught by Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\BarException; Type Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\BarException is already caught by Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\FooException
 
 		}
 	}

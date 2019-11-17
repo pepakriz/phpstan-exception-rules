@@ -10,7 +10,7 @@ class DeadCatchUnionRuleTest extends RuleTestCase
 
 	protected function getRule(): Rule
 	{
-		return new DeadCatchUnionRule();
+		return new DeadCatchUnionRule($this->createBroker());
 	}
 
 	public function test(): void

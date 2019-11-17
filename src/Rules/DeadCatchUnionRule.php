@@ -5,13 +5,24 @@ namespace Pepakriz\PHPStanExceptionRules\Rules;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Catch_;
 use PHPStan\Analyser\Scope;
+use PHPStan\Broker\Broker;
+use PHPStan\Broker\ClassNotFoundException;
+use PHPStan\Reflection\ClassReflection;
 use PHPStan\Rules\Rule;
 use function array_unique;
 use function count;
-use function is_a;
+use function sprintf;
 
 class DeadCatchUnionRule implements Rule
 {
+
+	/** @var Broker */
+	private $broker;
+
+	public function __construct(Broker $broker)
+	{
+		$this->broker = $broker;
+	}
 
 	public function getNodeType(): string
 	{
@@ -31,27 +42,32 @@ class DeadCatchUnionRule implements Rule
 			return [];
 		}
 
-		/** @var string[] $types */
+		/** @var ClassReflection[] $types */
 		$types = [];
 		foreach ($node->types as $type) {
-			$types[] = $type->toString();
+			try {
+				$types[] = $this->broker->getClass($type->toString());
+			} catch (ClassNotFoundException $exception) {
+				// ignore, already spotted by built-in rules
+			}
 		}
 
 		/** @var string[] $errors */
 		$errors = [];
-		foreach ($types as $key => $type) {
-			foreach ($types as $nestedKey => $nestedType) {
-				if ($key === $nestedKey) {
+		foreach ($types as $index => $type) {
+			foreach ($types as $otherIndex => $otherType) {
+				if ($index === $otherIndex) {
 					continue;
 				}
 
-				if ($type === $nestedType) {
-					$errors[] = "Type $type is caught twice";
+				if ($type === $otherType) {
+					$errors[] = sprintf('Type %s is redundant', $type->getName());
+
 					continue 2;
 				}
 
-				if (is_a($type, $nestedType, true)) {
-					$errors[] = "Type $type is already caught by $nestedType";
+				if ($type->isSubclassOf($otherType->getName())) {
+					$errors[] = sprintf('Type %s is already caught by %s', $type->getName(), $otherType->getName());
 					continue 2;
 				}
 			}
