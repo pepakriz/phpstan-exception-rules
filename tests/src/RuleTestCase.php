@@ -178,10 +178,12 @@ abstract class RuleTestCase extends TestCase
 				continue;
 			}
 
-			$expectedErrors[] = [
-				trim($matches[1]),
-				$line + 1,
-			];
+			foreach (explode(';', $matches[1]) as $error) {
+				$expectedErrors[] = [
+					trim($error),
+					$line + 1,
+				];
+			}
 		}
 
 		return $expectedErrors;

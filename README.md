@@ -24,6 +24,7 @@ This extension provides following rules and features:
 * [Dynamic throw types based on arguments](#extensibility)
 * Unreachable catch statements
 	* exception has been caught in some previous catch statement ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unreachable-catches.php))
+	* exception has been caught twice in the same catch statement ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/dead-catch-union.php))
 	* checked exception is never thrown in the corresponding try block ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-catches.php))
 * Report throwing checked exceptions in the global scope ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-in-global-scope.php))
 

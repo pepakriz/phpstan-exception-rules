@@ -88,5 +88,9 @@ services:
 		tags: [phpstan.rules.rule]
 
 	-
+		class: Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnionRule
+		tags: [phpstan.rules.rule]
+
+	-
 		class: Pepakriz\PHPStanExceptionRules\Rules\UselessThrowsPhpDocRule
 		tags: [phpstan.rules.rule]
