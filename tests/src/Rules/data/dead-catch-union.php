@@ -44,7 +44,7 @@ class DeadCatchUnion
 		}
 	}
 
-	public function theReversedOrderUnion(): void
+	public function reverseOrderUnion(): void
 	{
 		try {
 		} catch (BazException | BarException | FooException $e) { // error: Type Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\BazException is already caught by Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\BarException; Type Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\BarException is already caught by Pepakriz\PHPStanExceptionRules\Rules\DeadCatchUnion\FooException
