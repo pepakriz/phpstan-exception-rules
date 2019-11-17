@@ -19,7 +19,7 @@ This extension provides following rules and features:
 * Unnecessary `@throws` annotation detection ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-throws.php))
 * Useless `@throws` annotation detection ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/useless-throws.php))
 * Optionally ignore descriptive `@throws` annotations ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/unused-descriptive-throws.php))
-* Optionally allows unused `@throws` annotations in implementations ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/intentionally-unused-throws.php))
+* Optionally allows unused `@throws` annotations in subtypes ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/intentionally-unused-throws.php))
 * `@throws` annotation variance validation ([examples](https://github.com/pepakriz/phpstan-exception-rules/blob/master/tests/src/Rules/data/throws-inheritance.php))
 * [Dynamic throw types based on arguments](#extensibility)
 * Unreachable catch statements
@@ -49,9 +49,9 @@ includes:
 parameters:
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: false
+		reportUnusedCheckedThrowsInSubtypes: false
 		reportCheckedThrowsInGlobalScope: false
 		ignoreDescriptiveUncheckedExceptions: false
-		allowUnusedThrowsInImplementation: false
 		checkedExceptions:
 			- RuntimeException
 ```

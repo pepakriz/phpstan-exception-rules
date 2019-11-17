@@ -114,7 +114,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @var bool
 	 */
-	private $allowUnusedThrowsInImplementation;
+	private $reportUnusedCheckedThrowsInSubtypes;
 
 	/** @var string[] */
 	private $methodWhitelist;
@@ -129,9 +129,9 @@ class ThrowsPhpDocRule implements Rule
 		ThrowsAnnotationReader $throwsAnnotationReader,
 		Broker $broker,
 		bool $reportUnusedCatchesOfUncheckedExceptions,
+		bool $reportUnusedCheckedThrowsInSubtypes,
 		bool $reportCheckedThrowsInGlobalScope,
 		bool $ignoreDescriptiveUncheckedExceptions,
-		bool $allowUnusedThrowsInImplementation,
 		array $methodWhitelist
 	)
 	{
@@ -144,7 +144,7 @@ class ThrowsPhpDocRule implements Rule
 		$this->reportUnusedCatchesOfUncheckedExceptions = $reportUnusedCatchesOfUncheckedExceptions;
 		$this->reportCheckedThrowsInGlobalScope = $reportCheckedThrowsInGlobalScope;
 		$this->ignoreDescriptiveUncheckedExceptions = $ignoreDescriptiveUncheckedExceptions;
-		$this->allowUnusedThrowsInImplementation = $allowUnusedThrowsInImplementation;
+		$this->reportUnusedCheckedThrowsInSubtypes = $reportUnusedCheckedThrowsInSubtypes;
 		$this->methodWhitelist = $methodWhitelist;
 	}
 
@@ -559,7 +559,7 @@ class ThrowsPhpDocRule implements Rule
 			return $unusedThrows;
 		}
 
-		if ($this->allowUnusedThrowsInImplementation && $functionReflection instanceof MethodReflection) {
+		if (!$this->reportUnusedCheckedThrowsInSubtypes && $functionReflection instanceof MethodReflection) {
 			$declaringClass = $functionReflection->getDeclaringClass();
 			$nativeClassReflection = $declaringClass->getNativeReflection();
 			$nativeMethodReflection = $nativeClassReflection->getMethod($functionReflection->getName());
