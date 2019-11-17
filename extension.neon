@@ -1,9 +1,9 @@
 parameters:
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: false
+		reportUnusedCheckedThrowsInSubtypes: false
 		reportCheckedThrowsInGlobalScope: true
 		ignoreDescriptiveUncheckedExceptions: false
-		allowUnusedThrowsInImplementation: false
 		checkedExceptions: []
 		uncheckedExceptions: []
 		methodThrowTypeDeclarations: []
@@ -13,9 +13,9 @@ parameters:
 parametersSchema:
 	exceptionRules: structure([
 		reportUnusedCatchesOfUncheckedExceptions: bool()
+		reportUnusedCheckedThrowsInSubtypes: bool()
 		reportCheckedThrowsInGlobalScope: bool()
 		ignoreDescriptiveUncheckedExceptions: bool()
-		allowUnusedThrowsInImplementation: bool()
 		checkedExceptions: listOf(string())
 		uncheckedExceptions: listOf(string())
 		methodThrowTypeDeclarations: arrayOf(arrayOf(listOf(string())))
@@ -73,9 +73,9 @@ services:
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule
 		arguments:
 			reportUnusedCatchesOfUncheckedExceptions: %exceptionRules.reportUnusedCatchesOfUncheckedExceptions%
+			reportUnusedCheckedThrowsInSubtypes: %exceptionRules.reportUnusedCheckedThrowsInSubtypes%
 			reportCheckedThrowsInGlobalScope: %exceptionRules.reportCheckedThrowsInGlobalScope%
 			ignoreDescriptiveUncheckedExceptions: %exceptionRules.ignoreDescriptiveUncheckedExceptions%
-			allowUnusedThrowsInImplementation: %exceptionRules.allowUnusedThrowsInImplementation%
 			methodWhitelist: %exceptionRules.methodWhitelist%
 		tags: [phpstan.rules.rule]
 
