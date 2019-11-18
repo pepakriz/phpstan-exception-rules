@@ -20,7 +20,7 @@ parametersSchema:
 		uncheckedExceptions: listOf(string())
 		methodThrowTypeDeclarations: arrayOf(arrayOf(listOf(string())))
 		functionThrowTypeDeclarations: arrayOf(listOf(string()))
-		methodWhitelist: arrayOf(listOf(string()))
+		methodWhitelist: arrayOf(string())
 	])
 
 services:
