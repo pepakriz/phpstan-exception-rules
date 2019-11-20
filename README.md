@@ -90,7 +90,7 @@ In some cases, you may want to ignore exception-related errors as per class basi
 parameters:
 	exceptionRules:
 		methodWhitelist:
-			PHPUnit\Framework\TestCase: '#^(setup|setupbeforeclass|teardown|teardownafterclass|test.+)$#i'
+			PHPUnit\Framework\TestCase: '#^(test|(setup|setupbeforeclass|teardown|teardownafterclass)$)#i'
 ```
 
 ## Extensibility
