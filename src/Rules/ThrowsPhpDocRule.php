@@ -158,6 +158,12 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	public function processNode(Node $node, Scope $scope): array
 	{
+		$method = $scope->getFunction();
+
+		if ($method instanceof MethodReflection && $this->isWhitelistedMethod($method)) {
+			return [];
+		}
+
 		if ($node instanceof TryCatch) {
 			return $this->processTryCatch($node);
 		}
@@ -191,12 +197,6 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		if ($node instanceof FunctionEnd) {
-			$method = $scope->getFunction();
-
-			if ($method instanceof MethodReflection && $this->isWhitelistedMethod($method)) {
-				return $this->processWhitelistedMethod($method);
-			}
-
 			return $this->processFunctionEnd($scope);
 		}
 
@@ -229,29 +229,6 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		return [];
-	}
-
-	/**
-	 * @return string[]
-	 */
-	private function processWhitelistedMethod(MethodReflection $methodReflection): array
-	{
-		if (!$methodReflection instanceof ThrowableReflection) {
-			return [];
-		}
-
-		$throwType = $methodReflection->getThrowType();
-
-		if ($throwType === null) {
-			return [];
-		}
-
-		return array_map(
-			static function (string $throwClass): string {
-				return sprintf('Unused @throws %s annotation', $throwClass);
-			},
-			TypeUtils::getDirectClassNames($throwType)
-		);
 	}
 
 	private function isWhitelistedMethod(MethodReflection $methodReflection): bool
