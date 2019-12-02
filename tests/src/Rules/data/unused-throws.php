@@ -17,6 +17,13 @@ function foo() { // error: Unused @throws RuntimeException annotation
 
 class UnusedThrows
 {
+	/**
+	 * @throws \Exception
+	 */
+	public function shouldBeCorrect()
+	{
+		new \SplFileObject(''); // The phpdoc say @throws RuntimeException
+	}
 
 	/**
 	 * @throws RuntimeException
