@@ -11,10 +11,15 @@ class FooTest extends TestCase {
 	{
 	}
 
+	public function fooBis(): void  // I expect error here, since it's not in the whitelist
+	{
+		throw new RuntimeException(); // error: Missing @throws RuntimeException annotation
+	}
+
 	/**
 	 * @throws RuntimeException
 	 */
-	public function testBar(): void  // error: Unused @throws RuntimeException annotation
+	public function testBar(): void  // I don't expect error here, you can annotate if you want
 	{
 		throw new RuntimeException();
 	}
@@ -25,6 +30,16 @@ class FooTest extends TestCase {
 	public function bar(): void
 	{
 		throw new RuntimeException();
+	}
+
+	public function testFoo(): void
+	{
+		throw new RuntimeException();
+	}
+
+	public function testFooBis(): void
+	{
+		$this->bar();
 	}
 
 }
