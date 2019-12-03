@@ -185,6 +185,7 @@
 	<rule ref="SlevomatCodingStandard.Arrays.TrailingArrayComma"/>
 	<rule ref="SlevomatCodingStandard.Classes.ClassConstantVisibility" />
 	<rule ref="SlevomatCodingStandard.Classes.DisallowLateStaticBindingForConstants"/>
+	<rule ref="SlevomatCodingStandard.Classes.EmptyLinesAroundClassBraces"/>
 	<rule ref="SlevomatCodingStandard.Classes.UnusedPrivateElements"/>
 	<rule ref="SlevomatCodingStandard.Classes.UselessLateStaticBinding"/>
 	<rule ref="SlevomatCodingStandard.Classes.ModernClassNameReference"/>
@@ -201,13 +202,13 @@
 	<rule ref="SlevomatCodingStandard.ControlStructures.AssignmentInCondition"/>
 	<rule ref="SlevomatCodingStandard.ControlStructures.LanguageConstructWithParentheses"/>
 	<rule ref="SlevomatCodingStandard.ControlStructures.DisallowYodaComparison"/>
-	<rule ref="SlevomatCodingStandard.ControlStructures.DisallowEqualOperators" />
 	<rule ref="SlevomatCodingStandard.ControlStructures.DisallowContinueWithoutIntegerOperandInSwitch" />
 	<rule ref="SlevomatCodingStandard.ControlStructures.NewWithParentheses"/>
 	<rule ref="SlevomatCodingStandard.ControlStructures.RequireNullCoalesceOperator"/>
 	<rule ref="SlevomatCodingStandard.ControlStructures.RequireTernaryOperator"/>
 	<rule ref="SlevomatCodingStandard.ControlStructures.EarlyExit"/>
-	<rule ref="SlevomatCodingStandard.ControlStructures.UselessConditionWithReturn"/>
+	<rule ref="SlevomatCodingStandard.ControlStructures.UselessIfConditionWithReturn"/>
+	<rule ref="SlevomatCodingStandard.ControlStructures.UselessTernaryOperator"/>
 	<rule ref="SlevomatCodingStandard.Exceptions.DeadCatch"/>
 	<rule ref="SlevomatCodingStandard.Functions.UnusedInheritedVariablePassedToClosure"/>
 	<rule ref="SlevomatCodingStandard.Functions.UselessParameterDefaultValue"/>
@@ -218,12 +219,7 @@
 		</properties>
 	</rule>
 	<rule ref="SlevomatCodingStandard.Namespaces.UseFromSameNamespace"/>
-	<rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses">
-		<properties>
-			<property name="caseSensitive" value="false"/>
-			<property name="psr12Compatible" value="true"/>
-		</properties>
-	</rule>
+	<rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses"/>
 	<rule ref="SlevomatCodingStandard.Namespaces.DisallowGroupUse"/>
 	<rule ref="SlevomatCodingStandard.Namespaces.MultipleUsesPerLine"/>
 	<rule ref="SlevomatCodingStandard.Namespaces.UseDoesNotStartWithBackslash"/>
@@ -244,6 +240,7 @@
 			<property name="allowFallbackGlobalConstants" type="bool" value="false"/>
 		</properties>
 	</rule>
+	<rule ref="SlevomatCodingStandard.Operators.DisallowEqualOperators" />
 	<rule ref="SlevomatCodingStandard.Operators.RequireOnlyStandaloneIncrementAndDecrementOperators"/>
 	<rule ref="SlevomatCodingStandard.Operators.RequireCombinedAssignmentOperator"/>
 	<rule ref="SlevomatCodingStandard.PHP.UselessParentheses"/>
@@ -258,28 +255,19 @@
 	<rule ref="SlevomatCodingStandard.TypeHints.NullableTypeForNullDefaultValue" />
 	<rule ref="SlevomatCodingStandard.TypeHints.TypeHintDeclaration">
 		<properties>
-			<property name="usefulAnnotations" type="array" value="
-				@throws,
-				@dataProvider,
-				@requires,
-			"/>
 			<property name="traversableTypeHints" type="array" value="
 				Generator,
 				Traversable,
 			"/>
 			<property name="enableEachParameterAndReturnInspection" value="1" />
+			<property name="allAnnotationsAreUseful" value="1" />
 		</properties>
 	</rule>
 	<rule ref="SlevomatCodingStandard.TypeHints.LongTypeHints"/>
 	<rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHintSpacing"/>
 	<rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHintSpacing"/>
 	<rule ref="SlevomatCodingStandard.TypeHints.UselessConstantTypeHint"/>
-	<rule ref="SlevomatCodingStandard.Types.EmptyLinesAroundTypeBraces"/>
 	<rule ref="SlevomatCodingStandard.Variables.DuplicateAssignmentToVariable"/>
 	<rule ref="SlevomatCodingStandard.Variables.UnusedVariable"/>
 	<rule ref="SlevomatCodingStandard.Variables.UselessVariable"/>
-
-	<rule ref="Cdn77CodingStandard.Classes.ClassStructure"/>
-	<rule ref="Cdn77CodingStandard.Classes.ClassUsesSeparately"/>
-	<rule ref="Cdn77CodingStandard.TypeHints.NullTypeSpecifiedLast"/>
 </ruleset>
