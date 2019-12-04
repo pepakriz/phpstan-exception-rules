@@ -12,7 +12,6 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Broker\Broker;
 use PHPStan\Broker\ClassNotFoundException;
 use PHPStan\Reflection\MissingMethodFromReflectionException;
-use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Rules\Rule;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\FileTypeMapper;
@@ -27,6 +26,9 @@ use function array_merge;
 use function count;
 use function sprintf;
 
+/**
+ * @implements Rule<ClassMethod>
+ */
 class ThrowsPhpDocInheritanceRule implements Rule
 {
 
@@ -99,6 +101,7 @@ class ThrowsPhpDocInheritanceRule implements Rule
 			$scope->getFile(),
 			$classReflection->getName(),
 			$traitName,
+			$methodName,
 			$docComment->getText()
 		);
 
@@ -123,10 +126,6 @@ class ThrowsPhpDocInheritanceRule implements Rule
 			try {
 				$methodReflection = $parentClassReflection->getMethod($methodName, $scope);
 			} catch (MissingMethodFromReflectionException $e) {
-				continue;
-			}
-
-			if (!$methodReflection instanceof ThrowableReflection) {
 				continue;
 			}
 

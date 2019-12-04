@@ -13,6 +13,9 @@ use function array_unique;
 use function count;
 use function sprintf;
 
+/**
+ * @implements Rule<Catch_>
+ */
 class DeadCatchUnionRule implements Rule
 {
 

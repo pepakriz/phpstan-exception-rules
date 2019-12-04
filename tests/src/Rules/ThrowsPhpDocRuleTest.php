@@ -17,6 +17,9 @@ use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use RuntimeException;
 
+/**
+ * @extends RuleTestCase<ThrowsPhpDocRule>
+ */
 class ThrowsPhpDocRuleTest extends RuleTestCase
 {
 

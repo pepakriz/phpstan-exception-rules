@@ -13,6 +13,9 @@ use Pepakriz\PHPStanExceptionRules\RuleTestCase;
 use PHPStan\Rules\Rule;
 use Throwable;
 
+/**
+ * @extends RuleTestCase<ThrowsPhpDocRule>
+ */
 class PhpInternalsTest extends RuleTestCase
 {
 

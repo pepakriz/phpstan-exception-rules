@@ -14,6 +14,9 @@ use function array_map;
 use function is_a;
 use function sprintf;
 
+/**
+ * @implements Rule<Stmt>
+ */
 class UnreachableCatchRule implements Rule
 {
 
