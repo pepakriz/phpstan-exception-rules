@@ -58,7 +58,7 @@
 		"check:tests": "phpunit --coverage-text",
 		"check:cs": "phpcs --extensions=php --encoding=utf-8 --tab-width=4 --colors --ignore=tests/*/data -sp src tests/src",
 		"check:lint": "parallel-lint src tests/src",
-		"check:types": "phpstan analyse src tests",
+		"check:types": "phpstan analyse --level=8 src tests",
 		"fix": "@fix:cs",
 		"fix:cs": "phpcbf --extensions=php --encoding=utf-8 --tab-width=4 --colors --ignore=tests/*/data -sp src tests/src",
 		"coveralls": "php-coveralls -v"

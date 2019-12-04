@@ -99,6 +99,7 @@ class ThrowsPhpDocInheritanceRule implements Rule
 			$scope->getFile(),
 			$classReflection->getName(),
 			$traitName,
+			$methodName,
 			$docComment->getText()
 		);
 
