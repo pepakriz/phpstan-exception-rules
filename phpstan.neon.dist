@@ -1,5 +1,4 @@
 includes:
-	- vendor/phpstan/phpstan/conf/config.levelmax.neon
 	- vendor/phpstan/phpstan/conf/bleedingEdge.neon
 	- vendor/phpstan/phpstan-phpunit/extension.neon
 	- vendor/phpstan/phpstan-phpunit/rules.neon
@@ -12,6 +11,13 @@ parameters:
 	tmpDir: %rootDir%/../../../tmp
 	excludes_analyse:
 		- %rootDir%/../../../tests/*/data/*
+
+	ignoreErrors:
+		- "#^Method Pepakriz\\\\PHPStanExceptionRules\\\\RuleTestCase\\:\\:getRule\\(\\) return type with generic interface PHPStan\\\\Rules\\\\Rule does not specify its types\\: TNodeType$#"
+		-
+			message: "#^Parameter \\#1 \\$rules of class PHPStan\\\\Rules\\\\Registry constructor expects array\\<PHPStan\\\\Rules\\\\Rule\\>, array\\<int, TRule of PHPStan\\\\Rules\\\\Rule\\> given\\.$#"
+			count: 1
+			path: tests/src/RuleTestCase.php
 
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: true

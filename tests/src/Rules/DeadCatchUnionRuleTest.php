@@ -5,6 +5,9 @@ namespace Pepakriz\PHPStanExceptionRules\Rules;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
 use PHPStan\Rules\Rule;
 
+/**
+ * @extends RuleTestCase<DeadCatchUnionRule>
+ */
 class DeadCatchUnionRuleTest extends RuleTestCase
 {
 

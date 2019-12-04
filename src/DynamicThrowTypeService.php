@@ -9,7 +9,6 @@ use PhpParser\Node\Expr\StaticCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\FunctionReflection;
 use PHPStan\Reflection\MethodReflection;
-use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Type\Type;
 use PHPStan\Type\VoidType;
 use function spl_object_hash;
@@ -125,10 +124,7 @@ class DynamicThrowTypeService
 			}
 		}
 
-		$throwType = null;
-		if ($methodReflection instanceof ThrowableReflection) {
-			$throwType = $methodReflection->getThrowType();
-		}
+		$throwType = $methodReflection->getThrowType();
 
 		return $throwType ?? new VoidType();
 	}
@@ -157,10 +153,7 @@ class DynamicThrowTypeService
 			}
 		}
 
-		$throwType = null;
-		if ($methodReflection instanceof ThrowableReflection) {
-			$throwType = $methodReflection->getThrowType();
-		}
+		$throwType = $methodReflection->getThrowType();
 
 		return $throwType ?? new VoidType();
 	}
@@ -187,10 +180,7 @@ class DynamicThrowTypeService
 			}
 		}
 
-		$throwType = null;
-		if ($methodReflection instanceof ThrowableReflection) {
-			$throwType = $methodReflection->getThrowType();
-		}
+		$throwType = $methodReflection->getThrowType();
 
 		return $throwType ?? new VoidType();
 	}

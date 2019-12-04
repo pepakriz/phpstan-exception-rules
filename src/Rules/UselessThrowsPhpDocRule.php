@@ -19,6 +19,9 @@ use function ltrim;
 use function sprintf;
 use function uksort;
 
+/**
+ * @implements Rule<FunctionLike>
+ */
 class UselessThrowsPhpDocRule implements Rule
 {
 

@@ -11,6 +11,9 @@ use PHPStan\Rules\Rule;
 use PHPStan\Type\FileTypeMapper;
 use RuntimeException;
 
+/**
+ * @extends RuleTestCase<ThrowsPhpDocInheritanceRule>
+ */
 class ThrowsPhpDocInheritanceRuleTest extends RuleTestCase
 {
 

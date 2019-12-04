@@ -52,8 +52,12 @@ class TryCatchClass
 	public function caughtOneException(): void
 	{
 		try {
-			throw new FooRuntimeException();
-			throw new BarRuntimeException();
+			if (rand(0, 1)) {
+				throw new FooRuntimeException();
+			}
+			if (rand(0, 1)) {
+				throw new BarRuntimeException();
+			}
 		} catch (FooRuntimeException $e) {
 			// ignore
 		} catch (RuntimeException $e) {

@@ -51,9 +51,15 @@ class ThrowsAnnotationsClass
 
 	public function missingAnnotations(): void
 	{
-		throw new RuntimeException(); // error: Missing @throws RuntimeException annotation
-		throw new SomeRuntimeException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
-		throw new CheckedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException annotation
+		if (rand(0, 1)) {
+			throw new RuntimeException(); // error: Missing @throws RuntimeException annotation
+		}
+		if (rand(0, 1)) {
+			throw new SomeRuntimeException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
+		}
+		if (rand(0, 1)) {
+			throw new CheckedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException annotation
+		}
 	}
 
 	public function ignoreNonWhitelisted(): void
@@ -140,9 +146,15 @@ class ThrowsAnnotationsClass
 
 	public static function staticMissingAnnotations(): void
 	{
-		throw new RuntimeException(); // error: Missing @throws RuntimeException annotation
-		throw new SomeRuntimeException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
-		throw new CheckedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException annotation
+		if (rand(0, 1)) {
+			throw new RuntimeException(); // error: Missing @throws RuntimeException annotation
+		}
+		if (rand(0, 1)) {
+			throw new SomeRuntimeException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\SomeRuntimeException annotation
+		}
+		if (rand(0, 1)) {
+			throw new CheckedException(); // error: Missing @throws Pepakriz\PHPStanExceptionRules\Rules\Data\CheckedException annotation
+		}
 	}
 
 	public function callUndefinedMethod(): void

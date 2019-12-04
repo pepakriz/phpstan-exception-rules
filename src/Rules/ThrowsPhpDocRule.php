@@ -32,9 +32,9 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Broker\Broker;
 use PHPStan\Broker\ClassNotFoundException;
 use PHPStan\Broker\FunctionNotFoundException;
+use PHPStan\Node\UnreachableStatementNode;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\MissingMethodFromReflectionException;
-use PHPStan\Reflection\ThrowableReflection;
 use PHPStan\Rules\Rule;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\NeverType;
@@ -56,6 +56,9 @@ use function is_string;
 use function preg_match;
 use function sprintf;
 
+/**
+ * @implements Rule<Node>
+ */
 class ThrowsPhpDocRule implements Rule
 {
 
@@ -158,6 +161,10 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	public function processNode(Node $node, Scope $scope): array
 	{
+		if ($node instanceof UnreachableStatementNode) {
+			return $this->processNode($node->getOriginalStatement(), $scope);
+		}
+
 		if ($node instanceof TryCatch) {
 			return $this->processTryCatch($node);
 		}
@@ -236,10 +243,6 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private function processWhitelistedMethod(MethodReflection $methodReflection): array
 	{
-		if (!$methodReflection instanceof ThrowableReflection) {
-			return [];
-		}
-
 		$throwType = $methodReflection->getThrowType();
 
 		if ($throwType === null) {
@@ -491,9 +494,7 @@ class ThrowsPhpDocRule implements Rule
 			}
 		}
 
-		if ($methodReflection instanceof ThrowableReflection) {
-			$this->throwsScope->enterToThrowsAnnotationBlock($methodReflection->getThrowType());
-		}
+		$this->throwsScope->enterToThrowsAnnotationBlock($methodReflection->getThrowType());
 
 		if (!$node->hasAttribute(self::ATTRIBUTE_HAS_CLASS_METHOD_END)) {
 			$node->setAttribute(self::ATTRIBUTE_HAS_CLASS_METHOD_END, true);
@@ -520,10 +521,6 @@ class ThrowsPhpDocRule implements Rule
 
 		$classReflection = $scope->getClassReflection();
 		if ($classReflection !== null && ($classReflection->isInterface() || $classReflection->isAbstract())) {
-			return [];
-		}
-
-		if (!$functionReflection instanceof ThrowableReflection) {
 			return [];
 		}
 
@@ -765,10 +762,6 @@ class ThrowsPhpDocRule implements Rule
 		$throwTypes = [];
 		$targetMethodReflections = $this->getMethodReflections($class, $methods, $scope);
 		foreach ($targetMethodReflections as $targetMethodReflection) {
-			if (!$targetMethodReflection instanceof ThrowableReflection) {
-				continue;
-			}
-
 			$throwType = $targetMethodReflection->getThrowType();
 			if ($throwType === null) {
 				continue;
