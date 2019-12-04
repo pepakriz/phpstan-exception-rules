@@ -16,7 +16,6 @@ use PHPStan\File\FileHelper;
 use PHPStan\File\FuzzyRelativePathHelper;
 use PHPStan\PhpDoc\PhpDocNodeResolver;
 use PHPStan\PhpDoc\PhpDocStringResolver;
-use PHPStan\PhpDoc\TypeNodeResolver;
 use PHPStan\PhpDoc\TypeNodeResolverExtension;
 use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
