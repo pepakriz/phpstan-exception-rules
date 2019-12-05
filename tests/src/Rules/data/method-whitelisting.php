@@ -19,6 +19,12 @@ class FooTest extends TestCase {
 		throw new RuntimeException();
 	}
 
+	public function testBar2(): void // I don't expect error here, you can annotate if you want
+	{
+		throw new RuntimeException();
+		$this->bar();
+	}
+
 	/**
 	 * @throws RuntimeException
 	 */

@@ -165,6 +165,24 @@ class ThrowsPhpDocRule implements Rule
 			return $this->processNode($node->getOriginalStatement(), $scope);
 		}
 
+		if ($node instanceof Node\FunctionLike) {
+			return $this->processFunction($node, $scope);
+		}
+
+		$method = $scope->getFunction();
+		$isMethodWhitelisted = $method instanceof MethodReflection && $this->isWhitelistedMethod($method);
+		if ($node instanceof FunctionEnd) {
+			if ($isMethodWhitelisted && $method instanceof MethodReflection) {
+				return $this->processWhitelistedMethod($method);
+			}
+
+			return $this->processFunctionEnd($scope);
+		}
+
+		if ($isMethodWhitelisted) {
+			return [];
+		}
+
 		if ($node instanceof TryCatch) {
 			return $this->processTryCatch($node);
 		}
@@ -191,20 +209,6 @@ class ThrowsPhpDocRule implements Rule
 
 		if ($node instanceof Expr\YieldFrom) {
 			return $this->processExprTraversing($node->expr, $scope, true);
-		}
-
-		if ($node instanceof Node\FunctionLike) {
-			return $this->processFunction($node, $scope);
-		}
-
-		if ($node instanceof FunctionEnd) {
-			$method = $scope->getFunction();
-
-			if ($method instanceof MethodReflection && $this->isWhitelistedMethod($method)) {
-				return $this->processWhitelistedMethod($method);
-			}
-
-			return $this->processFunctionEnd($scope);
 		}
 
 		if ($node instanceof Catch_) {
@@ -305,22 +309,8 @@ class ThrowsPhpDocRule implements Rule
 	private function processThrow(Throw_ $node, Scope $scope): array
 	{
 		$exceptionType = $scope->getType($node->expr);
-		$exceptionClassNames = TypeUtils::getDirectClassNames($exceptionType);
-		$exceptionClassNames = $this->throwsScope->filterExceptionsByUncaught($exceptionClassNames);
-		$exceptionClassNames = $this->checkedExceptionService->filterCheckedExceptions($exceptionClassNames);
 
-		$isInGlobalScope = $this->throwsScope->isInGlobalScope();
-		if (!$this->reportCheckedThrowsInGlobalScope && $isInGlobalScope) {
-			return [];
-		}
-
-		return array_map(static function (string $exceptionClassName) use ($isInGlobalScope): string {
-			if ($isInGlobalScope) {
-				return sprintf('Throwing checked exception %s in global scope is prohibited', $exceptionClassName);
-			}
-
-			return sprintf('Missing @throws %s annotation', $exceptionClassName);
-		}, $exceptionClassNames);
+		return $this->processThrowsTypes($exceptionType);
 	}
 
 	/**
@@ -798,8 +788,17 @@ class ThrowsPhpDocRule implements Rule
 		$targetExceptionClasses = $this->throwsScope->filterExceptionsByUncaught($targetExceptionClasses);
 		$targetExceptionClasses = $this->checkedExceptionService->filterCheckedExceptions($targetExceptionClasses);
 
-		return array_map(static function (string $targetExceptionClass): string {
-			return sprintf('Missing @throws %s annotation', $targetExceptionClass);
+		$isInGlobalScope = $this->throwsScope->isInGlobalScope();
+		if (!$this->reportCheckedThrowsInGlobalScope && $isInGlobalScope) {
+			return [];
+		}
+
+		return array_map(static function (string $exceptionClassName) use ($isInGlobalScope): string {
+			if ($isInGlobalScope) {
+				return sprintf('Throwing checked exception %s in global scope is prohibited', $exceptionClassName);
+			}
+
+			return sprintf('Missing @throws %s annotation', $exceptionClassName);
 		}, $targetExceptionClasses);
 	}
 
