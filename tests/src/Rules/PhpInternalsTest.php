@@ -9,6 +9,7 @@ use Pepakriz\PHPStanExceptionRules\Extension\DateTimeExtension;
 use Pepakriz\PHPStanExceptionRules\Extension\IntdivExtension;
 use Pepakriz\PHPStanExceptionRules\Extension\JsonEncodeDecodeExtension;
 use Pepakriz\PHPStanExceptionRules\Extension\ReflectionExtension;
+use Pepakriz\PHPStanExceptionRules\Extension\SplFileObjectExtension;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
 use PHPStan\Rules\Rule;
 use Throwable;
@@ -23,6 +24,7 @@ class PhpInternalsTest extends RuleTestCase
 	{
 		$reflectionClassExtension = new ReflectionExtension($this->createBroker());
 		$dateTimeExtension = new DateTimeExtension();
+		$splFileObjectExtension = new SplFileObjectExtension();
 		$jsonEncodeDecodeExtension = new JsonEncodeDecodeExtension();
 		$intdivExtension = new IntdivExtension();
 		return new ThrowsPhpDocRule(
@@ -37,6 +39,7 @@ class PhpInternalsTest extends RuleTestCase
 				[
 					$reflectionClassExtension,
 					$dateTimeExtension,
+					$splFileObjectExtension,
 				],
 				[
 					$jsonEncodeDecodeExtension,

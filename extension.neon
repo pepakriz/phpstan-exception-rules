@@ -60,6 +60,11 @@ services:
 			- exceptionRules.dynamicConstructorThrowTypeExtension
 
 	-
+		class: Pepakriz\PHPStanExceptionRules\Extension\SplFileObjectExtension
+		tags:
+			- exceptionRules.dynamicConstructorThrowTypeExtension
+
+	-
 		class: Pepakriz\PHPStanExceptionRules\Extension\JsonEncodeDecodeExtension
 		tags:
 			- exceptionRules.dynamicFunctionThrowTypeExtension
