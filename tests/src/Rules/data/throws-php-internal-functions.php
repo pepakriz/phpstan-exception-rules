@@ -10,6 +10,7 @@ use ReflectionMethod;
 use ReflectionObject;
 use ReflectionProperty;
 use ReflectionZendExtension;
+use SplFileObject;
 use stdClass;
 use Throwable;
 use function rand;
@@ -101,6 +102,11 @@ class Example
 		new DateTime(rand(0, 1) === 0 ? '2018-01-01' : '2019-01-01');
 		new DateTime(rand(0, 1) === 0 ? '2018-01-01' : null);
 		new DateTime(rand(0, 1) === 0 ? '2018-01-01' : 123); // error: Missing @throws Exception annotation
+	}
+
+	public function testSplFileObject(): void
+	{
+		new SplFileObject(); // error: Missing @throws LogicException annotation; Missing @throws RuntimeException annotation
 	}
 
 	public function testIntdiv(): void
