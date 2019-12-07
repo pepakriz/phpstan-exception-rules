@@ -465,7 +465,11 @@ class ThrowsPhpDocRule implements Rule
 			return [];
 		}
 
-		$classReflection = $scope->getClassReflection();
+		$classReflection = $scope->getTraitReflection();
+		if ($classReflection === null) {
+			$classReflection = $scope->getClassReflection();
+		}
+
 		if ($classReflection === null) {
 			try {
 				$methodReflection = $this->broker->getFunction(new Name($node->name->toString()), $scope);
@@ -489,7 +493,7 @@ class ThrowsPhpDocRule implements Rule
 		if (!$node->hasAttribute(self::ATTRIBUTE_HAS_CLASS_METHOD_END)) {
 			$node->setAttribute(self::ATTRIBUTE_HAS_CLASS_METHOD_END, true);
 			if ($node->stmts === null) {
-				$node->stmts = [];
+				throw new ShouldNotHappenException();
 			}
 			$node->stmts[] = new FunctionEnd($node);
 		}
