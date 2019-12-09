@@ -5,6 +5,7 @@ namespace Pepakriz\PHPStanExceptionRules\Rules\Data\TryCatch;
 use LogicException;
 use RuntimeException;
 use Throwable;
+use function rand;
 
 class FooRuntimeException extends RuntimeException {}
 class BarRuntimeException extends RuntimeException {}
@@ -131,9 +132,15 @@ class TryCatchClass
 	 */
 	private function throwUnion(): void
 	{
-		throw new FooRuntimeException();
-		throw new BarRuntimeException();
-		throw new SomeRuntimeException();
+		if (rand(0, 1)) {
+			throw new FooRuntimeException();
+		}
+		if (rand(0, 1)) {
+			throw new BarRuntimeException();
+		}
+		if (rand(0, 1)) {
+			throw new SomeRuntimeException();
+		}
 	}
 
 	/**
@@ -143,9 +150,15 @@ class TryCatchClass
 	 */
 	private static function throwStaticUnion(): void
 	{
-		throw new FooRuntimeException();
-		throw new BarRuntimeException();
-		throw new SomeRuntimeException();
+		if (rand(0, 1)) {
+			throw new FooRuntimeException();
+		}
+		if (rand(0, 1)) {
+			throw new BarRuntimeException();
+		}
+		if (rand(0, 1)) {
+			throw new SomeRuntimeException();
+		}
 	}
 
 	/**
@@ -153,9 +166,15 @@ class TryCatchClass
 	 */
 	private function throwAsParent(): void
 	{
-		throw new FooRuntimeException();
-		throw new BarRuntimeException();
-		throw new SomeRuntimeException();
+		if (rand(0, 1)) {
+			throw new FooRuntimeException();
+		}
+		if (rand(0, 1)) {
+			throw new BarRuntimeException();
+		}
+		if (rand(0, 1)) {
+			throw new SomeRuntimeException();
+		}
 	}
 
 }
