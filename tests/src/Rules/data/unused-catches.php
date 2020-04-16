@@ -101,7 +101,7 @@ class UnusedCatches
 	/**
 	 * @throws LogicException
 	 */
-	private function throwLogic(): void // error: Unused @throws LogicException annotation
+	private function throwLogic(): void
 	{
 		throw new LogicException();
 	}

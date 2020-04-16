@@ -52,7 +52,6 @@ parameters:
 		reportUnusedCatchesOfUncheckedExceptions: false
 		reportUnusedCheckedThrowsInSubtypes: false
 		reportCheckedThrowsInGlobalScope: false
-		ignoreDescriptiveUncheckedExceptions: false
 		checkedExceptions:
 			- RuntimeException
 ```

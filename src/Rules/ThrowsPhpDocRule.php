@@ -115,11 +115,6 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @var bool
 	 */
-	private $ignoreDescriptiveUncheckedExceptions;
-
-	/**
-	 * @var bool
-	 */
 	private $reportUnusedCheckedThrowsInSubtypes;
 
 	/** @var string[] */
@@ -137,7 +132,6 @@ class ThrowsPhpDocRule implements Rule
 		bool $reportUnusedCatchesOfUncheckedExceptions,
 		bool $reportUnusedCheckedThrowsInSubtypes,
 		bool $reportCheckedThrowsInGlobalScope,
-		bool $ignoreDescriptiveUncheckedExceptions,
 		array $methodWhitelist
 	)
 	{
@@ -149,7 +143,6 @@ class ThrowsPhpDocRule implements Rule
 		$this->throwsScope = new ThrowsScope();
 		$this->reportUnusedCatchesOfUncheckedExceptions = $reportUnusedCatchesOfUncheckedExceptions;
 		$this->reportCheckedThrowsInGlobalScope = $reportCheckedThrowsInGlobalScope;
-		$this->ignoreDescriptiveUncheckedExceptions = $ignoreDescriptiveUncheckedExceptions;
 		$this->reportUnusedCheckedThrowsInSubtypes = $reportUnusedCheckedThrowsInSubtypes;
 		$this->methodWhitelist = $methodWhitelist;
 	}
@@ -549,8 +542,7 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private function filterUnusedExceptions(array $declaredThrows, array $usedThrowsAnnotations, Scope $scope): array
 	{
-		$checkedThrowsAnnotations = $this->checkedExceptionService->filterCheckedExceptions($usedThrowsAnnotations);
-		$unusedThrows = array_diff($declaredThrows, $checkedThrowsAnnotations);
+		$unusedThrows = array_diff($declaredThrows, $usedThrowsAnnotations);
 
 		$functionReflection = $scope->getFunction();
 		if ($functionReflection === null) {
@@ -580,10 +572,6 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		$unusedThrows = array_diff($unusedThrows, TypeUtils::getDirectClassNames($defaultThrowsType));
-
-		if (!$this->ignoreDescriptiveUncheckedExceptions) {
-			return $unusedThrows;
-		}
 
 		$throwsAnnotations = $this->throwsAnnotationReader->read($scope);
 

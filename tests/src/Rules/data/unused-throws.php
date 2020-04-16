@@ -54,7 +54,12 @@ class UnusedThrows
 	/**
 	 * @throws LogicException
 	 */
-	public function unusedLogic(): void // error: Unused @throws LogicException annotation
+	public function usedLogic(): void
+	{
+		throw new LogicException();
+	}
+
+	public function notMandatoryLogic(): void
 	{
 		throw new LogicException();
 	}
