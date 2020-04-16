@@ -4,7 +4,7 @@
 [![Latest Stable Version](https://poser.pugx.org/pepakriz/phpstan-exception-rules/v/stable)](https://packagist.org/packages/pepakriz/phpstan-exception-rules)
 [![License](https://poser.pugx.org/pepakriz/phpstan-exception-rules/license)](https://packagist.org/packages/pepakriz/phpstan-exception-rules)
 
-* [PHPStan](https://github.com/phpstan/phpstan)
+* [PHPStan](https://phpstan.org/)
 
 This extension provides following rules and features:
 
@@ -95,7 +95,7 @@ parameters:
 
 ## Extensibility
 
-`Dynamic throw type extensions` - If the throw type is not always the same, but depends on an argument passed to the method. (Similar feature as [Dynamic return type extensions](https://github.com/phpstan/phpstan#dynamic-return-type-extensions))
+`Dynamic throw type extensions` - If the throw type is not always the same, but depends on an argument passed to the method. (Similar feature as [Dynamic return type extensions](https://phpstan.org/developing-extensions/dynamic-return-type-extensions))
 
 There are interfaces, which you can implement:
 
