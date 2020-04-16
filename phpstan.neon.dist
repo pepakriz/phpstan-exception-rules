@@ -14,10 +14,6 @@ parameters:
 
 	ignoreErrors:
 		- "#^Method Pepakriz\\\\PHPStanExceptionRules\\\\RuleTestCase\\:\\:getRule\\(\\) return type with generic interface PHPStan\\\\Rules\\\\Rule does not specify its types\\: TNodeType$#"
-		-
-			message: "#^Parameter \\#1 \\$rules of class PHPStan\\\\Rules\\\\Registry constructor expects array\\<PHPStan\\\\Rules\\\\Rule\\>, array\\<int, TRule of PHPStan\\\\Rules\\\\Rule\\> given\\.$#"
-			count: 1
-			path: tests/src/RuleTestCase.php
 
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: true

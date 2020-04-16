@@ -18,14 +18,14 @@
 	},
 	"require": {
 		"php": "^7.1",
-		"phpstan/phpstan": "^0.12.0"
+		"phpstan/phpstan": "^0.12.18"
 	},
 	"require-dev": {
 		"jakub-onderka/php-console-highlighter": "0.4.0",
 		"jakub-onderka/php-parallel-lint": "1.0.0",
 		"nette/utils": "^3.0",
 		"php-coveralls/php-coveralls": "^2.1",
-		"phpstan/phpstan": "^0.12.0",
+		"phpstan/phpstan": "^0.12.18",
 		"phpstan/phpstan-nette": "^0.12.0",
 		"phpstan/phpstan-phpunit": "^0.12.0",
 		"phpstan/phpstan-strict-rules": "^0.12.0",
@@ -58,7 +58,7 @@
 		"check:tests": "phpunit --coverage-text",
 		"check:cs": "phpcs --extensions=php --encoding=utf-8 --tab-width=4 --colors --ignore=tests/*/data -sp src tests/src",
 		"check:lint": "parallel-lint src tests/src",
-		"check:types": "phpstan analyse -l max src tests",
+		"check:types": "phpstan analyse --memory-limit=1G -l max src tests",
 		"fix": "@fix:cs",
 		"fix:cs": "phpcbf --extensions=php --encoding=utf-8 --tab-width=4 --colors --ignore=tests/*/data -sp src tests/src",
 		"coveralls": "php-coveralls -v"
