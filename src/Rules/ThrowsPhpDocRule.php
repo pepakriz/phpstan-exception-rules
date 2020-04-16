@@ -9,7 +9,6 @@ use IteratorAggregate;
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\DefaultThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
-use Pepakriz\PHPStanExceptionRules\Node\FunctionEnd;
 use Pepakriz\PHPStanExceptionRules\Node\TryCatchTryEnd;
 use Pepakriz\PHPStanExceptionRules\ThrowsAnnotationReader;
 use Pepakriz\PHPStanExceptionRules\UnsupportedClassException;
@@ -32,10 +31,14 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Broker\Broker;
 use PHPStan\Broker\ClassNotFoundException;
 use PHPStan\Broker\FunctionNotFoundException;
+use PHPStan\Node\FunctionReturnStatementsNode;
+use PHPStan\Node\MethodReturnStatementsNode;
 use PHPStan\Node\UnreachableStatementNode;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\MissingMethodFromReflectionException;
 use PHPStan\Rules\Rule;
+use PHPStan\Rules\RuleError;
+use PHPStan\Rules\RuleErrorBuilder;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\NeverType;
 use PHPStan\Type\ObjectType;
@@ -157,7 +160,7 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	public function processNode(Node $node, Scope $scope): array
 	{
@@ -171,12 +174,16 @@ class ThrowsPhpDocRule implements Rule
 
 		$method = $scope->getFunction();
 		$isMethodWhitelisted = $method instanceof MethodReflection && $this->isWhitelistedMethod($method);
-		if ($node instanceof FunctionEnd) {
+		if ($node instanceof MethodReturnStatementsNode) {
 			if ($isMethodWhitelisted && $method instanceof MethodReflection) {
-				return $this->processWhitelistedMethod($method);
+				return $this->processWhitelistedMethod($method, $node->getStartLine());
 			}
 
-			return $this->processFunctionEnd($scope);
+			return $this->processFunctionEnd($scope, $node->getStartLine());
+		}
+
+		if ($node instanceof FunctionReturnStatementsNode) {
+			return $this->processFunctionEnd($scope, $node->getStartLine());
 		}
 
 		if ($isMethodWhitelisted) {
@@ -243,9 +250,9 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
-	private function processWhitelistedMethod(MethodReflection $methodReflection): array
+	private function processWhitelistedMethod(MethodReflection $methodReflection, int $startLine): array
 	{
 		$throwType = $methodReflection->getThrowType();
 
@@ -254,8 +261,10 @@ class ThrowsPhpDocRule implements Rule
 		}
 
 		return array_map(
-			static function (string $throwClass): string {
-				return sprintf('Unused @throws %s annotation', $throwClass);
+			static function (string $throwClass) use ($startLine): RuleError {
+				return RuleErrorBuilder::message(sprintf('Unused @throws %s annotation', $throwClass))
+					->line($startLine)
+					->build();
 			},
 			TypeUtils::getDirectClassNames($throwType)
 		);
@@ -279,7 +288,7 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processTryCatch(TryCatch $node): array
 	{
@@ -294,7 +303,7 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processTryCatchTryEnd(): array
 	{
@@ -304,7 +313,7 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processThrow(Throw_ $node, Scope $scope): array
 	{
@@ -314,7 +323,7 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processMethodCall(MethodCall $node, Scope $scope): array
 	{
@@ -360,7 +369,7 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processStaticCall(StaticCall $node, Scope $scope): array
 	{
@@ -397,7 +406,7 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processNew(New_ $node, Scope $scope): array
 	{
@@ -420,7 +429,7 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processExprTraversing(Expr $expr, Scope $scope, bool $useKey): array
 	{
@@ -454,7 +463,7 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processFunction(Node\FunctionLike $node, Scope $scope): array
 	{
@@ -492,19 +501,15 @@ class ThrowsPhpDocRule implements Rule
 
 		if (!$node->hasAttribute(self::ATTRIBUTE_HAS_CLASS_METHOD_END)) {
 			$node->setAttribute(self::ATTRIBUTE_HAS_CLASS_METHOD_END, true);
-			if ($node->stmts === null) {
-				throw new ShouldNotHappenException();
-			}
-			$node->stmts[] = new FunctionEnd($node);
 		}
 
 		return [];
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
-	private function processFunctionEnd(Scope $scope): array
+	private function processFunctionEnd(Scope $scope, int $startLine): array
 	{
 		$usedThrowsAnnotations = $this->throwsScope->exitFromThrowsAnnotationBlock();
 
@@ -528,7 +533,9 @@ class ThrowsPhpDocRule implements Rule
 
 		$messages = [];
 		foreach ($unusedThrows as $unusedClass) {
-			$messages[] = sprintf('Unused @throws %s annotation', $unusedClass);
+			$messages[] = RuleErrorBuilder::message(sprintf('Unused @throws %s annotation', $unusedClass))
+				->line($startLine)
+				->build();
 		}
 
 		return $messages;
@@ -603,7 +610,7 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processCatch(Catch_ $node): array
 	{
@@ -623,11 +630,11 @@ class ThrowsPhpDocRule implements Rule
 
 			if (!$this->checkedExceptionService->isCheckedException($type->toString())) {
 				foreach ($caughtChecked as $caughtCheckedException) {
-					$messages[] = sprintf(
+					$messages[] = RuleErrorBuilder::message(sprintf(
 						'Catching checked exception %s as unchecked %s is not supported properly in this moment. Eliminate checked exceptions by custom catch statement.',
 						$caughtCheckedException,
 						$type->toString()
-					);
+					))->build();
 				}
 			}
 
@@ -647,14 +654,14 @@ class ThrowsPhpDocRule implements Rule
 				continue;
 			}
 
-			$messages[] = sprintf('%s is never thrown in the corresponding try block', $exceptionClass);
+			$messages[] = RuleErrorBuilder::message(sprintf('%s is never thrown in the corresponding try block', $exceptionClass))->build();
 		}
 
 		return $messages;
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processFuncCall(FuncCall $node, Scope $scope): array
 	{
@@ -699,7 +706,7 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processDiv(Expr $divisor, Scope $scope): array
 	{
@@ -725,7 +732,7 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processShift(Expr $value, Scope $scope): array
 	{
@@ -774,7 +781,7 @@ class ThrowsPhpDocRule implements Rule
 	/**
 	 * @param Name|Expr|ClassLike $class
 	 * @param string[] $methods
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processThrowTypesOnMethod($class, array $methods, Scope $scope): array
 	{
@@ -784,7 +791,7 @@ class ThrowsPhpDocRule implements Rule
 	}
 
 	/**
-	 * @return string[]
+	 * @return RuleError[]
 	 */
 	private function processThrowsTypes(Type $targetThrowType): array
 	{
@@ -797,12 +804,12 @@ class ThrowsPhpDocRule implements Rule
 			return [];
 		}
 
-		return array_map(static function (string $exceptionClassName) use ($isInGlobalScope): string {
+		return array_map(static function (string $exceptionClassName) use ($isInGlobalScope): RuleError {
 			if ($isInGlobalScope) {
-				return sprintf('Throwing checked exception %s in global scope is prohibited', $exceptionClassName);
+				return RuleErrorBuilder::message(sprintf('Throwing checked exception %s in global scope is prohibited', $exceptionClassName))->build();
 			}
 
-			return sprintf('Missing @throws %s annotation', $exceptionClassName);
+			return RuleErrorBuilder::message(sprintf('Missing @throws %s annotation', $exceptionClassName))->build();
 		}, $targetExceptionClasses);
 	}
 
