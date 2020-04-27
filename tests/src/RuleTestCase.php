@@ -75,15 +75,47 @@ abstract class RuleTestCase extends TestCase
 			$registry = new Registry([$this->getRule()]);
 			$broker = $this->createBroker();
 			$printer = new Standard();
-			$typeSpecifier = $this->createTypeSpecifier($printer, $broker, $this->getMethodTypeSpecifyingExtensions(), $this->getStaticMethodTypeSpecifyingExtensions());
+
 			$currentWorkingDirectory = $this->getCurrentWorkingDirectory();
-			$fileHelper = new FileHelper($currentWorkingDirectory);
-			$currentWorkingDirectory = $fileHelper->normalizePath($currentWorkingDirectory, '/');
 			$fileHelper = new FileHelper($currentWorkingDirectory);
 			$relativePathHelper = new SimpleRelativePathHelper($currentWorkingDirectory);
 			$anonymousClassNameHelper = new AnonymousClassNameHelper($fileHelper, $relativePathHelper);
-			$nodeScopeResolver = new NodeScopeResolver($broker, $this->getParser(), new FileTypeMapper($this->getParser(), self::getContainer()->getByType(PhpDocStringResolver::class), self::getContainer()->getByType(PhpDocNodeResolver::class), $this->createMock(Cache::class), $anonymousClassNameHelper), $fileHelper, $typeSpecifier, $this->shouldPolluteScopeWithLoopInitialAssignments(), $this->shouldPolluteCatchScopeWithTryAssignments(), $this->shouldPolluteScopeWithAlwaysIterableForeach(), [], []);
-			$fileAnalyser = new FileAnalyser($this->createScopeFactory($broker, $typeSpecifier), $nodeScopeResolver, $this->getParser(), new DependencyResolver($broker), $fileHelper);
+
+			$typeSpecifier = $this->createTypeSpecifier(
+				$printer,
+				$broker,
+				$this->getMethodTypeSpecifyingExtensions(),
+				$this->getStaticMethodTypeSpecifyingExtensions()
+			);
+
+			$nodeScopeResolver = new NodeScopeResolver(
+				$broker,
+				$this->getParser(),
+				new FileTypeMapper(
+					$this->getParser(),
+					self::getContainer()->getByType(PhpDocStringResolver::class),
+					self::getContainer()->getByType(PhpDocNodeResolver::class),
+					$this->createMock(Cache::class),
+					$anonymousClassNameHelper
+				),
+				$fileHelper,
+				$typeSpecifier,
+				$this->shouldPolluteScopeWithLoopInitialAssignments(),
+				$this->shouldPolluteCatchScopeWithTryAssignments(),
+				$this->shouldPolluteScopeWithAlwaysIterableForeach(),
+				[],
+				[]
+			);
+
+			$fileAnalyser = new FileAnalyser(
+				$this->createScopeFactory($broker, $typeSpecifier),
+				$nodeScopeResolver,
+				$this->getParser(),
+				new DependencyResolver($broker),
+				$fileHelper,
+				$this->shouldReportUnmatchedIgnoredErrors()
+			);
+
 			$this->analyser = new Analyser($fileAnalyser, $registry, $nodeScopeResolver, 50);
 		}
 
@@ -189,6 +221,11 @@ abstract class RuleTestCase extends TestCase
 	protected function shouldPolluteScopeWithAlwaysIterableForeach(): bool
 	{
 		return false;
+	}
+
+	protected function shouldReportUnmatchedIgnoredErrors(): bool
+	{
+		return true;
 	}
 
 }
