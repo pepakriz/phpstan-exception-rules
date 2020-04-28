@@ -8,12 +8,14 @@ use Nette\Utils\Strings;
 use PhpParser\PrettyPrinter\Standard;
 use PHPStan\Analyser\Analyser;
 use PHPStan\Analyser\Error;
+use PHPStan\Analyser\FileAnalyser;
 use PHPStan\Analyser\NodeScopeResolver;
 use PHPStan\Analyser\TypeSpecifier;
 use PHPStan\Broker\AnonymousClassNameHelper;
 use PHPStan\Cache\Cache;
+use PHPStan\Dependency\DependencyResolver;
 use PHPStan\File\FileHelper;
-use PHPStan\File\FuzzyRelativePathHelper;
+use PHPStan\File\SimpleRelativePathHelper;
 use PHPStan\PhpDoc\PhpDocNodeResolver;
 use PHPStan\PhpDoc\PhpDocStringResolver;
 use PHPStan\PhpDoc\TypeNodeResolverExtension;
@@ -31,7 +33,6 @@ use function file_get_contents;
 use function implode;
 use function sprintf;
 use function trim;
-use const DIRECTORY_SEPARATOR;
 
 /**
  * @template TRule of \PHPStan\Rules\Rule
@@ -72,38 +73,50 @@ abstract class RuleTestCase extends TestCase
 	{
 		if ($this->analyser === null) {
 			$registry = new Registry([$this->getRule()]);
-
 			$broker = $this->createBroker();
 			$printer = new Standard();
-			$fileHelper = $this->getFileHelper();
+
+			$currentWorkingDirectory = $this->getCurrentWorkingDirectory();
+			$fileHelper = new FileHelper($currentWorkingDirectory);
+			$relativePathHelper = new SimpleRelativePathHelper($currentWorkingDirectory);
+			$anonymousClassNameHelper = new AnonymousClassNameHelper($fileHelper, $relativePathHelper);
+
 			$typeSpecifier = $this->createTypeSpecifier(
 				$printer,
 				$broker,
 				$this->getMethodTypeSpecifyingExtensions(),
 				$this->getStaticMethodTypeSpecifyingExtensions()
 			);
-			$currentWorkingDirectory = $this->getCurrentWorkingDirectory();
-			$this->analyser = new Analyser(
-				$this->createScopeFactory($broker, $typeSpecifier),
+
+			$nodeScopeResolver = new NodeScopeResolver(
+				$broker,
 				$this->getParser(),
-				$registry,
-				new NodeScopeResolver(
-					$broker,
+				new FileTypeMapper(
 					$this->getParser(),
-					new FileTypeMapper($this->getParser(), self::getContainer()->getByType(PhpDocStringResolver::class), self::getContainer()->getByType(PhpDocNodeResolver::class), $this->createMock(Cache::class), new AnonymousClassNameHelper(new FileHelper($currentWorkingDirectory), new FuzzyRelativePathHelper($currentWorkingDirectory, DIRECTORY_SEPARATOR, []))),
-					$fileHelper,
-					$typeSpecifier,
-					$this->shouldPolluteScopeWithLoopInitialAssignments(),
-					$this->shouldPolluteCatchScopeWithTryAssignments(),
-					$this->shouldPolluteScopeWithAlwaysIterableForeach(),
-					[],
-					[]
+					self::getContainer()->getByType(PhpDocStringResolver::class),
+					self::getContainer()->getByType(PhpDocNodeResolver::class),
+					$this->createMock(Cache::class),
+					$anonymousClassNameHelper
 				),
 				$fileHelper,
+				$typeSpecifier,
+				$this->shouldPolluteScopeWithLoopInitialAssignments(),
+				$this->shouldPolluteCatchScopeWithTryAssignments(),
+				$this->shouldPolluteScopeWithAlwaysIterableForeach(),
 				[],
-				true,
-				50
+				[]
 			);
+
+			$fileAnalyser = new FileAnalyser(
+				$this->createScopeFactory($broker, $typeSpecifier),
+				$nodeScopeResolver,
+				$this->getParser(),
+				new DependencyResolver($broker),
+				$fileHelper,
+				$this->shouldReportUnmatchedIgnoredErrors()
+			);
+
+			$this->analyser = new Analyser($fileAnalyser, $registry, $nodeScopeResolver, 50);
 		}
 
 		return $this->analyser;
@@ -137,7 +150,7 @@ abstract class RuleTestCase extends TestCase
 	{
 		$file = $this->getFileHelper()->normalizePath($file);
 		$expectedErrors = $this->parseExpectedErrors($file);
-		$actualErrors = $this->getAnalyser()->analyse([$file], false);
+		$actualErrors = $this->getAnalyser()->analyse([$file])->getUnorderedErrors();
 
 		$strictlyTypedSprintf = static function (int $line, string $message): string {
 			return sprintf('%02d: %s', $line, $message);
@@ -208,6 +221,11 @@ abstract class RuleTestCase extends TestCase
 	protected function shouldPolluteScopeWithAlwaysIterableForeach(): bool
 	{
 		return false;
+	}
+
+	protected function shouldReportUnmatchedIgnoredErrors(): bool
+	{
+		return true;
 	}
 
 }
