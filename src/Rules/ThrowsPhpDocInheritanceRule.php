@@ -75,9 +75,8 @@ class ThrowsPhpDocInheritanceRule implements Rule
 	 */
 	public function processNode(Node $node, Scope $scope): array
 	{
-		if (!$node instanceof ClassMethod) {
-			return [];
-		}
+		/** @var ClassMethod $node */
+		$node = $node;
 
 		$classReflection = $scope->getClassReflection();
 		if ($classReflection === null) {
