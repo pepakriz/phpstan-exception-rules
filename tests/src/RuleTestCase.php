@@ -16,6 +16,7 @@ use PHPStan\Cache\Cache;
 use PHPStan\Dependency\DependencyResolver;
 use PHPStan\File\FileHelper;
 use PHPStan\File\SimpleRelativePathHelper;
+use PHPStan\PhpDoc\PhpDocInheritanceResolver;
 use PHPStan\PhpDoc\PhpDocNodeResolver;
 use PHPStan\PhpDoc\PhpDocStringResolver;
 use PHPStan\PhpDoc\TypeNodeResolverExtension;
@@ -88,16 +89,20 @@ abstract class RuleTestCase extends TestCase
 				$this->getStaticMethodTypeSpecifyingExtensions()
 			);
 
+			$fileTypeMapper = new FileTypeMapper(
+				$this->getParser(),
+				self::getContainer()->getByType(PhpDocStringResolver::class),
+				self::getContainer()->getByType(PhpDocNodeResolver::class),
+				$this->createMock(Cache::class),
+				$anonymousClassNameHelper
+			);
+			$phpDocInheritanceResolver = new PhpDocInheritanceResolver($fileTypeMapper);
+
 			$nodeScopeResolver = new NodeScopeResolver(
 				$broker,
 				$this->getParser(),
-				new FileTypeMapper(
-					$this->getParser(),
-					self::getContainer()->getByType(PhpDocStringResolver::class),
-					self::getContainer()->getByType(PhpDocNodeResolver::class),
-					$this->createMock(Cache::class),
-					$anonymousClassNameHelper
-				),
+				$fileTypeMapper,
+				$phpDocInheritanceResolver,
 				$fileHelper,
 				$typeSpecifier,
 				$this->shouldPolluteScopeWithLoopInitialAssignments(),

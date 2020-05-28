@@ -37,9 +37,8 @@ class DeadCatchUnionRule implements Rule
 	 */
 	public function processNode(Node $node, Scope $scope): array
 	{
-		if (!$node instanceof Catch_) {
-			return [];
-		}
+		/** @var Catch_ $node */
+		$node = $node;
 
 		if (count($node->types) <= 1) {
 			return [];

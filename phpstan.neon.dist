@@ -12,9 +12,6 @@ parameters:
 	excludes_analyse:
 		- %rootDir%/../../../tests/*/data/*
 
-	ignoreErrors:
-		- "#^Method Pepakriz\\\\PHPStanExceptionRules\\\\RuleTestCase\\:\\:getRule\\(\\) return type with generic interface PHPStan\\\\Rules\\\\Rule does not specify its types\\: TNodeType$#"
-
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: true
 		uncheckedExceptions:
