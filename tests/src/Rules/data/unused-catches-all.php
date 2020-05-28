@@ -48,6 +48,14 @@ class UnusedCatches
 		} catch (RuntimeException $e) { // error: RuntimeException is never thrown in the corresponding try block
 
 		}
+
+		try {
+			$this->throwLogicWithoutAnnotation();
+		} catch (LogicException $e) { // error: LogicException is never thrown in the corresponding try block
+
+		} catch (RuntimeException $e) { // error: RuntimeException is never thrown in the corresponding try block
+
+		}
 	}
 
 	private function someVoidMethod(): void
@@ -57,7 +65,12 @@ class UnusedCatches
 	/**
 	 * @throws LogicException
 	 */
-	private function throwLogic(): void // error: Unused @throws LogicException annotation
+	private function throwLogic(): void
+	{
+		throw new LogicException();
+	}
+
+	private function throwLogicWithoutAnnotation(): void
 	{
 		throw new LogicException();
 	}

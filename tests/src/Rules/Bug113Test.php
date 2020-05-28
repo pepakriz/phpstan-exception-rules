@@ -48,7 +48,6 @@ class Bug113Test extends RuleTestCase
 			false,
 			true,
 			false,
-			false,
 			[]
 		);
 	}

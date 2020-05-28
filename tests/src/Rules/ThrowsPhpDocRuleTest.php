@@ -36,11 +36,6 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	/**
 	 * @var bool
 	 */
-	private $ignoreDescriptiveUncheckedExceptions = false;
-
-	/**
-	 * @var bool
-	 */
 	private $reportCheckedThrowsInGlobalScope = false;
 
 	/**
@@ -90,7 +85,6 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			$this->reportUnusedCatchesOfUncheckedExceptions,
 			$this->reportUnusedCheckedThrowsInSubtypes,
 			$this->reportCheckedThrowsInGlobalScope,
-			$this->ignoreDescriptiveUncheckedExceptions,
 			$this->methodWhitelist
 		);
 	}
@@ -132,13 +126,6 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	{
 		$this->reportUnusedCatchesOfUncheckedExceptions = true;
 		$this->analyse(__DIR__ . '/data/unused-catches-all.php');
-	}
-
-	public function testDescriptiveUnusedCatches(): void
-	{
-		$this->reportUnusedCatchesOfUncheckedExceptions = true;
-		$this->ignoreDescriptiveUncheckedExceptions = true;
-		$this->analyse(__DIR__ . '/data/unused-descriptive-throws.php');
 	}
 
 	public function testIterators(): void
