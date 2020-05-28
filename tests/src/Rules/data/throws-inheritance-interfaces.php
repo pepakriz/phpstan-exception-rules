@@ -24,6 +24,11 @@ interface BaseThrowsAnnotations
 
 	public function parentWithoutThrows(): void;
 
+	/**
+	 * @throws void
+	 */
+	public function parentWithThrowsVoid(): void;
+
 }
 
 interface ThrowsAnnotations extends BaseThrowsAnnotations
@@ -48,6 +53,11 @@ interface ThrowsAnnotations extends BaseThrowsAnnotations
 	 * @throws BaseException
 	 */
 	public function parentWithoutThrows(): void; // error: PHPDoc tag @throws with type Pepakriz\PHPStanExceptionRules\Rules\Data\InheritanceInterfaces\BaseException is not compatible with parent
+
+	/**
+	 * @throws BaseException
+	 */
+	public function parentWithThrowsVoid(): void; // error: PHPDoc tag @throws with type Pepakriz\PHPStanExceptionRules\Rules\Data\InheritanceInterfaces\BaseException is not compatible with parent
 
 }
 
@@ -82,6 +92,14 @@ class Implementation implements BaseThrowsAnnotations
 	 * @throws BaseException
 	 */
 	public function parentWithoutThrows(): void // error: PHPDoc tag @throws with type Pepakriz\PHPStanExceptionRules\Rules\Data\InheritanceInterfaces\BaseException is not compatible with parent
+	{
+
+	}
+
+	/**
+	 * @throws BaseException
+	 */
+	public function parentWithThrowsVoid(): void // error: PHPDoc tag @throws with type Pepakriz\PHPStanExceptionRules\Rules\Data\InheritanceInterfaces\BaseException is not compatible with parent
 	{
 
 	}
