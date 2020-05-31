@@ -23,7 +23,6 @@
 	},
 	"require-dev": {
 		"nette/utils": "^3.0",
-		"php-coveralls/php-coveralls": "^2.1",
 		"php-parallel-lint/php-console-highlighter": "^0.4.0",
 		"php-parallel-lint/php-parallel-lint": "^1.2.0",
 		"phpstan/phpstan-nette": "^0.12.0",
@@ -55,13 +54,12 @@
 			"@check:tests"
 		],
 		"check:composer": "composer validate",
-		"check:tests": "phpunit --coverage-text",
+		"check:tests": "phpunit",
 		"check:cs": "phpcs --extensions=php --encoding=utf-8 --tab-width=4 --colors --ignore=tests/*/data -sp src tests/src",
 		"check:lint": "parallel-lint src tests/src",
 		"check:types": "phpstan analyse --memory-limit=1G -l max src tests",
 		"fix": "@fix:cs",
-		"fix:cs": "phpcbf --extensions=php --encoding=utf-8 --tab-width=4 --colors --ignore=tests/*/data -sp src tests/src",
-		"coveralls": "php-coveralls -v"
+		"fix:cs": "phpcbf --extensions=php --encoding=utf-8 --tab-width=4 --colors --ignore=tests/*/data -sp src tests/src"
 	},
 	"config": {
 		"sort-packages": true

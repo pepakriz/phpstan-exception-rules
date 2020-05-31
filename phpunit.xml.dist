@@ -11,17 +11,6 @@
 	failOnRisky="true"
 	failOnWarning="true"
 >
-
-	<logging>
-		<log
-			type="coverage-text"
-			target="php://stdout"
-			showUncoveredFiles="true"
-			showOnlySummary="true"
-		/>
-		<log type="coverage-clover" target="tests/tmp/clover.xml"/>
-	</logging>
-
 	<testsuites>
 		<testsuite name="Exception rules for PHPStan">
 			<directory>./tests</directory>
