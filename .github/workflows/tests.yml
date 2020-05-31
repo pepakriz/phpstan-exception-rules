@@ -1,0 +1,55 @@
+name: tests
+
+on: [pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version:
+          - "7.1"
+          - "7.2"
+          - "7.3"
+          - "7.4"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Install PHP"
+        uses: shivammathur/setup-php@v2
+        with:
+          coverage: "none"
+          php-version: "${{ matrix.php-version }}"
+
+      - name: "Validate Composer"
+        run: "composer validate"
+
+      - name: "Cache dependencies"
+        uses: "actions/cache@v1.1.2"
+        with:
+          path: "~/.composer/cache"
+          key: "php-${{ matrix.php-version }}-composer-${{ hashFiles('**/composer.json') }}"
+          restore-keys: "php-${{ matrix.php-version }}-composer-"
+
+      - name: "Install dependencies"
+        run: "composer update --no-interaction --no-progress --no-suggest --prefer-dist"
+
+      - name: "Check Composer"
+        run: "composer run-script check:composer"
+        if: ${{ matrix.php-version == '7.4' }}
+
+      - name: "Check lint"
+        run: "composer run-script check:lint"
+
+      - name: "Check CodeStyle"
+        run: "composer run-script check:cs"
+        if: ${{ matrix.php-version == '7.4' }}
+
+      - name: "Check types"
+        run: "composer run-script check:types"
+        if: ${{ matrix.php-version == '7.4' }}
+
+      - name: "Check tests"
+        run: "composer run-script check:tests"
