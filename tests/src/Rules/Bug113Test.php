@@ -46,7 +46,6 @@ class Bug113Test extends RuleTestCase
 			$this->createThrowsAnnotationReader(),
 			$this->createBroker(),
 			false,
-			true,
 			false,
 			[]
 		);

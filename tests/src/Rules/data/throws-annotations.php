@@ -328,7 +328,7 @@ class Inheritdoc extends BaseInheritdoc
 	/**
 	 * {@inheritdoc}
 	 */
-	public function foo(): void // error: Unused @throws RuntimeException annotation
+	public function foo(): void
 	{
 
 	}

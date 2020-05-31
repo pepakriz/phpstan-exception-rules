@@ -1,7 +1,6 @@
 parameters:
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: false
-		reportUnusedCheckedThrowsInSubtypes: false
 		reportCheckedThrowsInGlobalScope: true
 		checkedExceptions: []
 		uncheckedExceptions: []
@@ -12,7 +11,6 @@ parameters:
 parametersSchema:
 	exceptionRules: structure([
 		reportUnusedCatchesOfUncheckedExceptions: bool()
-		reportUnusedCheckedThrowsInSubtypes: bool()
 		reportCheckedThrowsInGlobalScope: bool()
 		checkedExceptions: listOf(string())
 		uncheckedExceptions: listOf(string())
@@ -76,7 +74,6 @@ services:
 		class: Pepakriz\PHPStanExceptionRules\Rules\ThrowsPhpDocRule
 		arguments:
 			reportUnusedCatchesOfUncheckedExceptions: %exceptionRules.reportUnusedCatchesOfUncheckedExceptions%
-			reportUnusedCheckedThrowsInSubtypes: %exceptionRules.reportUnusedCheckedThrowsInSubtypes%
 			reportCheckedThrowsInGlobalScope: %exceptionRules.reportCheckedThrowsInGlobalScope%
 			methodWhitelist: %exceptionRules.methodWhitelist%
 		tags: [phpstan.rules.rule]

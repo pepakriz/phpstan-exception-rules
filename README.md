@@ -50,7 +50,6 @@ includes:
 parameters:
 	exceptionRules:
 		reportUnusedCatchesOfUncheckedExceptions: false
-		reportUnusedCheckedThrowsInSubtypes: false
 		reportCheckedThrowsInGlobalScope: false
 		checkedExceptions:
 			- RuntimeException

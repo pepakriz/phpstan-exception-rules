@@ -31,11 +31,6 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	/**
 	 * @var bool
 	 */
-	private $reportUnusedCheckedThrowsInSubtypes = true;
-
-	/**
-	 * @var bool
-	 */
 	private $reportCheckedThrowsInGlobalScope = false;
 
 	/**
@@ -83,7 +78,6 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			$this->createThrowsAnnotationReader(),
 			$this->createBroker(),
 			$this->reportUnusedCatchesOfUncheckedExceptions,
-			$this->reportUnusedCheckedThrowsInSubtypes,
 			$this->reportCheckedThrowsInGlobalScope,
 			$this->methodWhitelist
 		);
@@ -172,7 +166,6 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 
 	public function testIntentionallyUnusedThrows(): void
 	{
-		$this->reportUnusedCheckedThrowsInSubtypes = false;
 		$this->analyse(__DIR__ . '/data/intentionally-unused-throws.php');
 	}
 
