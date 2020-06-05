@@ -63,6 +63,11 @@ services:
 			- exceptionRules.dynamicConstructorThrowTypeExtension
 
 	-
+		class: Pepakriz\PHPStanExceptionRules\Extension\DOMDocumentExtension
+		tags:
+			- exceptionRules.dynamicMethodThrowTypeExtension
+
+	-
 		class: Pepakriz\PHPStanExceptionRules\Extension\JsonEncodeDecodeExtension
 		tags:
 			- exceptionRules.dynamicFunctionThrowTypeExtension

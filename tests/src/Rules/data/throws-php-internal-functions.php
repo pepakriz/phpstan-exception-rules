@@ -4,6 +4,7 @@ namespace Pepakriz\PHPStanExceptionRules\Rules\PhpInternalFunctions;
 
 use DateTime;
 use DateTimeImmutable;
+use DOMDocument;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionMethod;
@@ -128,6 +129,23 @@ class Example
 		intdiv(rand(0, 1) === 0 ? $integer : $integer, 0); // error: Missing @throws ArithmeticError annotation
 		intdiv(8, rand(0, 1) === 0 ? $integer : 10); // error: Missing @throws ArithmeticError annotation
 		intdiv(rand(0, 1) === 0 ? 20 : 10, rand(0, 1) === 0 ? 5 : 10);
+	}
+
+	public function testDOMDocumentObject(): void
+	{
+		$domDocument = new DOMDocument();
+
+		$domDocument->load(''); // error: Missing @throws ErrorException annotation
+		$domDocument->load('non empty string'); // error: Missing @throws ErrorException annotation
+
+		$domDocument->loadXML(''); // error: Missing @throws ErrorException annotation
+		$domDocument->loadXML('non empty string');
+
+		$domDocument->loadHTML(''); // error: Missing @throws ErrorException annotation
+		$domDocument->loadHTML('non empty string');
+
+		$domDocument->loadHTMLFile(''); // error: Missing @throws ErrorException annotation
+		$domDocument->loadHTMLFile('non empty string'); // error: Missing @throws ErrorException annotation
 	}
 
 }
