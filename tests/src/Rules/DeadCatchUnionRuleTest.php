@@ -18,7 +18,7 @@ class DeadCatchUnionRuleTest extends RuleTestCase
 
 	public function test(): void
 	{
-		$this->analyse(__DIR__ . '/data/dead-catch-union.php');
+		$this->analyseFile(__DIR__ . '/data/dead-catch-union.php');
 	}
 
 }
