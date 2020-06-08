@@ -22,6 +22,7 @@ use PHPStan\PhpDoc\PhpDocStringResolver;
 use PHPStan\PhpDoc\TypeNodeResolverExtension;
 use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
+use PHPStan\Reflection\ReflectionProvider\DirectReflectionProviderProvider;
 use PHPStan\Rules\Registry;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\TestCase;
@@ -90,6 +91,7 @@ abstract class RuleTestCase extends TestCase
 			);
 
 			$fileTypeMapper = new FileTypeMapper(
+				new DirectReflectionProviderProvider($broker),
 				$this->getParser(),
 				self::getContainer()->getByType(PhpDocStringResolver::class),
 				self::getContainer()->getByType(PhpDocNodeResolver::class),
@@ -100,6 +102,8 @@ abstract class RuleTestCase extends TestCase
 
 			$nodeScopeResolver = new NodeScopeResolver(
 				$broker,
+				self::getReflectors()[0],
+				$this->getClassReflectionExtensionRegistryProvider(),
 				$this->getParser(),
 				$fileTypeMapper,
 				$phpDocInheritanceResolver,

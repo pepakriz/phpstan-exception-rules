@@ -19,7 +19,7 @@
 	"require": {
 		"php": "^7.1",
 		"nikic/php-parser": "^4.4",
-		"phpstan/phpstan": "^0.12.25"
+		"phpstan/phpstan": "^0.12.26"
 	},
 	"require-dev": {
 		"nette/utils": "^3.0",

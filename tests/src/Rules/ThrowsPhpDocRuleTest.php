@@ -11,7 +11,7 @@ use Pepakriz\PHPStanExceptionRules\Rules\DynamicExtension\DynamicExtension;
 use Pepakriz\PHPStanExceptionRules\Rules\UnusedCatches\FooException;
 use Pepakriz\PHPStanExceptionRules\Rules\UnusedCatches\UnusedCatches;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
-use PharData;
+use Phar;
 use PHPStan\Rules\Rule;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -107,7 +107,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	public function testUnusedCatches(): void
 	{
 		$this->methodThrowTypes = [
-			PharData::class => [
+			Phar::class => [
 				'extractTo' => [
 					RuntimeException::class,
 				],
