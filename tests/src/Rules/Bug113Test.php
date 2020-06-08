@@ -54,7 +54,7 @@ class Bug113Test extends RuleTestCase
 
 	public function testBasicThrows(): void
 	{
-		$this->analyse(__DIR__ . '/data/bug113.php');
+		$this->analyseFile(__DIR__ . '/data/bug113.php');
 	}
 
 }

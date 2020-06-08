@@ -21,7 +21,7 @@ class UselessThrowsPhpDocRuleTest extends RuleTestCase
 
 	public function testBasicUselessThrows(): void
 	{
-		$this->analyse(__DIR__ . '/data/useless-throws.php');
+		$this->analyseFile(__DIR__ . '/data/useless-throws.php');
 	}
 
 }

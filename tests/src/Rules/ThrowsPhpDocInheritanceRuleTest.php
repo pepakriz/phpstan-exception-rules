@@ -42,17 +42,17 @@ class ThrowsPhpDocInheritanceRuleTest extends RuleTestCase
 
 	public function testInheritance(): void
 	{
-		$this->analyse(__DIR__ . '/data/throws-inheritance.php');
+		$this->analyseFile(__DIR__ . '/data/throws-inheritance.php');
 	}
 
 	public function testInheritanceWithInterfaces(): void
 	{
-		$this->analyse(__DIR__ . '/data/throws-inheritance-interfaces.php');
+		$this->analyseFile(__DIR__ . '/data/throws-inheritance-interfaces.php');
 	}
 
 	public function testInheritanceWithOverriding(): void
 	{
-		$this->analyse(__DIR__ . '/data/throws-inheritance-overriding.php');
+		$this->analyseFile(__DIR__ . '/data/throws-inheritance-overriding.php');
 	}
 
 }

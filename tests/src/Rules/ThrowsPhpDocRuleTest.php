@@ -91,17 +91,17 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 
 	public function testBasicThrows(): void
 	{
-		$this->analyse(__DIR__ . '/data/throws-annotations.php');
+		$this->analyseFile(__DIR__ . '/data/throws-annotations.php');
 	}
 
 	public function testTryCatch(): void
 	{
-		$this->analyse(__DIR__ . '/data/try-catch.php');
+		$this->analyseFile(__DIR__ . '/data/try-catch.php');
 	}
 
 	public function testUnusedThrows(): void
 	{
-		$this->analyse(__DIR__ . '/data/unused-throws.php');
+		$this->analyseFile(__DIR__ . '/data/unused-throws.php');
 	}
 
 	public function testUnusedCatches(): void
@@ -119,61 +119,61 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 			],
 		];
 
-		$this->analyse(__DIR__ . '/data/unused-catches.php');
+		$this->analyseFile(__DIR__ . '/data/unused-catches.php');
 	}
 
 	public function testAllUnusedCatches(): void
 	{
 		$this->reportUnusedCatchesOfUncheckedExceptions = true;
-		$this->analyse(__DIR__ . '/data/unused-catches-all.php');
+		$this->analyseFile(__DIR__ . '/data/unused-catches-all.php');
 	}
 
 	public function testIterators(): void
 	{
-		$this->analyse(__DIR__ . '/data/iterators.php');
+		$this->analyseFile(__DIR__ . '/data/iterators.php');
 	}
 
 	public function testCountable(): void
 	{
-		$this->analyse(__DIR__ . '/data/countables.php');
+		$this->analyseFile(__DIR__ . '/data/countables.php');
 	}
 
 	public function testJsonSerializable(): void
 	{
-		$this->analyse(__DIR__ . '/data/json-serializable.php');
+		$this->analyseFile(__DIR__ . '/data/json-serializable.php');
 	}
 
 	public function testDynamicExtension(): void
 	{
-		$this->analyse(__DIR__ . '/data/dynamic-extension.php');
+		$this->analyseFile(__DIR__ . '/data/dynamic-extension.php');
 	}
 
 	public function testUnsupportedCatchCheckedAndUnchecked(): void
 	{
-		$this->analyse(__DIR__ . '/data/unsupported-catch.php');
+		$this->analyseFile(__DIR__ . '/data/unsupported-catch.php');
 	}
 
 	public function testAnonymClass(): void
 	{
-		$this->analyse(__DIR__ . '/data/throws-anonym-class.php');
+		$this->analyseFile(__DIR__ . '/data/throws-anonym-class.php');
 	}
 
 	public function testThrowsInGlobalScope(): void
 	{
 		$this->reportCheckedThrowsInGlobalScope = true;
-		$this->analyse(__DIR__ . '/data/throws-in-global-scope.php');
+		$this->analyseFile(__DIR__ . '/data/throws-in-global-scope.php');
 	}
 
 	public function testMethodWhitelist(): void
 	{
 		$this->methodWhitelist = [TestCase::class => '/^test/'];
-		$this->analyse(__DIR__ . '/data/method-whitelisting.php');
+		$this->analyseFile(__DIR__ . '/data/method-whitelisting.php');
 	}
 
 	public function testIntentionallyUnusedThrows(): void
 	{
 		$this->reportUnusedCheckedThrowsInSubtypes = false;
-		$this->analyse(__DIR__ . '/data/intentionally-unused-throws.php');
+		$this->analyseFile(__DIR__ . '/data/intentionally-unused-throws.php');
 	}
 
 }

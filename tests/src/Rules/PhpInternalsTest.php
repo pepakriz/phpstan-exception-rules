@@ -63,7 +63,7 @@ class PhpInternalsTest extends RuleTestCase
 
 	public function testPhpInternalFunctions(): void
 	{
-		$this->analyse(__DIR__ . '/data/throws-php-internal-functions.php');
+		$this->analyseFile(__DIR__ . '/data/throws-php-internal-functions.php');
 	}
 
 	/**
@@ -71,12 +71,12 @@ class PhpInternalsTest extends RuleTestCase
 	 */
 	public function testPhpInternalFunctionsPhp73(): void
 	{
-		$this->analyse(__DIR__ . '/data/throws-php-internal-functions-php7.3.php');
+		$this->analyseFile(__DIR__ . '/data/throws-php-internal-functions-php7.3.php');
 	}
 
 	public function testPhpInternalOperators(): void
 	{
-		$this->analyse(__DIR__ . '/data/throws-php-internal-operators.php');
+		$this->analyseFile(__DIR__ . '/data/throws-php-internal-operators.php');
 	}
 
 }

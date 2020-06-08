@@ -18,7 +18,7 @@ class UnreachableCatchRuleTest extends RuleTestCase
 
 	public function test(): void
 	{
-		$this->analyse(__DIR__ . '/data/unreachable-catches.php');
+		$this->analyseFile(__DIR__ . '/data/unreachable-catches.php');
 	}
 
 }
