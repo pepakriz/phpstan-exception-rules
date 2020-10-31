@@ -199,6 +199,14 @@
 					  value="@author,@created,@version,@package,@copyright,@license,@see,@since,@link"/>
 		</properties>
 	</rule>
+	<rule ref="SlevomatCodingStandard.Commenting.UselessFunctionDocComment">
+		<properties>
+			<property name="traversableTypeHints" type="array">
+				<element value="Generator"/>
+				<element value="Traversable"/>
+			</property>
+		</properties>
+	</rule>
 	<rule ref="SlevomatCodingStandard.ControlStructures.AssignmentInCondition"/>
 	<rule ref="SlevomatCodingStandard.ControlStructures.LanguageConstructWithParentheses"/>
 	<rule ref="SlevomatCodingStandard.ControlStructures.DisallowYodaComparison"/>
@@ -253,14 +261,29 @@
 		</properties>
 	</rule>
 	<rule ref="SlevomatCodingStandard.TypeHints.NullableTypeForNullDefaultValue" />
-	<rule ref="SlevomatCodingStandard.TypeHints.TypeHintDeclaration">
+	<rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHint">
 		<properties>
-			<property name="traversableTypeHints" type="array" value="
-				Generator,
-				Traversable,
-			"/>
-			<property name="enableEachParameterAndReturnInspection" value="1" />
-			<property name="allAnnotationsAreUseful" value="1" />
+			<property name="traversableTypeHints" type="array">
+				<element value="Generator"/>
+				<element value="Traversable"/>
+			</property>
+		</properties>
+	</rule>
+	<rule ref="SlevomatCodingStandard.TypeHints.PropertyTypeHint">
+		<properties>
+			<property name="traversableTypeHints" type="array">
+				<element value="Generator"/>
+				<element value="Traversable"/>
+			</property>
+			<property name="enableNativeTypeHint" value="false"/>
+		</properties>
+	</rule>
+	<rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint">
+		<properties>
+			<property name="traversableTypeHints" type="array">
+				<element value="Generator"/>
+				<element value="Traversable"/>
+			</property>
 		</properties>
 	</rule>
 	<rule ref="SlevomatCodingStandard.TypeHints.LongTypeHints"/>
