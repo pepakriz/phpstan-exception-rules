@@ -698,21 +698,16 @@ class ThrowsPhpDocRule implements Rule
 	 */
 	private function processDiv(Expr $divisor, Scope $scope): array
 	{
-		$divisionByZero = false;
 		$divisorType = $scope->getType($divisor);
 		foreach (TypeUtils::getConstantScalars($divisorType) as $constantScalarType) {
 			if ($constantScalarType->getValue() === 0) {
-				$divisionByZero = true;
+				return $this->processThrowsTypes(new ObjectType(DivisionByZeroError::class));
 			}
 
 			$divisorType = TypeCombinator::remove($divisorType, $constantScalarType);
 		}
 
 		if (!$divisorType instanceof NeverType) {
-			return $this->processThrowsTypes(new ObjectType(ArithmeticError::class));
-		}
-
-		if ($divisionByZero) {
 			return $this->processThrowsTypes(new ObjectType(DivisionByZeroError::class));
 		}
 
