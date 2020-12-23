@@ -16,25 +16,25 @@ class Example
 		echo $a / 1;
 		echo $a / 0; // error: Missing @throws DivisionByZeroError annotation
 		echo $a / (rand(0, 1) === 0 ? 0 : 1); // error: Missing @throws DivisionByZeroError annotation
-		echo $a / $b; // error: Missing @throws ArithmeticError annotation
+		echo $a / $b; // error: Missing @throws DivisionByZeroError annotation
 		echo (rand(0, 1) === 0 ? 20 : 10) / (rand(0, 1) === 0 ? 5 : 10);
 
 		echo $a /= 1;
 		echo $a /= 0; // error: Missing @throws DivisionByZeroError annotation
 		echo $a /= (rand(0, 1) === 0 ? 0 : 1); // error: Missing @throws DivisionByZeroError annotation
-		echo $a /= $b; // error: Missing @throws ArithmeticError annotation
+		echo $a /= $b; // error: Missing @throws DivisionByZeroError annotation
 		echo $a /= (rand(0, 1) === 0 ? 5 : 10);
 
 		echo $a % 1;
 		echo $a % 0; // error: Missing @throws DivisionByZeroError annotation
 		echo $a % (rand(0, 1) === 0 ? 0 : 1); // error: Missing @throws DivisionByZeroError annotation
-		echo $a % $b; // error: Missing @throws ArithmeticError annotation
+		echo $a % $b; // error: Missing @throws DivisionByZeroError annotation
 		echo (rand(0, 1) === 0 ? 20 : 10) % (rand(0, 1) === 0 ? 5 : 10);
 
 		echo $a %= 1;
 		echo $a %= 0; // error: Missing @throws DivisionByZeroError annotation
 		echo $a %= (rand(0, 1) === 0 ? 0 : 1); // error: Missing @throws DivisionByZeroError annotation
-		echo $a %= $b; // error: Missing @throws ArithmeticError annotation
+		echo $a %= $b; // error: Missing @throws DivisionByZeroError annotation
 		echo $a %= (rand(0, 1) === 0 ? 5 : 10);
 
 		echo $a << 0;

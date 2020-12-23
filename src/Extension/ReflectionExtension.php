@@ -249,6 +249,9 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 			throw new ShouldNotHappenException();
 		}
 
+		// Reset the cache to force a new computation
+		$node->setAttribute('phpstan_cache_printer', null);
+
 		return $scope->getType($node);
 	}
 
