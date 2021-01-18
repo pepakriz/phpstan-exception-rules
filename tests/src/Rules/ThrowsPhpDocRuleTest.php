@@ -2,6 +2,7 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
+use LogicException;
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\DefaultThrowTypeExtension;
 use Pepakriz\PHPStanExceptionRules\DefaultThrowTypeService;
@@ -39,7 +40,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	private $reportCheckedThrowsInGlobalScope = false;
 
 	/**
-	 * @var array
+	 * @var string[]
 	 */
 	private $checkedExceptions = [
 		RuntimeException::class,
@@ -48,7 +49,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	];
 
 	/**
-	 * @var array
+	 * @var string[]
 	 */
 	private $uncheckedExceptions = [];
 
@@ -150,7 +151,7 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 
 		$this->checkedExceptions = [];
 		$this->uncheckedExceptions = [
-			\LogicException::class,
+			LogicException::class,
 		];
 
 		$this->analyseFile(__DIR__ . '/data/unused-catches.php');
