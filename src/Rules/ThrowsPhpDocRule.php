@@ -485,7 +485,15 @@ class ThrowsPhpDocRule implements Rule
 				throw new ShouldNotHappenException();
 			}
 
-			if ($classReflection->getNativeReflection()->getMethod($methodReflection->getName())->isAbstract()) {
+			try {
+				$nativeMethodReflection = $classReflection->getNativeReflection()->getMethod(
+					$methodReflection->getName()
+				);
+			} catch (ReflectionException $exception) {
+				throw new ShouldNotHappenException();
+			}
+
+			if ($nativeMethodReflection->isAbstract()) {
 				return [];
 			}
 		}
@@ -551,8 +559,14 @@ class ThrowsPhpDocRule implements Rule
 
 		if (!$this->reportUnusedCheckedThrowsInSubtypes && $functionReflection instanceof MethodReflection) {
 			$declaringClass = $functionReflection->getDeclaringClass();
-			$nativeClassReflection = $declaringClass->getNativeReflection();
-			$nativeMethodReflection = $nativeClassReflection->getMethod($functionReflection->getName());
+
+			try {
+				$nativeMethodReflection = $declaringClass->getNativeReflection()->getMethod(
+					$functionReflection->getName()
+				);
+			} catch (ReflectionException $exception) {
+				throw new ShouldNotHappenException();
+			}
 
 			if ($this->isImplementation($nativeMethodReflection)) {
 				return [];
