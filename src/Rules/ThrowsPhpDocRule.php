@@ -634,10 +634,6 @@ class ThrowsPhpDocRule implements Rule
 				continue;
 			}
 
-			if (!$this->reportUnusedCatchesOfUncheckedExceptions) {
-				$caughtExceptions = $this->checkedExceptionService->filterCheckedExceptions($caughtExceptions);
-			}
-
 			if (count($caughtExceptions) > 0) {
 				continue;
 			}
