@@ -2,6 +2,7 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules;
 
+use LogicException;
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\DefaultThrowTypeExtension;
 use Pepakriz\PHPStanExceptionRules\DefaultThrowTypeService;
@@ -39,6 +40,20 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 	private $reportCheckedThrowsInGlobalScope = false;
 
 	/**
+	 * @var string[]
+	 */
+	private $checkedExceptions = [
+		RuntimeException::class,
+		CheckedException::class,
+		ReflectionException::class,
+	];
+
+	/**
+	 * @var string[]
+	 */
+	private $uncheckedExceptions = [];
+
+	/**
 	 * @var array<string, string>
 	 */
 	private $methodWhitelist = [];
@@ -67,11 +82,8 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 
 		return new ThrowsPhpDocRule(
 			new CheckedExceptionService(
-				[
-					RuntimeException::class,
-					CheckedException::class,
-					ReflectionException::class,
-				]
+				$this->checkedExceptions,
+				$this->uncheckedExceptions
 			),
 			new DynamicThrowTypeService(
 				$extensions,
@@ -117,6 +129,29 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 					FooException::class,
 				],
 			],
+		];
+
+		$this->analyseFile(__DIR__ . '/data/unused-catches.php');
+	}
+
+	public function testUnusedCatchesUncheckedExceptions(): void
+	{
+		$this->methodThrowTypes = [
+			Phar::class => [
+				'extractTo' => [
+					RuntimeException::class,
+				],
+			],
+			UnusedCatches::class => [
+				'methodWithDefaultThrowType' => [
+					FooException::class,
+				],
+			],
+		];
+
+		$this->checkedExceptions = [];
+		$this->uncheckedExceptions = [
+			LogicException::class,
 		];
 
 		$this->analyseFile(__DIR__ . '/data/unused-catches.php');
