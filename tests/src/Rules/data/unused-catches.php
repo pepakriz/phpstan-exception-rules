@@ -94,6 +94,15 @@ class UnusedCatches
 		}
 	}
 
+	public function correctCatchMethodCallWithThrows2(): void
+	{
+		try {
+			$this->throwLogic();
+		} catch (\Throwable $e) {
+
+		}
+	}
+
 	private function someVoidMethod(): void
 	{
 	}
