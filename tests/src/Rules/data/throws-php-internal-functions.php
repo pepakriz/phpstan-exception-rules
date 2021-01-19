@@ -2,6 +2,7 @@
 
 namespace Pepakriz\PHPStanExceptionRules\Rules\PhpInternalFunctions;
 
+use DateInterval;
 use DateTime;
 use DateTimeImmutable;
 use DOMDocument;
@@ -103,6 +104,16 @@ class Example
 		new DateTime(rand(0, 1) === 0 ? '2018-01-01' : '2019-01-01');
 		new DateTime(rand(0, 1) === 0 ? '2018-01-01' : null);
 		new DateTime(rand(0, 1) === 0 ? '2018-01-01' : 123); // error: Missing @throws Exception annotation
+	}
+
+	/**
+	 * @requires PHP 7.3
+	 */
+	public function testDateInterval(): void
+	{
+		new DateInterval(null); // error: Missing @throws Exception annotation
+		new DateInterval('P10D');
+		new DateInterval('invalid format'); // error: Missing @throws Exception annotation
 	}
 
 	public function testSplFileObject(): void

@@ -58,6 +58,11 @@ services:
 			- exceptionRules.dynamicConstructorThrowTypeExtension
 
 	-
+		class: Pepakriz\PHPStanExceptionRules\Extension\DateIntervalExtension
+		tags:
+			- exceptionRules.dynamicConstructorThrowTypeExtension
+
+	-
 		class: Pepakriz\PHPStanExceptionRules\Extension\SplFileObjectExtension
 		tags:
 			- exceptionRules.dynamicConstructorThrowTypeExtension

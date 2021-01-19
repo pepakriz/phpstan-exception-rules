@@ -5,6 +5,7 @@ namespace Pepakriz\PHPStanExceptionRules\Rules;
 use Pepakriz\PHPStanExceptionRules\CheckedExceptionService;
 use Pepakriz\PHPStanExceptionRules\DefaultThrowTypeService;
 use Pepakriz\PHPStanExceptionRules\DynamicThrowTypeService;
+use Pepakriz\PHPStanExceptionRules\Extension\DateIntervalExtension;
 use Pepakriz\PHPStanExceptionRules\Extension\DateTimeExtension;
 use Pepakriz\PHPStanExceptionRules\Extension\DOMDocumentExtension;
 use Pepakriz\PHPStanExceptionRules\Extension\IntdivExtension;
@@ -24,6 +25,7 @@ class PhpInternalsTest extends RuleTestCase
 	protected function getRule(): Rule
 	{
 		$reflectionClassExtension = new ReflectionExtension($this->createBroker());
+		$dateIntervalExtension = new DateIntervalExtension();
 		$dateTimeExtension = new DateTimeExtension();
 		$splFileObjectExtension = new SplFileObjectExtension();
 		$jsonEncodeDecodeExtension = new JsonEncodeDecodeExtension();
@@ -43,6 +45,7 @@ class PhpInternalsTest extends RuleTestCase
 				[],
 				[
 					$reflectionClassExtension,
+					$dateIntervalExtension,
 					$dateTimeExtension,
 					$splFileObjectExtension,
 				],
