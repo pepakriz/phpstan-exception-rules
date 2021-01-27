@@ -12,6 +12,7 @@ use ReflectionMethod;
 use ReflectionObject;
 use ReflectionProperty;
 use ReflectionZendExtension;
+use SimpleXMLElement;
 use SplFileObject;
 use stdClass;
 use Throwable;
@@ -119,6 +120,13 @@ class Example
 	public function testSplFileObject(): void
 	{
 		new SplFileObject(); // error: Missing @throws LogicException annotation; Missing @throws RuntimeException annotation
+	}
+
+	public function testSimpleXMLElement(): void
+	{
+		new SimpleXMLElement(); // error: Missing @throws Exception annotation
+		new SimpleXMLElement('foo'); // error: Missing @throws Exception annotation
+		new SimpleXMLElement('<foo />');
 	}
 
 	public function testIntdiv(): void

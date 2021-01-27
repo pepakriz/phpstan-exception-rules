@@ -11,6 +11,7 @@ use Pepakriz\PHPStanExceptionRules\Extension\DOMDocumentExtension;
 use Pepakriz\PHPStanExceptionRules\Extension\IntdivExtension;
 use Pepakriz\PHPStanExceptionRules\Extension\JsonEncodeDecodeExtension;
 use Pepakriz\PHPStanExceptionRules\Extension\ReflectionExtension;
+use Pepakriz\PHPStanExceptionRules\Extension\SimpleXMLElementExtension;
 use Pepakriz\PHPStanExceptionRules\Extension\SplFileObjectExtension;
 use Pepakriz\PHPStanExceptionRules\RuleTestCase;
 use PHPStan\Rules\Rule;
@@ -31,6 +32,7 @@ class PhpInternalsTest extends RuleTestCase
 		$jsonEncodeDecodeExtension = new JsonEncodeDecodeExtension();
 		$intdivExtension = new IntdivExtension();
 		$domDocumentExtension = new DOMDocumentExtension();
+		$simpleXMLElementEtension = new SimpleXMLElementExtension();
 
 		return new ThrowsPhpDocRule(
 			new CheckedExceptionService(
@@ -48,6 +50,7 @@ class PhpInternalsTest extends RuleTestCase
 					$dateIntervalExtension,
 					$dateTimeExtension,
 					$splFileObjectExtension,
+					$simpleXMLElementEtension,
 				],
 				[
 					$jsonEncodeDecodeExtension,
