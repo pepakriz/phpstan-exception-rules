@@ -168,7 +168,7 @@ class ThrowsPhpDocRule implements Rule
 		$method = $scope->getFunction();
 		$isMethodWhitelisted = $method instanceof MethodReflection && $this->isWhitelistedMethod($method);
 		if ($node instanceof MethodReturnStatementsNode) {
-			if ($isMethodWhitelisted && $method instanceof MethodReflection) {
+			if ($isMethodWhitelisted) {
 				return $this->processWhitelistedMethod($method, $node->getStartLine());
 			}
 
