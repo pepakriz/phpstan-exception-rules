@@ -195,6 +195,10 @@ class ThrowsPhpDocRule implements Rule
 			return $this->processThrow($node, $scope);
 		}
 
+		if ($node instanceof Expr\Throw_) {
+			return $this->processExprThrow($node, $scope);
+		}
+
 		if ($node instanceof MethodCall) {
 			return $this->processMethodCall($node, $scope);
 		}
@@ -309,6 +313,16 @@ class ThrowsPhpDocRule implements Rule
 	 * @return RuleError[]
 	 */
 	private function processThrow(Throw_ $node, Scope $scope): array
+	{
+		$exceptionType = $scope->getType($node->expr);
+
+		return $this->processThrowsTypes($exceptionType);
+	}
+
+	/**
+	 * @return RuleError[]
+	 */
+	private function processExprThrow(Expr\Throw_ $node, Scope $scope): array
 	{
 		$exceptionType = $scope->getType($node->expr);
 
