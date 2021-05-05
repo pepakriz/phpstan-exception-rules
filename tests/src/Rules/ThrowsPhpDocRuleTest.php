@@ -106,6 +106,14 @@ class ThrowsPhpDocRuleTest extends RuleTestCase
 		$this->analyseFile(__DIR__ . '/data/throws-annotations.php');
 	}
 
+	/**
+	 * @requires PHP 8.0
+	 */
+	public function testExpressionThrows(): void
+	{
+		$this->analyseFile(__DIR__ . '/data/expression-throws.php');
+	}
+
 	public function testTryCatch(): void
 	{
 		$this->analyseFile(__DIR__ . '/data/try-catch.php');

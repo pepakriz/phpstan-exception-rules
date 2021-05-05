@@ -168,7 +168,7 @@ class ThrowsPhpDocRule implements Rule
 		$method = $scope->getFunction();
 		$isMethodWhitelisted = $method instanceof MethodReflection && $this->isWhitelistedMethod($method);
 		if ($node instanceof MethodReturnStatementsNode) {
-			if ($isMethodWhitelisted && $method instanceof MethodReflection) {
+			if ($isMethodWhitelisted) {
 				return $this->processWhitelistedMethod($method, $node->getStartLine());
 			}
 
@@ -193,6 +193,10 @@ class ThrowsPhpDocRule implements Rule
 
 		if ($node instanceof Throw_) {
 			return $this->processThrow($node, $scope);
+		}
+
+		if ($node instanceof Expr\Throw_) {
+			return $this->processExprThrow($node, $scope);
 		}
 
 		if ($node instanceof MethodCall) {
@@ -309,6 +313,16 @@ class ThrowsPhpDocRule implements Rule
 	 * @return RuleError[]
 	 */
 	private function processThrow(Throw_ $node, Scope $scope): array
+	{
+		$exceptionType = $scope->getType($node->expr);
+
+		return $this->processThrowsTypes($exceptionType);
+	}
+
+	/**
+	 * @return RuleError[]
+	 */
+	private function processExprThrow(Expr\Throw_ $node, Scope $scope): array
 	{
 		$exceptionType = $scope->getType($node->expr);
 

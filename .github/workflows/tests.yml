@@ -43,6 +43,7 @@ jobs:
 
       - name: "Check lint"
         run: "composer run-script check:lint"
+        if: ${{ matrix.php-version == '8.0' }}
 
       - name: "Check CodeStyle"
         run: "composer run-script check:cs"
