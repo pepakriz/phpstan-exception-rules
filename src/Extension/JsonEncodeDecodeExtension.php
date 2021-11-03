@@ -35,11 +35,11 @@ class JsonEncodeDecodeExtension implements DynamicFunctionThrowTypeExtension
 				return new VoidType();
 			}
 
-			if (!isset($functionCall->args[3])) {
+			if (!isset($functionCall->getArgs()[3])) {
 				return new VoidType();
 			}
 
-			$valueType = $scope->getType($functionCall->args[0]->value);
+			$valueType = $scope->getType($functionCall->getArgs()[0]->value);
 			foreach (TypeUtils::getConstantScalars($valueType) as $constantScalarType) {
 				try {
 					json_decode((string) $constantScalarType->getValue(), true, 512, JSON_THROW_ON_ERROR);
@@ -54,7 +54,7 @@ class JsonEncodeDecodeExtension implements DynamicFunctionThrowTypeExtension
 			}
 
 			$exceptionType = new ObjectType(JsonException::class);
-			$optionsType = $scope->getType($functionCall->args[3]->value);
+			$optionsType = $scope->getType($functionCall->getArgs()[3]->value);
 			foreach (TypeUtils::getConstantScalars($optionsType) as $constantScalarType) {
 				if (!$constantScalarType instanceof IntegerType) {
 					continue;
@@ -83,11 +83,11 @@ class JsonEncodeDecodeExtension implements DynamicFunctionThrowTypeExtension
 				return new VoidType();
 			}
 
-			if (!isset($functionCall->args[1])) {
+			if (!isset($functionCall->getArgs()[1])) {
 				return new VoidType();
 			}
 
-			$valueType = $scope->getType($functionCall->args[0]->value);
+			$valueType = $scope->getType($functionCall->getArgs()[0]->value);
 			foreach (TypeUtils::getConstantScalars($valueType) as $constantScalarType) {
 				try {
 					json_encode($constantScalarType->getValue(), JSON_THROW_ON_ERROR);
@@ -102,7 +102,7 @@ class JsonEncodeDecodeExtension implements DynamicFunctionThrowTypeExtension
 			}
 
 			$exceptionType = new ObjectType(JsonException::class);
-			$optionsType = $scope->getType($functionCall->args[1]->value);
+			$optionsType = $scope->getType($functionCall->getArgs()[1]->value);
 			foreach (TypeUtils::getConstantScalars($optionsType) as $constantScalarType) {
 				if (!$constantScalarType instanceof IntegerType) {
 					continue;

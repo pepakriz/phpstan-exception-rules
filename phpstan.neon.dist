@@ -9,7 +9,7 @@ includes:
 
 parameters:
 	tmpDir: %rootDir%/../../../tmp
-	excludes_analyse:
+	excludePaths:
 		- %rootDir%/../../../tests/*/data/*
 
 	exceptionRules:
