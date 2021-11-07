@@ -32,7 +32,7 @@ class DateTimeExtension implements DynamicConstructorThrowTypeExtension
 			is_a($methodReflection->getDeclaringClass()->getName(), DateTime::class, true)
 			|| is_a($methodReflection->getDeclaringClass()->getName(), DateTimeImmutable::class, true)
 		) {
-			return $this->resolveThrowType($newNode->args, $scope);
+			return $this->resolveThrowType($newNode->getArgs(), $scope);
 		}
 
 		throw new UnsupportedClassException();

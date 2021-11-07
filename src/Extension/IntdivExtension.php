@@ -30,7 +30,7 @@ class IntdivExtension implements DynamicFunctionThrowTypeExtension
 		}
 
 		$containsMax = false;
-		$valueType = $scope->getType($functionCall->args[0]->value);
+		$valueType = $scope->getType($functionCall->getArgs()[0]->value);
 		foreach (TypeUtils::getConstantScalars($valueType) as $constantScalarType) {
 			if ($constantScalarType->getValue() === PHP_INT_MAX) {
 				$containsMax = true;
@@ -44,7 +44,7 @@ class IntdivExtension implements DynamicFunctionThrowTypeExtension
 		}
 
 		$divisionByZero = false;
-		$divisorType = $scope->getType($functionCall->args[1]->value);
+		$divisorType = $scope->getType($functionCall->getArgs()[1]->value);
 		foreach (TypeUtils::getConstantScalars($divisorType) as $constantScalarType) {
 			if ($constantScalarType->getValue() === 0) {
 				$divisionByZero = true;

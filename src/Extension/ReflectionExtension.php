@@ -88,11 +88,11 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 	private function resolveReflectionClass(New_ $newNode, Scope $scope): Type
 	{
 		$reflectionExceptionType = new ObjectType(ReflectionException::class);
-		if (!isset($newNode->args[0])) {
+		if (!isset($newNode->getArgs()[0])) {
 			return $reflectionExceptionType;
 		}
 
-		$valueType = $this->resolveType($newNode->args[0]->value, $scope);
+		$valueType = $this->resolveType($newNode->getArgs()[0]->value, $scope);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
 			if (!$this->broker->hasClass($constantString->getValue())) {
 				return $reflectionExceptionType;
@@ -111,11 +111,11 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 	private function resolveReflectionFunction(New_ $newNode, Scope $scope): Type
 	{
 		$reflectionExceptionType = new ObjectType(ReflectionException::class);
-		if (!isset($newNode->args[0])) {
+		if (!isset($newNode->getArgs()[0])) {
 			return $reflectionExceptionType;
 		}
 
-		$valueType = $this->resolveType($newNode->args[0]->value, $scope);
+		$valueType = $this->resolveType($newNode->getArgs()[0]->value, $scope);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
 			if (!$this->broker->hasFunction(new Name($constantString->getValue()), $scope)) {
 				return $reflectionExceptionType;
@@ -148,12 +148,12 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 	private function resolveReflectionMethodOrProperty(New_ $newNode, Scope $scope, callable $existenceChecker): Type
 	{
 		$reflectionExceptionType = new ObjectType(ReflectionException::class);
-		if (!isset($newNode->args[1])) {
+		if (!isset($newNode->getArgs()[1])) {
 			return $reflectionExceptionType;
 		}
 
-		$valueType = $this->resolveType($newNode->args[0]->value, $scope);
-		$propertyType = $this->resolveType($newNode->args[1]->value, $scope);
+		$valueType = $this->resolveType($newNode->getArgs()[0]->value, $scope);
+		$propertyType = $this->resolveType($newNode->getArgs()[1]->value, $scope);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
 			try {
 				$classReflection = $this->broker->getClass($constantString->getValue());
@@ -188,11 +188,11 @@ class ReflectionExtension implements DynamicConstructorThrowTypeExtension
 	private function resolveReflectionExtension(New_ $newNode, Scope $scope): Type
 	{
 		$reflectionExceptionType = new ObjectType(ReflectionException::class);
-		if (!isset($newNode->args[0])) {
+		if (!isset($newNode->getArgs()[0])) {
 			return $reflectionExceptionType;
 		}
 
-		$valueType = $this->resolveType($newNode->args[0]->value, $scope);
+		$valueType = $this->resolveType($newNode->getArgs()[0]->value, $scope);
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {
 			if (!extension_loaded($constantString->getValue())) {
 				return $reflectionExceptionType;

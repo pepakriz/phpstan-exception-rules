@@ -684,19 +684,19 @@ class ThrowsPhpDocRule implements Rule
 
 		$functionName = $nodeName->toString();
 		if ($functionName === 'count') {
-			return $this->processThrowTypesOnMethod($node->args[0]->value, ['count'], $scope);
+			return $this->processThrowTypesOnMethod($node->getArgs()[0]->value, ['count'], $scope);
 		}
 
 		if ($functionName === 'iterator_count') {
-			return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'next'], $scope);
+			return $this->processThrowTypesOnMethod($node->getArgs()[0]->value, ['rewind', 'valid', 'next'], $scope);
 		}
 
 		if ($functionName === 'iterator_to_array') {
-			return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'current', 'key', 'next'], $scope);
+			return $this->processThrowTypesOnMethod($node->getArgs()[0]->value, ['rewind', 'valid', 'current', 'key', 'next'], $scope);
 		}
 
 		if ($functionName === 'iterator_apply') {
-			return $this->processThrowTypesOnMethod($node->args[0]->value, ['rewind', 'valid', 'next'], $scope);
+			return $this->processThrowTypesOnMethod($node->getArgs()[0]->value, ['rewind', 'valid', 'next'], $scope);
 		}
 
 		try {
@@ -710,7 +710,7 @@ class ThrowsPhpDocRule implements Rule
 		if ($functionName === 'json_encode') {
 			$throwType = TypeCombinator::union(
 				$throwType,
-				...$this->getThrowTypesOnMethod($node->args[0]->value, ['jsonSerialize'], $scope)
+				...$this->getThrowTypesOnMethod($node->getArgs()[0]->value, ['jsonSerialize'], $scope)
 			);
 		}
 

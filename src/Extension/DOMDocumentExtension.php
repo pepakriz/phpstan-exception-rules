@@ -44,7 +44,7 @@ class DOMDocumentExtension implements DynamicMethodThrowTypeExtension
 
 	private function resolveLoadSourceType(MethodCall $methodCall, Scope $scope): Type
 	{
-		$valueType = $scope->getType($methodCall->args[0]->value);
+		$valueType = $scope->getType($methodCall->getArgs()[0]->value);
 		$exceptionType = new ObjectType(ErrorException::class);
 
 		foreach (TypeUtils::getConstantStrings($valueType) as $constantString) {

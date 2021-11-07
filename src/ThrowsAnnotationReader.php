@@ -8,6 +8,7 @@ use PhpParser\NodeVisitorAbstract;
 use PHPStan\Analyser\NameScope;
 use PHPStan\Analyser\Scope;
 use PHPStan\Parser\Parser;
+use PHPStan\Parser\ParserErrorsException;
 use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use PHPStan\PhpDocParser\Parser\TokenIterator;
@@ -105,7 +106,11 @@ class ThrowsAnnotationReader
 
 		$tokens = new TokenIterator($this->phpDocLexer->tokenize($docBlock));
 		$phpDocNode = $this->phpDocParser->parse($tokens);
-		$nameScope = $this->createNameScope($sourceFile, $namespace);
+		try {
+			$nameScope = $this->createNameScope($sourceFile, $namespace);
+		} catch (ParserErrorsException $exception) {
+			return [];
+		}
 
 		$annotations = [];
 		foreach ($phpDocNode->getThrowsTagValues() as $tagValue) {
@@ -153,6 +158,9 @@ class ThrowsAnnotationReader
 		return $docBlock !== false ? $docBlock : null;
 	}
 
+	/**
+	 * @throws ParserErrorsException
+	 */
 	private function createNameScope(string $sourceFile, ?string $namespace = null): NameScope
 	{
 		return new NameScope($namespace, $this->getUsesMap($sourceFile, (string) $namespace));
@@ -160,6 +168,8 @@ class ThrowsAnnotationReader
 
 	/**
 	 * @return string[]
+	 *
+	 * @throws ParserErrorsException
 	 */
 	private function getUsesMap(string $fileName, string $namespace): array
 	{
@@ -172,6 +182,8 @@ class ThrowsAnnotationReader
 
 	/**
 	 * @return string[][]
+	 *
+	 * @throws ParserErrorsException
 	 */
 	private function createUsesMap(string $sourceFile): array
 	{

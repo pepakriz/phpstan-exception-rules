@@ -31,6 +31,8 @@ services:
 
 	-
 		class: Pepakriz\PHPStanExceptionRules\ThrowsAnnotationReader
+		arguments:
+			phpParser: @defaultAnalysisParser
 	-
 		class: Pepakriz\PHPStanExceptionRules\CheckedExceptionService
 		factory: Pepakriz\PHPStanExceptionRules\CheckedExceptionService(%exceptionRules.checkedExceptions%, %exceptionRules.uncheckedExceptions%)
