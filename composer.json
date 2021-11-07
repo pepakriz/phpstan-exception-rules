@@ -8,7 +8,7 @@
 	"prefer-stable": true,
 	"extra": {
 		"branch-alias": {
-			"dev-master": "0.11-dev"
+			"dev-master": "0.12-dev"
 		},
 		"phpstan": {
 			"includes": [
